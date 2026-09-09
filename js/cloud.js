@@ -128,7 +128,7 @@
     const id = state.user.id;
     await request('account', { method: 'DELETE', body: JSON.stringify({ password }) });
     generation++; running = false; clearTimeout(timer);
-    try { localStorage.removeItem('miette-account-' + id); localStorage.removeItem('miette-sync-' + id); localStorage.removeItem('miette-last-account'); } catch {}
+    try { localStorage.removeItem('miette-account-' + id); localStorage.removeItem('miette-sync-' + id); localStorage.removeItem('miette-last-account'); localStorage.removeItem('miette-workshop-v1:miette-account-' + id); } catch {}
     state.user = null; state.conflict = null; state.error = ''; state.savedAt = null; state.status = 'local';
     meta = { revision: 0, base: N.empty(), dirty: false };
     apply(read(guestKey) || N.empty()); emit();

@@ -15,7 +15,9 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 - Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
 - Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
 - 100 recettes originales et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
-- **Nidelle Plus en pré-lancement** : page `#plus`, offre à 4,90 €/mois ou pass 9 mois à 29,90 €, paywall dans les menus et aperçu gratuit de deux jours avec préférences. Les quatre repas peuvent être consultés puis ajoutés aux créneaux libres du carnet. Aucun paiement ni abonnement n’est actif ; toutes les fonctionnalités existantes restent gratuites. [Modèle économique, hypothèses et lancement](BUSINESS_MODEL.md).
+- **L’atelier Plus** : page d’offre `#plus` et atelier complet `#atelier`, offert en découverte. Composition de 7 dîners ou 14 repas pour deux personnes selon le temps, les envies, le choix végétarien, six exclusions culinaires et douze ingrédients du placard. Épinglage, remplacement individuel, courses par rayon et carnet HTML autonome à ouvrir hors connexion, partager ou imprimer en PDF. L’offre apparaît après le résultat : 4,90 €/mois ou pass 9 mois à 29,90 €, tarifs proposés pour le lancement. Aucun paiement ni abonnement actif. [Modèle économique, hypothèses et lancement](BUSINESS_MODEL.md).
+- L’atelier ajoute les créneaux libres et peut actualiser ses propres repas ; les changements faits ailleurs et les menus manuels sont préservés. Les courses identiques sont regroupées avec leurs mentions de préparation ; compléter la liste garde les quantités déjà supérieures et ne double pas les mêmes besoins.
+- Brouillon de l’atelier conservé localement, séparément pour chaque compte et le carnet invité. Seuls les menus et courses effectivement ajoutés au carnet se synchronisent. L’effacement du carnet et la suppression du compte effacent aussi son brouillon sur cet appareil. Les goûts et ingrédients choisis ne sont pas des filtres d’allergies ni une prescription nutritionnelle.
 - Compte facultatif, connexion, récupération du mot de passe, déconnexion et suppression du compte avec confirmation du mot de passe.
 - Carnet sauvegardé automatiquement, copie locale hors connexion, synchronisation au retour du réseau. Les modifications indépendantes sont fusionnées ; un conflit sur le même élément demande un choix explicite.
 - Carnets séparés par compte et carnet invité distinct. L’ajout du carnet invité lors de la connexion est facultatif.
@@ -106,7 +108,8 @@ js/recipes.js          90 recettes supplémentaires et collections
 js/rules.js            Repérage partiel des précautions et contrôle EAN/UPC
 js/api.js              Normalisation et cache de la recherche
 js/app.js              Pages, fiches, compte, menus, courses, transfert et installation
-js/plus.js             Offre de pré-lancement et aperçu gratuit de quatre repas
+js/plus.js             Composition, préférences, épingles et regroupement des courses
+js/workshop.js         Atelier complet, brouillon par compte et carnet HTML autonome
 js/cloud.js            Session, sauvegarde et synchronisation
 js/notebook.js         Fusion des modifications entre appareils
 src/scanner.js         Lecteur ZXing compilé en dist/js/scanner.js

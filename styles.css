@@ -158,3 +158,172 @@ body{background:var(--canvas)}.sidebar{background:#f5f2e9;border-right-color:var
 @media print{.plus-planner-banner,.plus-preview-upsell{display:none}}
 
 .seasoning-note{font-size:12px;line-height:1.8;color:#665e50;background:#f4ece0;border-radius:12px;padding:14px 18px;margin:14px 0}.food-card[data-category=seasoning] .food-art-wrap{background:#f2e8da}
+
+/* A complete cooking workshop: show the meals before presenting the offer. */
+.offer-page,.workshop-page{padding-bottom:30px}
+.offer-hero{display:grid;grid-template-columns:1fr 1.05fr;gap:20px;align-items:center;background:#f3ebdd;border:1px solid #eadfce;border-radius:26px;padding:36px;overflow:hidden}
+.offer-hero-copy{position:relative;z-index:1}
+.offer-access{display:block;margin:25px 0 16px;color:#82503d;font-size:9px;font-weight:700;letter-spacing:1.8px}
+.offer-hero h1{font:500 clamp(30px,3.1vw,47px)/1.22 'Lora',Georgia,serif;letter-spacing:-1.5px;color:var(--green-dark);margin-bottom:20px}
+.offer-hero-copy>p{font-size:14px;line-height:1.9;max-width:430px;color:#625d50}
+.offer-primary{margin-top:27px;font-size:13px;min-height:50px;padding:15px 20px}
+.offer-hero-copy>small{display:block;font-size:10px;color:#645e50;max-width:310px;line-height:1.8;margin-top:13px}
+.offer-showcase{position:relative;min-width:0;height:535px}
+.offer-note{position:absolute;top:0;left:10px;right:0;text-align:center;font:italic 15px/1.5 'Lora',Georgia,serif;color:#825b44;transform:rotate(-3deg)}
+.offer-dish{position:absolute;background:#fffdf7;box-shadow:0 12px 28px #735f4420;border:6px solid #fffdf7;border-radius:15px;overflow:hidden;padding:0;text-align:left;transition:transform .2s,box-shadow .2s;width:61%}
+.offer-dish>img{width:100%;height:160px;object-fit:cover;border-radius:9px}
+.offer-dish>span{display:grid;gap:5px;padding:11px 9px 9px}
+.offer-dish small{font-size:8px;letter-spacing:1.2px;color:#755740;font-weight:600}
+.offer-dish b{font:500 16px/1.35 'Lora',Georgia,serif;color:#344d3c}
+.offer-dish em{font-size:9px;color:#60664f;font-style:normal}
+.offer-dish-0{left:1%;top:48px;transform:rotate(-7deg);z-index:2}
+.offer-dish-1{right:0;top:145px;transform:rotate(7deg);z-index:3}
+.offer-dish-2{left:8%;top:258px;transform:rotate(-4deg);z-index:4;width:53%}
+.offer-dish-2>img{height:123px}
+.offer-dish:hover,.offer-dish:focus-visible{transform:rotate(0) translateY(-6px);z-index:5;box-shadow:0 18px 35px #735f4430}
+.offer-shopping-note{position:absolute;bottom:40px;right:0;z-index:6;display:flex;gap:10px;align-items:center;padding:14px;border-radius:12px;background:#e5ecd9;border:1px solid #cdd9bf;color:#3f5737;box-shadow:0 6px 20px #5e6a3210;font-size:10px;transform:rotate(3deg)}
+.offer-example-note{position:absolute;bottom:0;left:0;right:0;text-align:center;color:#625e50;font-size:9px}
+.offer-value-strip{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px 20px;border-bottom:1px solid #e5dfd1;padding:24px 5px;color:#516046;font-size:11px}
+.offer-value-strip>span{display:flex;align-items:center;gap:8px}
+.offer-scenarios{margin:48px 0}
+.offer-scenarios .section-heading{margin-bottom:24px}
+.offer-scenarios h2{font-size:28px;margin-top:9px}
+.offer-scenario-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.offer-scenario-grid article{display:flex;flex-direction:column;align-items:flex-start;padding:26px;border:1px solid #e7dfd0;border-radius:18px;background:#fffdf7}
+.offer-scenario-grid article:nth-child(2){background:#eef0e4}
+.offer-scenario-grid article:nth-child(3){background:#f5e9df}
+.offer-scenario-icon{display:grid;place-items:center;width:42px;height:42px;background:#ffffff85;border:1px solid #e4decb;border-radius:14px;color:#6a7450;margin-bottom:20px}
+.offer-scenario-grid h3{font:500 20px/1.4 'Lora',Georgia,serif;letter-spacing:-.4px}
+.offer-scenario-grid p{font-size:12px;line-height:1.9;color:#655e50;margin:14px 0 18px}
+.offer-scenario-grid a{margin-top:auto}
+.offer-how{display:grid;grid-template-columns:1.2fr 1fr;align-items:center;gap:24px;padding:35px;background:#f2ecdf;border:1px solid #e8ddcb;border-radius:24px;margin-bottom:55px}
+.offer-how h2,.offer-pricing-copy h2{font:500 30px/1.35 'Lora',Georgia,serif;letter-spacing:-.7px;margin:13px 0 24px}
+.offer-how ol{list-style:none;padding:0;counter-reset:offer-step;display:grid;gap:21px;margin:25px 0}
+.offer-how li{position:relative;padding-left:43px;counter-increment:offer-step}
+.offer-how li:before{content:counter(offer-step,decimal-leading-zero);position:absolute;left:0;top:0;font:500 17px 'Lora',Georgia,serif;color:#8d5f42}
+.offer-how li b{font-size:13px;display:block;margin-bottom:5px}
+.offer-how li span{display:block;font-size:12px;line-height:1.8;color:#635f50}
+.offer-how>img{width:100%;height:auto;object-fit:contain;mix-blend-mode:multiply}
+.offer-pricing-section{display:grid;grid-template-columns:1fr 1fr;gap:45px;align-items:center;margin-bottom:60px}
+.offer-pricing-copy>p{font-size:13px;line-height:1.9;color:#655f50;max-width:440px}
+.offer-pricing-copy .offer-honesty{font-size:11px;padding-top:16px;border-top:1px solid #e4dece}
+.offer-pricing-section .plus-offer-panel{width:100%}
+.plus-offer-panel h3{font:500 25px/1.35 'Lora',Georgia,serif;margin-top:19px;letter-spacing:-.5px}
+.offer-dialog h2{font:500 32px/1.3 'Lora',Georgia,serif;letter-spacing:-.8px;margin:20px 0 0}
+.offer-proof{background:#eaf0e1;border:1px solid #dce4cf;border-radius:14px;padding:18px;margin:20px 0}
+.offer-proof>b{font-size:12px}
+.offer-proof>div{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:15px;margin-top:10px}
+.offer-proof span{font-size:11px;color:#556347}
+.offer-proof strong{display:block;font:500 30px/1.3 'Lora',Georgia,serif;color:var(--green-dark)}
+.offer-dialog-photo{position:relative;border-radius:15px;overflow:hidden;margin:20px 0}
+.offer-dialog-photo img{width:100%;height:190px;object-fit:cover}
+.offer-dialog-photo span{position:absolute;left:14px;bottom:13px;background:#fffaf1f2;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600}
+.offer-planner>img{width:170px;height:170px;object-fit:cover;mix-blend-mode:normal;border:6px solid #fffaf0;border-radius:25px;transform:rotate(5deg);box-shadow:0 7px 20px #7a5a3615}
+
+.workshop-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.workshop-heading h1{font:500 clamp(27px,3vw,37px)/1.3 'Lora',Georgia,serif;letter-spacing:-1px;margin:12px 0}
+.workshop-heading p{font-size:13px;color:#645f52;line-height:1.8}
+.workshop-demo{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #d7dfc9;background:#eaf0df;color:#4f603f;border-radius:30px;font-size:10px;white-space:nowrap}
+.workshop-discovery{font-size:11px;color:#635c4c;margin:17px 0 26px}
+.workshop-form{background:#fffdf8;border:1px solid #e3dece;border-radius:22px;padding:28px 30px;box-shadow:0 6px 20px #6a5c3605}
+.workshop-form-heading{display:flex;align-items:center;gap:14px;margin-bottom:27px}
+.workshop-step{width:43px;height:43px;display:grid;place-items:center;border-radius:50%;background:#f1e6d5;color:#7e593d;font:500 18px 'Lora',Georgia,serif;flex-shrink:0}
+.workshop-form h2{font:500 25px/1.4 'Lora',Georgia,serif;letter-spacing:-.5px}
+.workshop-form-heading p{font-size:11px;color:#686050;margin-top:3px}
+.workshop-form fieldset{min-width:0;padding:0;border:0;margin:0 0 24px}
+.workshop-form legend{font-size:12px;font-weight:600;margin-bottom:12px;padding:0}
+.workshop-moods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.workshop-moods label{position:relative;cursor:pointer;min-width:0;display:flex}
+.workshop-moods input{position:absolute;left:12px;top:14px;width:15px;height:15px;accent-color:var(--green);margin:0}
+.workshop-moods label>span{display:flex;flex-direction:column;gap:7px;border:1px solid #dedccf;border-radius:12px;padding:13px 13px 13px 35px;background:#fcfaf3;width:100%}
+.workshop-moods b{font-size:12px;font-weight:600}
+.workshop-moods small{font-size:10px;line-height:1.7;color:#67624e}
+.workshop-moods input:checked+span{border-color:#7f916d;background:#eaf0df;box-shadow:inset 0 0 0 1px #7f916d}
+.workshop-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.workshop-fields .field{margin-bottom:20px}
+.workshop-fields label{font-size:12px}
+.workshop-fields .text-input{width:100%;font-size:12px;min-height:45px;background:#fffefa}
+.workshop-vegetarian{display:flex;align-items:center;gap:9px;font-size:12px;margin:0 0 24px;width:fit-content;cursor:pointer}
+.workshop-page input[type=checkbox]{width:17px;height:17px;flex-shrink:0;accent-color:var(--green);margin:0}
+.workshop-preferences>p{font-size:11px;color:#68604f;line-height:1.8;margin:-6px 0 11px}
+.workshop-chips{display:flex;gap:8px;flex-wrap:wrap}
+.workshop-chip{position:relative;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border:1px solid #e3ddcd;padding:7px 11px;border-radius:9px;font-size:11px;background:#fbf8f0;min-height:38px}
+.workshop-chip:has(input:checked){background:#e7eddd;border-color:#7e9069;color:#3d573a}
+.workshop-chip:has(input:focus-visible),.workshop-moods label:has(input:focus-visible){outline:3px solid #90ad8b;outline-offset:3px;border-radius:10px}
+.workshop-chip input:focus-visible,.workshop-moods input:focus-visible{outline:none}
+.workshop-compose{display:flex;align-items:center;gap:18px;border-top:1px solid #e9e2d2;padding-top:22px}
+.workshop-compose .btn{font-size:12px;min-height:47px}
+.workshop-compose>span{font-size:10px;color:#635f4f;line-height:1.8}
+.workshop-feedback{font-size:12px;font-weight:500;color:var(--green-dark);line-height:1.8;scroll-margin-top:20px}
+.workshop-feedback:not(:empty){background:#eaf0e2;border:1px solid #d9e2cc;border-radius:10px;padding:13px 17px;margin:20px 0}
+.workshop-before{padding:40px 22px;margin:27px 0;border-radius:22px;text-align:center;background:#f4eee1;border:1px dashed #d7cdb9}
+.workshop-before-photos{display:flex;align-items:center;justify-content:center;margin:0 auto 26px;max-width:430px;padding:10px}
+.workshop-before-photos img{object-fit:cover;width:33.3%;height:110px;border:5px solid #fffaf1;border-radius:13px;transform:rotate(-7deg);box-shadow:0 7px 15px #76604312}
+.workshop-before-photos img:nth-child(2){transform:rotate(5deg);margin:0 -4px;position:relative;top:-6px;z-index:1}
+.workshop-before-photos img:nth-child(3){transform:rotate(-3deg)}
+.workshop-before h2{font:500 25px/1.4 'Lora',Georgia,serif;margin-bottom:10px}
+.workshop-before p{max-width:510px;margin:auto;font-size:12px;color:#665f50;line-height:1.9}
+.workshop-section-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:23px}
+.workshop-section-heading h2{font:500 28px/1.35 'Lora',Georgia,serif;letter-spacing:-.5px;margin:9px 0}
+.workshop-section-heading p{font-size:12px;color:#655e50;line-height:1.8}
+.workshop-section-heading>.btn{flex-shrink:0}
+.workshop-menu{margin:35px 0 40px}
+.workshop-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:0 0 27px}
+.workshop-metrics>span{display:flex;align-items:center;gap:11px;border:1px solid #e0dece;padding:13px 18px;border-radius:13px;background:#f1f0e4;color:#5f624e;font-size:11px;line-height:1.6}
+.workshop-metrics b{font:500 30px 'Lora',Georgia,serif;color:#425b3b}
+.workshop-days{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 19px}
+.workshop-day{min-width:0;display:flex;flex-direction:column}
+.workshop-day>h3{font-size:12px;font-weight:600;text-transform:capitalize;margin:0 0 11px;line-height:1.6;color:#6d5f48}
+.workshop-recipe{border:1px solid #e3dfcf;border-radius:16px;overflow:hidden;background:#fffdf8;display:flex;flex-direction:column;margin-bottom:12px;flex:1}
+.workshop-recipe.is-pinned{border-color:#7f946e;box-shadow:0 0 0 1px #7f946e}
+.workshop-recipe-open{padding:0;text-align:left;background:transparent;width:100%;display:flex;flex-direction:column;flex:1}
+.workshop-recipe-open>img{height:170px;width:100%;object-fit:cover}
+.workshop-recipe-open>span{padding:14px 16px 15px;display:flex;flex-direction:column;gap:8px;width:100%;flex:1}
+.workshop-recipe-open small{font-size:10px;color:#6b6553}
+.workshop-recipe-open b{font:500 18px/1.45 'Lora',Georgia,serif}
+.workshop-match{display:flex;align-items:center;gap:4px;color:#536543;font-size:10px;line-height:1.8;margin-top:auto}
+.workshop-recipe-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e7e1d1;background:#f7f3e9}
+.workshop-recipe-actions button{display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;font-size:11px;min-height:43px;padding:10px 7px;color:var(--green-dark)}
+.workshop-recipe-actions button+button{border-left:1px solid #e7e1d1}
+.workshop-recipe-actions button:hover:not(:disabled){background:#eaf0df}
+.workshop-page button:disabled{cursor:default}
+.workshop-occupied{font-size:10px;line-height:1.7;padding:10px 13px;background:#f5e9d7;color:#775235;border-top:1px solid #e9ddc7}
+.workshop-save{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:23px 25px;background:#e8eedf;border:1px solid #d7dfc9;border-radius:16px;margin-top:10px}
+.workshop-save b{font-size:13px}
+.workshop-save p{font-size:11px;color:#5c654c;line-height:1.8;margin-top:5px}
+.workshop-save .btn{flex-shrink:0}
+.workshop-shopping{padding:28px 30px;border:1px solid #e1dece;background:#fffdf7;border-radius:22px;margin-bottom:28px}
+.workshop-aisles{display:grid;grid-template-columns:1fr 1fr;gap:27px 30px;margin-top:26px;align-items:start}
+.workshop-aisles h3{font-size:12px;color:#675b44;background:#f2eadc;border-radius:7px;padding:10px 12px;margin-bottom:6px;line-height:1.6}
+.workshop-shopping-row{display:flex;gap:11px;align-items:center;min-height:53px;padding:10px 5px;border-bottom:1px solid #eee7d9;cursor:pointer}
+.workshop-shopping-row>span{display:flex;justify-content:space-between;align-items:center;gap:12px;flex:1;min-width:0;font-size:12px;line-height:1.7}
+.workshop-shopping-row small{font-size:10px;color:#70654f;white-space:nowrap}
+.workshop-shopping-row.is-owned>span{text-decoration:line-through;color:#737263}
+.workshop-shopping-row.is-owned{background:#f3f5eb}
+.workshop-takeaway{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;padding:30px;border-radius:22px;background:#f2e8d8;border:1px solid #e7d9c4}
+.workshop-takeaway-icon{color:#886441;width:62px;height:62px;border:1px solid #dcc9aa;background:#fff7e9;border-radius:18px;display:grid;place-items:center;transform:rotate(-6deg)}
+.workshop-takeaway h2{font:500 23px/1.4 'Lora',Georgia,serif;margin:8px 0}
+.workshop-takeaway p{font-size:12px;line-height:1.9;color:#665c49;max-width:600px}
+.workshop-after{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:35px 6px;margin:20px 0 8px;border-bottom:1px solid #e4ddcc}
+.workshop-after h2{font:500 27px/1.4 'Lora',Georgia,serif;margin:9px 0}
+.workshop-after p{font-size:12px;color:#665d4c;line-height:1.8}
+.workshop-after>.btn{flex-shrink:0}
+.workshop-footnote{font-size:10px;line-height:1.9;color:#696251;margin:20px 0 0}
+.workshop-dirty{padding:15px 18px;margin:20px 0;background:#f5e7d4;color:#765132;border:1px solid #e7d4b7;font-size:12px;line-height:1.9;border-radius:12px}
+
+@media(max-width:1200px){
+  .offer-hero{padding:28px;gap:15px}.offer-hero h1{font-size:34px}.offer-dish>img{height:145px}.offer-dish b{font-size:14px}.offer-dish-2>img{height:115px}.offer-shopping-note{bottom:52px}
+  .offer-value-strip{display:grid;grid-template-columns:1fr 1fr}.offer-scenario-grid article{padding:20px}.offer-scenario-grid h3{font-size:18px}.offer-how{padding:28px}.offer-pricing-section{gap:28px}
+  .workshop-moods{grid-template-columns:repeat(2,minmax(0,1fr))}.workshop-days{grid-template-columns:repeat(2,minmax(0,1fr))}.workshop-takeaway{grid-template-columns:auto 1fr}.workshop-takeaway>.btn{grid-column:2;justify-self:start}
+}
+@media(max-width:950px){
+  .offer-hero{grid-template-columns:1fr;padding:30px}.offer-hero h1{font-size:40px}.offer-hero-copy>p{max-width:560px}.offer-hero-copy>small{max-width:none}.offer-showcase{height:445px;max-width:570px;width:100%;margin:15px auto 0}.offer-note{left:0}.offer-dish{width:45%}.offer-dish-0{top:58px}.offer-dish-1{top:62px;right:3%}.offer-dish-2{left:25%;top:212px;width:45%}.offer-shopping-note{bottom:36px}.offer-example-note{font-size:8px}
+  .offer-scenario-grid{grid-template-columns:1fr;gap:12px}.offer-scenario-grid article{display:grid;grid-template-columns:42px 1fr;gap:0 15px}.offer-scenario-icon{grid-row:1/4;margin:0}.offer-scenario-grid p{margin:9px 0}.offer-scenario-grid a{grid-column:2;justify-self:start}.offer-how{grid-template-columns:1fr 150px;gap:5px}.offer-how h2{font-size:26px}.offer-how>img{align-self:start;margin-top:35px}.offer-pricing-section{grid-template-columns:1fr;gap:26px}.offer-pricing-section .plus-offer-panel{max-width:none}
+  .workshop-heading{align-items:flex-start;flex-direction:column;gap:11px}.workshop-form{padding:25px}.workshop-fields{grid-template-columns:1fr 1fr;gap:0 15px}.workshop-metrics>span{flex-direction:column;align-items:flex-start;gap:3px;padding:12px}.workshop-shopping{padding:24px}.workshop-aisles{gap:25px 20px}
+}
+@media(max-width:600px){
+  .offer-hero{padding:24px 20px;border-radius:20px}.offer-access{font-size:8px;letter-spacing:1.1px;margin-top:23px}.offer-hero h1{font-size:32px;letter-spacing:-1px}.offer-hero-copy>p{font-size:12px}.offer-primary{font-size:11px;padding:14px;margin-top:22px;width:100%}.offer-hero-copy>small{font-size:9px}.offer-showcase{height:470px;margin-top:28px}.offer-note{font-size:12px}.offer-dish{width:65%}.offer-dish>img{height:121px}.offer-dish>span{padding:9px 6px 6px}.offer-dish b{font-size:14px}.offer-dish small{font-size:7px;letter-spacing:.6px}.offer-dish-0{top:42px;left:1%}.offer-dish-1{top:148px;right:0}.offer-dish-2{top:241px;left:1%;width:61%}.offer-dish-2>img{height:100px}.offer-shopping-note{bottom:34px;right:-3px;padding:10px;gap:6px;font-size:9px}.offer-example-note{font-size:8px;line-height:1.6}.offer-value-strip{gap:14px 8px;font-size:9px;padding:21px 3px}.offer-value-strip>span{align-items:flex-start;gap:7px}.offer-value-strip svg{width:15px;height:15px}.offer-scenarios{margin:34px 0}.offer-scenarios h2{font-size:25px}.offer-scenario-grid article{padding:21px 17px;column-gap:12px}.offer-scenario-grid h3{font-size:18px}.offer-scenario-grid p{font-size:11px}.offer-scenario-grid a{font-size:10px}.offer-how{grid-template-columns:1fr;padding:25px 21px;margin-bottom:35px}.offer-how>img{width:150px;margin:18px auto 0}.offer-how h2{font-size:25px}.offer-pricing-copy h2{font-size:28px}.offer-pricing-section{margin-bottom:38px}.offer-proof{padding:15px}.offer-proof>div{gap:10px}.offer-proof span{font-size:10px}.offer-proof strong{font-size:27px}.offer-dialog h2{font-size:28px}.offer-planner>img{width:69px;height:69px;right:13px;top:12px;border-width:4px;border-radius:16px}
+  .workshop-heading h1{font-size:29px}.workshop-heading p{font-size:12px}.workshop-demo{font-size:9px}.workshop-discovery{font-size:10px}.workshop-form{padding:22px 18px}.workshop-form h2{font-size:22px}.workshop-form-heading{gap:11px}.workshop-step{width:35px;height:35px;font-size:15px}.workshop-moods{gap:8px}.workshop-moods label>span{padding:33px 11px 12px}.workshop-moods input{top:11px;left:11px}.workshop-moods b{font-size:11px}.workshop-moods small{font-size:9px}.workshop-fields{grid-template-columns:1fr}.workshop-chip{font-size:10px;padding:8px;gap:6px}.workshop-chips{gap:7px}.workshop-compose{flex-direction:column;align-items:stretch;gap:11px}.workshop-compose>span{text-align:center;font-size:9px}.workshop-form legend{font-size:11px}.workshop-preferences>p{font-size:10px}.workshop-vegetarian{font-size:11px}.workshop-before{padding:28px 18px}.workshop-before-photos{padding:8px 2px}.workshop-before-photos img{height:81px;border-width:4px}.workshop-before h2{font-size:22px}.workshop-before p{font-size:11px}.workshop-section-heading{flex-direction:column;align-items:flex-start;gap:16px}.workshop-section-heading h2{font-size:26px}.workshop-metrics{gap:7px}.workshop-metrics>span{font-size:9px;padding:11px 9px}.workshop-metrics b{font-size:26px}.workshop-days{grid-template-columns:1fr;gap:17px}.workshop-day>h3{font-size:12px}.workshop-recipe-open>img{height:185px}.workshop-recipe-open b{font-size:19px}.workshop-recipe-actions button{min-height:45px;font-size:12px}.workshop-save{flex-direction:column;align-items:stretch;padding:20px;gap:16px}.workshop-shopping{padding:22px 18px}.workshop-aisles{grid-template-columns:1fr;gap:23px}.workshop-shopping-row>span{font-size:11px;gap:9px}.workshop-shopping-row small{font-size:9px}.workshop-takeaway{grid-template-columns:1fr;gap:16px;padding:23px 21px}.workshop-takeaway>.btn{grid-column:auto;justify-self:stretch}.workshop-takeaway-icon{width:48px;height:48px;border-radius:13px}.workshop-takeaway h2{font-size:24px}.workshop-takeaway p{font-size:11px}.workshop-after{flex-direction:column;align-items:flex-start;gap:20px}.workshop-after h2{font-size:25px}.workshop-feedback:not(:empty){padding:13px;font-size:11px}.workshop-footnote{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.offer-dish{transition:none}.offer-dish:hover{transform:none}}
+@media print{.workshop-form,.workshop-discovery,.workshop-after,.workshop-recipe-actions,.workshop-save,.workshop-takeaway,.workshop-feedback,.offer-page{display:none}.workshop-days,.workshop-aisles{grid-template-columns:1fr 1fr}.workshop-recipe{break-inside:avoid}.workshop-shopping{break-before:page}}

@@ -1,6 +1,7 @@
 /* Small, code-native illustrations. No remote icon dependency. */
 window.MietteIcons = (() => {
   const paths = {
+    pin: '<path d="m8 3 8 0-1 6 4 4H5l4-4-1-6Zm4 10v9"/>',
     spice: '<path d="M3 12h18c-1 6-4 9-9 9s-8-3-9-9Zm9 0 6-9a2 2 0 0 1 3 2l-6 7M7 8h.01M4 5h.01M10 4h.01"/>',
     cloud: '<path d="M6 18a4 4 0 0 1-.6-8A7 7 0 0 1 19 8.5 4.8 4.8 0 0 1-.8 9.5H6Z"/>',
     home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',

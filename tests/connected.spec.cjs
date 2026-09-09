@@ -28,23 +28,22 @@ async function mockAccount(page, remote, initialUser=null) {
   });
 }
 const user={id:'account-a',name:'Camille',email:'a@example.com'};
-test('A notebook sync during a Plus preview never replaces a meal saved on another device',async({page})=>{
+test('A notebook sync during the workshop preserves a meal saved on another device',async({page})=>{
   await page.clock.setFixedTime(new Date('2026-09-09T12:00:00+02:00'));
   const remote={};await mockAccount(page,remote,user);
-  await page.goto('/#menus');
+  await page.goto('/#atelier');
   await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
-  await page.locator('[data-action="plus-preview"]').click();
-  await page.locator('#plus-start').fill('2026-09-14');
-  await page.locator('#plus-preview-form [type="submit"]').click();
-  await expect(page.locator('.plus-preview-recipe')).toHaveCount(4);
-  remote['account-a']={notebook:{...empty(),menus:{'2026-09-14':{lunch:'sunny-bowl'}}},revision:1};
+  await page.locator('#workshop-start').fill('2026-09-14');
+  await page.locator('#workshop-form [type="submit"]').click();
+  await expect(page.locator('.workshop-recipe')).toHaveCount(7);
+  remote['account-a']={notebook:{...empty(),menus:{'2026-09-14':{dinner:'sunny-bowl'}}},revision:1};
   await page.evaluate(()=>MietteCloud.sync());
-  await expect(page.locator('.plus-preview-recipe')).toHaveCount(4);
-  await page.locator('[data-action="plus-save-preview"]').click();
+  await expect(page.locator('.workshop-recipe')).toHaveCount(7);
+  await page.locator('[data-action="workshop-save"]').click();
   await page.evaluate(()=>MietteCloud.sync());
-  await expect.poll(()=>Object.values(remote['account-a'].notebook.menus).flatMap(d=>Object.values(d)).length).toBe(4);
-  expect(remote['account-a'].notebook.menus['2026-09-14'].lunch).toBe('sunny-bowl');
-  await expect(page.locator('#toasts')).toContainText('Les repas déjà prévus ont été conservés');
+  await expect.poll(()=>Object.values(remote['account-a'].notebook.menus).flatMap(d=>Object.values(d)).length).toBe(7);
+  expect(remote['account-a'].notebook.menus['2026-09-14'].dinner).toBe('sunny-bowl');
+  await expect(page.locator('.workshop-occupied')).toHaveCount(1);
 });
 async function login(page,email='a@example.com',includeGuest=true) {
   await page.goto('/#profil');await expect(page.locator('#auth-form')).toBeVisible();
@@ -145,10 +144,14 @@ test('Deleting an account needs confirmation and retains the separate guest note
   const remote={};await mockAccount(page,remote,user);let deletes=0;
   await page.route('**/api/account',route=>{deletes++;if(route.request().postDataJSON().password!=='correct-password')return route.fulfill({status:400,json:{error:'Mot de passe incorrect'}});return route.fulfill({json:{deleted:true}})});
   await page.addInitScript(()=>localStorage.setItem('miette-notebook-v1',JSON.stringify({name:'Invitée',vegetarian:false,favorites:[],products:[],menus:{},shopping:[]})));
-  await page.goto('/#profil');await expect(page.locator('.account-email')).toBeVisible();await page.goto('/#confidentialite');await page.locator('[data-action="delete-account"]').click();expect(deletes).toBe(0);
+  await page.goto('/#atelier');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+  await page.locator('#workshop-form [type="submit"]').click();await expect(page.locator('.workshop-recipe')).toHaveCount(7);
+  expect(await page.evaluate(()=>!!localStorage.getItem('miette-workshop-v1:miette-account-account-a'))).toBe(true);
+  await page.goto('/#confidentialite');await page.locator('[data-action="delete-account"]').click();expect(deletes).toBe(0);
   await page.locator('#delete-password').fill('wrong-password');await page.locator('#delete-account-form [type="submit"]').click();await expect(page.locator('#delete-feedback')).toContainText('incorrect');
   await page.locator('#delete-password').fill('correct-password');await page.locator('#delete-account-form [type="submit"]').click();await expect(page.locator('dialog')).not.toBeVisible();
   expect(await page.evaluate(()=>MietteCloud.state.user)).toBe(null);expect(await page.evaluate(()=>localStorage.getItem('miette-account-account-a'))).toBe(null);
+  expect(await page.evaluate(()=>localStorage.getItem('miette-workshop-v1:miette-account-account-a'))).toBe(null);
   await page.goto('/#profil');await expect(page.locator('#profile-name')).toHaveValue('Invitée');
 });
 
@@ -160,4 +163,25 @@ test('Background synchronization preserves open dialogs and unfinished form inpu
   remote['account-a']={notebook:{...empty(),name:'Ailleurs'},revision:3};await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('dialog')).toBeVisible();await expect(page.locator('#dialog-title')).toHaveText(title);await page.keyboard.press('Escape');
   await page.goto('/#confidentialite');await page.locator('[data-action="delete-account"]').click();await page.locator('#delete-password').fill('not-submitted');
   remote['account-a']={notebook:{...empty(),name:'Autre mise à jour'},revision:4};await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('#delete-password')).toHaveValue('not-submitted');await expect(page.locator('dialog')).toBeVisible();
+});
+
+test('Workshop drafts remain separate for guests and two accounts through sign-out and sign-in', async ({ page }) => {
+  const remote = {}; await mockAccount(page, remote);
+  const ids = () => page.locator('[data-action="workshop-recipe"]').evaluateAll(nodes => nodes.map(n => n.dataset.id));
+  await page.goto('/#atelier'); await page.locator('#workshop-form [type="submit"]').click();
+  const guest = await ids(); expect(guest).toHaveLength(7);
+  await login(page, 'a@example.com', false); await page.goto('/#atelier');
+  await expect(page.locator('.workshop-before')).toBeVisible();
+  await page.locator('#workshop-meals').selectOption('both');
+  await page.locator('#workshop-form [type="submit"]').click();
+  const account = await ids(); expect(account).toHaveLength(14);
+  await page.goto('/#profil'); await page.locator('[data-action="sign-out"]').click();
+  await expect(page.locator('#auth-form')).toBeVisible(); await page.goto('/#atelier');
+  expect(await ids()).toEqual(guest);
+  await login(page, 'b@example.com', false); await page.goto('/#atelier');
+  await expect(page.locator('.workshop-before')).toBeVisible();
+  await page.goto('/#profil'); await page.locator('[data-action="sign-out"]').click();
+  await expect(page.locator('#auth-form')).toBeVisible();
+  await login(page, 'a@example.com', false); await page.goto('/#atelier');
+  expect(await ids()).toEqual(account);
 });

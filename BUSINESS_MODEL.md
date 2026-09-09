@@ -1,83 +1,92 @@
-# Nidelle Plus — modèle économique proposé
+# L’atelier Plus — modèle économique proposé
 
-Version du 9 septembre 2026. **Pré-lancement : aucun paiement ouvert, aucun abonnement actif.** La page `#plus` et le paywall des menus présentent l’offre. L’aperçu de deux jours fonctionne dès maintenant, sans compte ni carte bancaire.
+Version du 9 septembre 2026, application 2.3.0. **Pré-lancement : atelier complet offert, aucun paiement ouvert, aucun abonnement actif.** La page `#plus` présente le service ; `#atelier` permet de l’utiliser sans compte ni carte bancaire.
 
 ## Ce que l’on vend
 
-La grossesse apporte déjà beaucoup de décisions quotidiennes. Nidelle aide à comprendre les aliments gratuitement ; **Nidelle Plus vend le temps gagné pour imaginer et organiser ses repas**. La proposition est concrète : « Une semaine d’idées, en quelques gestes. »
+**« Le menu est prêt. Vous pouvez souffler. »** L’offre porte sur un résultat utilisable : une semaine de plats choisis, les courses regroupées et un carnet qui permet à une autre personne de prendre le relais en cuisine.
 
-Le produit reste sans publicité, sans vente de données et sans promesse de suivi médical personnalisé. Le choix végétarien et le temps de cuisine servent à sélectionner des recettes ; ils ne constituent pas un bilan nutritionnel. Aucun trimestre, résultat médical ou terme de grossesse n’est nécessaire pour tester l’aperçu.
+Le parcours part de trois situations concrètes : un aliment ne tente plus, des ingrédients attendent dans le placard, ou la personne qui partage le quotidien peut s’occuper des repas. Les sept jours seuls ne justifient pas le prix : l’intérêt vient de l’ensemble des préférences, des changements simples, de la liste qui se recalcule et du document prêt à emporter.
 
-## Offre et prix
+Les fiches, les explications, les sources et toutes les recettes restent gratuites. Le produit ne vend pas un accès à la sécurité alimentaire, un régime médical, une protection contre les allergies ou un suivi professionnel. Il ne promet pas de montant économisé ni de temps gagné chiffré. Aucun terme de grossesse ou résultat médical n’est demandé.
 
-| Fonction | Nidelle gratuit | Nidelle Plus, au lancement |
-| --- | --- | --- |
-| 360 fiches, raisons, précautions, sources | Oui | Inclus |
-| Recherche et scan Open Food Facts | Oui, selon la disponibilité du service | Même accès |
-| Toutes les 100 recettes et leurs précautions | Oui | Inclus |
-| Favoris, menus manuels, courses, export et synchronisation | Oui | Inclus |
-| Proposition automatique de 2 jours / 4 repas | Oui, déjà utilisable | Inclus |
-| Composer 7 jours / 14 repas en une fois | — | Prévu |
-| Temps disponible et option végétarienne | Dans l’aperçu | Sur la semaine entière |
-| Remplacer un plat ou renouveler une proposition | Nouvelle proposition dans l’aperçu | Prévu sur la semaine |
-| Ajouter la proposition au carnet puis aux courses | Depuis l’aperçu | Depuis la semaine entière |
+## Ce qui fonctionne dès maintenant
 
-Deux tarifs à tester, affichés dans l’app :
+| Besoin | Fonction livrée |
+| --- | --- |
+| Préparer la semaine entière | 7 dîners ou 7 déjeuners + 7 dîners, pour deux personnes, sans recette répétée dans la proposition |
+| Composer selon ses envies | Quatre ambiances culinaires, 30 ou 45 minutes maximum, option végétarienne |
+| Écarter ce qui ne tente pas | Poisson, champignons, œufs, fromage, oignon/échalote, coco : filtres sur les ingrédients écrits, hors allergies et traces |
+| Utiliser le placard | Douze ingrédients sélectionnables ; priorité aux recettes qui les utilisent, avec les correspondances affichées |
+| Garder la main | Épingler un plat, en remplacer un seul, recomposer le reste en gardant ses épingles |
+| Préparer les courses | Quantités cumulées par ingrédient et unité, quatre rayons, mentions de préparation conservées, cases « déjà à la maison » après vérification des quantités |
+| Retrouver son organisation | Ajout aux menus et aux courses du carnet existant ; actualisation des seuls repas précédemment ajoutés par cet atelier, si personne ne les a modifiés ailleurs |
+| Passer le relais | Document HTML autonome contenant menu, courses, ingrédients, étapes, allergènes et précautions sourcées ; ouverture hors connexion et impression/PDF depuis le navigateur |
 
-- **Pass 9 mois : 29,90 € en une fois.** Neuf mois d’accès à compter de l’activation, sans renouvellement automatique. C’est la formule mise en avant, adaptée à une période de vie limitée. Aucun justificatif de grossesse.
-- **Mensuel : 4,90 €/mois.** Renouvellement automatique, résiliation à tout moment pour empêcher la prochaine échéance ; accès jusqu’à la fin de la période déjà payée.
+Le brouillon et les préférences sont locaux, séparés par compte. Les menus et courses ajoutés au carnet suivent sa synchronisation. Les articles déjà à la maison ne sont retirés qu’après confirmation de la quantité par l’utilisatrice. Compléter la liste applique un besoin minimal et conserve les quantités existantes plus élevées ; cela n’additionne pas plusieurs fois la même semaine. Après un changement de recette, les coches du placard sont réinitialisées pour revérifier les nouveaux besoins.
 
-Le pass coûte 14,20 € de moins que neuf mensualités à 4,90 €. C’est une comparaison entre deux durées d’achat, pas une remise sur un ancien prix. Pas d’abonnement annuel imposé, de compteur d’urgence ni de formule précochée conduisant à un encaissement. Les prix restent des hypothèses commerciales ; les conditions définitives seront établies avant l’ouverture.
+Les goûts culinaires sont des préférences de sélection, pas un bilan nutritionnel. L’atelier ne commande pas les courses et ne dispose d’aucun prix de panier. Le document à partager est téléchargé : aucun partage avec un tiers n’est automatique.
 
-À expiration, les menus enregistrés restent lisibles, modifiables à la main et exportables. Aucun contenu personnel ne devient inaccessible.
+## Offre et prix proposés
 
-## Placement du paywall
+| Accès | Contenu |
+| --- | --- |
+| Gratuit durable | 360 fiches alimentaires sourcées, recherche/scan Open Food Facts selon disponibilité, 100 recettes, favoris, menus manuels, courses, export et synchronisation |
+| Découverte actuelle | Tout l’atelier, renouvelable sans quota, sans compte ni carte bancaire |
+| Plus au lancement commercial envisagé | Utilisation répétée de l’atelier complet ; première semaine complète offerte avant le premier achat |
 
-1. Une entrée « Découvrir Nidelle Plus » et une page d’offre accessible directement à `#plus`.
-2. Dans **Mes menus**, un bloc propose **Essayer 2 jours** et **Composer 7 jours · Plus**.
-3. L’aperçu permet de choisir une date, une durée et l’option végétarienne, puis de consulter quatre vraies recettes. Il remplit seulement les créneaux encore libres, en vérifiant à nouveau le carnet au moment d’ajouter.
-4. Après l’aperçu, « Découvrir l’offre » ouvre le paywall. « Composer 7 jours · Plus » l’ouvre également depuis le calendrier.
-5. Le paywall explique le bénéfice et les deux formules ; sa fermeture et la poursuite gratuite sont toujours visibles. Aucun écran de paiement au milieu d’une précaution alimentaire, d’une source ou d’une recette.
+- **Pass 9 mois : 29,90 € en une fois.** Neuf mois d’accès à partir de l’activation, sans renouvellement automatique. Aucun justificatif de grossesse.
+- **Mensuel : 4,90 €/mois.** Renouvellement automatique ; résiliation possible pour empêcher la prochaine échéance, accès jusqu’à la fin de la période payée.
 
-**Dans cette version**, la sélection d’une formule affiche ses conditions, puis le bouton propose l’aperçu gratuit. Le texte indique que l’offre et les paiements sont en préparation. Aucun achat, réservation, abonnement ni période d’essai payante ne sont simulés. L’aperçu peut être renouvelé ; il n’existe pas de quota caché ni de verrou prétendument sécurisé dans le navigateur.
+Le pass coûte 14,20 € de moins que neuf mensualités. Cette comparaison entre durées d’achat n’est pas une remise sur un ancien prix. Aucun compteur d’urgence, avis fictif, faux nombre de clientes ou achat par simple sélection d’une formule.
 
-## Acquisition et validation
+Les tarifs sont des hypothèses à tester, pas une preuve de disposition à payer. À expiration, les menus et courses déjà enregistrés restent accessibles, modifiables manuellement et exportables. Le pass couvre une période de vie limitée et évite de dépendre uniquement d’une longue rétention mensuelle.
 
-Le premier canal serait le contenu utile : fiches consultables depuis les moteurs de recherche, recettes et pages pratiques partageables. Le routage actuel par fragments (`#…`) ne suffit pas à un catalogue SEO : prévoir des pages statiques avec URL, titre et description propres avant d’investir dans ce canal. Les recommandations de professionnels peuvent ensuite aider à faire connaître l’outil, sans présenter une recommandation commerciale comme une validation clinique.
+## Un paywall après la preuve
 
-Commencer par observer, avec des participantes volontaires : comprennent-elles les deux offres, ajoutent-elles les quatre repas, et souhaitent-elles payer pour une semaine complète ? Le pré-lancement actuel ne collecte pas ces observations automatiquement : aucune mesure d’audience ni liste d’attente n’a été ajoutée.
+1. La page `#plus` montre de vraies recettes du catalogue et les trois situations quotidiennes. Les exemples sont explicitement identifiés comme exemples.
+2. Le bouton principal ouvre l’atelier complet, également accessible depuis la navigation et **Mes menus**.
+3. L’utilisatrice compose, consulte les recettes, ajuste les plats, prépare les courses et peut emporter son carnet.
+4. Après le résultat, **Découvrir l’offre Plus** ouvre une présentation avec les nombres réellement obtenus : repas, plats utilisant les ingrédients sélectionnés et articles à prévoir.
+5. Le prix et les conditions sont lisibles, la fermeture et la poursuite gratuite restent accessibles. Les sources et précautions ne rencontrent jamais un paywall.
 
-Une fois le paiement réellement disponible, mesurer un parcours minimal : aperçu terminé → repas ajoutés → offre consultée → achat confirmé par le serveur. Suivre les formules choisies, les remboursements, les mois réellement payés et l’usage des menus après achat. Les métriques éventuelles devront éviter les recherches d’aliments, le carnet ou les informations de santé et faire l’objet d’une information adaptée.
+**Dans cette version**, les formules affichent leurs conditions mais n’ouvrent aucun achat. Le bouton ramène à l’atelier offert. Aucune réservation, période d’essai avec facturation ultérieure ou activation d’abonnement n’est simulée. Il n’existe pas de booléen premium faisant autorité dans le navigateur.
 
-Le prix de 29,90 € et le partage gratuit/payant sont des hypothèses à valider. Ne pas conclure à une demande solvable sur le seul nombre de clics d’une page de pré-lancement.
+**Au lancement envisagé**, le premier carnet complet doit être utilisable gratuitement. Le point de conversion à tester serait la préparation d’une nouvelle semaine après cette première expérience. Remplacer les plats et corriger le premier carnet doivent rester possibles pendant la découverte. Toute future limite devra être expliquée avant le parcours et contrôlée côté serveur, avec accès permanent aux carnets déjà enregistrés.
+
+## Valider la valeur avant d’ouvrir les paiements
+
+Faire essayer l’atelier à des participantes volontaires, puis vérifier des comportements concrets : gardent-elles plusieurs suggestions, utilisent-elles leurs ingrédients, emportent-elles le document, et reviennent-elles préparer la semaine suivante ? Demander ensuite si l’offre résout un problème pour lequel elles paieraient, et laquelle des deux formules elles choisiraient. Les clics sur le prix ne suffisent pas à prouver une demande solvable.
+
+Le pré-lancement n’ajoute ni mesure d’audience ni liste d’attente. Il reste sans publicité et sans vente de données. Une mesure future du parcours devrait se limiter aux événements nécessaires, en excluant les recherches d’aliments, le contenu des carnets et les informations médicales, avec information adaptée.
+
+Le contenu utile peut servir à l’acquisition. Le routage actuel par fragments ne suffit pas pour un catalogue SEO : créer de vraies pages statiques par aliment et recette avant d’investir dans ce canal. Une recommandation commerciale par un professionnel ne constitue pas une validation clinique.
 
 ## Scénario de recettes, à titre d’hypothèse
 
-Sur **1 000 utilisatrices actives par mois**, avec 70 % des achats sur le pass et 30 % sur le mensuel :
+Sur 1 000 utilisatrices actives par mois, en supposant 70 % des nouveaux achats sur le pass et 30 % sur le mensuel :
 
-| Conversion en nouveaux achats | Pass vendus | Nouveaux abonnements mensuels | Encaissement initial brut |
+| Conversion en nouveaux achats | Pass vendus | Nouveaux abonnements | Encaissement initial brut |
 | --- | ---: | ---: | ---: |
 | 2 % | 14 | 6 | 448 € |
 | 3 % | 21 | 9 | 672 € |
 | 5 % | 35 | 15 | 1 120 € |
 
-Ce sont des scénarios, pas des prévisions ni un bénéfice. Ils excluent les renouvellements des cohortes précédentes. Les pass sont encaissés une fois pour neuf mois de service : leur produit n’est pas du revenu mensuel récurrent. Au scénario central, seuls les neuf nouveaux abonnements apportent 44,10 € de revenu mensuel récurrent initial avant résiliations et déductions.
+Ces scénarios excluent les renouvellements antérieurs et ne sont ni des prévisions ni un bénéfice. Un pass finance neuf mois de service et ne constitue pas du revenu mensuel récurrent. Au scénario central, les neuf nouveaux abonnements apporteraient 44,10 € de revenu mensuel récurrent initial avant résiliations et déductions.
 
-Pour une carte standard de l’Espace économique européen, Stripe affiche **1,5 % + 0,25 € par transaction** ; l’offre à l’usage de Stripe Billing affiche **0,7 % du volume Billing**. Cela représente environ 0,70 € de frais de paiement pour un pass, et 0,36 € pour une mensualité en ajoutant Billing, avec ces seules hypothèses. D’autres cartes, services, devises ou litiges changent ces frais. [Tarifs officiels Stripe, consultés le 9 septembre 2026](https://stripe.com/fr/pricing).
-
-Le budget doit aussi couvrir l’hébergement, les services de compte et de base de données, la maintenance des sources, une relecture clinique indépendante, le support, les remboursements, les taxes applicables et l’acquisition. Les montants bruts ci-dessus n’en tiennent pas compte. Limiter les dépenses d’acquisition jusqu’à connaître la marge réelle par cohorte ; neuf mois de durée proposée ne prouvent pas neuf mensualités de rétention. Le pass sert aussi à limiter la dépendance à une longue rétention sur un besoin temporaire.
+Le budget doit couvrir hébergement, comptes et base de données, frais du prestataire de paiement, maintenance des sources, relecture clinique indépendante, support, remboursements, taxes et acquisition. Vérifier les [tarifs du prestataire](https://stripe.com/fr/pricing) avant toute décision de marge. Limiter les dépenses d’acquisition jusqu’à disposer de coûts réels par cohorte et d’achats confirmés.
 
 ## Passage à de vrais paiements
 
-Le frontal peut rester statique ; **un paiement réel nécessite une autorité serveur**. Le projet dispose déjà de fonctions Vercel et de comptes Neon. L’offre décrite dans `js/plus.js` est uniquement une configuration de présentation, jamais une preuve d’achat.
+Le frontal peut rester statique ; un droit payant fiable nécessite une autorité serveur. Vercel et les comptes Neon sont déjà présents. `js/plus.js` fournit la composition et les prix de présentation, jamais une preuve d’achat.
 
-Avant toute ouverture :
+Avant l’ouverture :
 
-1. Terminer et vérifier la composition complète de sept jours et le remplacement d’un plat, en conservant les précautions de chaque recette et les repas déjà enregistrés. Faire relire la portée des suggestions ; ne pas vendre une promesse de régime médical.
-2. Configurer les produits Stripe du vendeur : prix unique pour le pass, prix récurrent pour le mensuel, conditions de vente, support, information sur les prix et taxes, résiliation et remboursement. Utiliser un environnement de test tant que ces éléments ne sont pas prêts.
-3. Créer les sessions Checkout depuis une fonction authentifiée. Le serveur choisit le prix dans une liste autorisée ; aucun montant ni identifiant de compte du navigateur ne fait autorité. [Checkout prend en charge les paiements uniques et récurrents](https://docs.stripe.com/payments/checkout).
-4. Activer les droits en base après événement Stripe vérifié, avec contrôle de signature sur le corps brut, déduplication des événements et gestion des paiements différés, échecs, remboursements et résiliations. La page de retour ne débloque rien par elle-même. [Documentation officielle des webhooks Stripe](https://docs.stripe.com/webhooks).
-5. Fournir un état d’abonnement lu auprès du serveur et un accès à la gestion de la facturation. La génération premium est autorisée par le serveur ; un booléen dans `localStorage` ne protège pas un service payant. Les menus déjà enregistrés restent dans le carnet gratuit, y compris hors connexion.
-6. Vérifier les achats de test, le renouvellement, la résiliation, le pass à expiration, la restauration sur un autre appareil, les événements rejoués et les remboursements avant d’activer les paiements réels. Sur le miroir GitHub Pages, ouvrir le parcours de compte et de paiement sur le domaine Vercel.
+1. Valider le service et les prix avec des utilisatrices ; faire relire la portée des suggestions et conserver leur statut d’idées culinaires.
+2. Configurer les produits du vendeur, les conditions de vente, le support, les taxes, la résiliation et le remboursement, en environnement de test.
+3. Créer les [sessions Checkout](https://docs.stripe.com/payments/checkout) depuis une fonction authentifiée : le serveur sélectionne le prix autorisé et identifie le compte depuis la session.
+4. Activer les droits après [webhook signé et vérifié](https://docs.stripe.com/webhooks), avec déduplication et gestion des paiements différés, échecs, remboursements, résiliations et expiration du pass. La page de retour ne débloque aucun droit par elle-même.
+5. Autoriser les nouvelles générations auprès du serveur et fournir une gestion de facturation. Les documents et menus déjà créés restent gratuits, y compris hors connexion ; une variable locale ne protège pas la génération actuellement publique.
+6. Vérifier achats de test, renouvellement, résiliation, expiration, restauration sur un autre appareil et événements rejoués avant toute facturation réelle. Le miroir GitHub Pages ouvre le parcours de compte et de paiement sur le domaine Vercel.
 
-Cette version livre le positionnement, l’offre, ses points d’entrée et un aperçu utile. Elle ne crée aucun produit Stripe et ne facture personne.
+Cette version livre le service complet à essayer et une offre fondée sur son résultat. Elle ne crée aucun produit Stripe et ne facture personne.
