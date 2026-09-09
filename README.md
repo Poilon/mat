@@ -29,7 +29,10 @@ Le site peut aussi être déposé sur tout hébergement statique HTTPS, y compri
 - Recherche mondiale **Open Food Facts**, par nom, marque ou code-barres, avec pagination.
 - Lecture caméra native si `BarcodeDetector` et `getUserMedia` sont disponibles. Saisie manuelle toujours accessible, avec validation de la clé GTIN/EAN/UPC.
 - Fiches avec conditions de préparation, ingrédients disponibles, allergènes déclarés, valeurs nutritionnelles et liens vers les sources.
-- **10 recettes**, portions de 1 à 8 personnes et quantités recalculées.
+- **100 recettes originales**, réparties dans 9 collections : brunch, bowls, Italie, cuisine d’ailleurs, bistro, four, soupes, douceurs et apéritif.
+- Recherche instantanée par plat ou ingrédient, filtres combinables par collection, repas, durée et végétarien ; tri par inspiration, temps ou nom.
+- Portions de 1 à 8 personnes avec quantités recalculées, favoris, menus et liste de courses pour toutes les recettes. Recherche intégrée au choix des menus.
+- Catalogue et photos accessibles hors connexion après la première visite et la mise en cache.
 - Favoris alimentaires et recettes, menus hebdomadaires, liste de courses avec cumul des quantités et cases à cocher.
 - Export texte de la liste et export JSON du carnet ; effacement des données depuis l’interface.
 - Prénom facultatif et préférence végétarienne, enregistrés uniquement dans ce navigateur.
@@ -48,7 +51,7 @@ Open Food Facts est une base collaborative de produits, **pas une base de décis
 
 **Aucun produit Open Food Facts n’est automatiquement déclaré « Compatible ».** Une fiche sans signal reste « À vérifier », y compris avec un Nutri-Score A. La pasteurisation, la cuisson réelle, la chaîne du froid et les rappels de lots ne peuvent pas être confirmés par cette app. Les règles ne suppriment pas les précautions en fonction du trimestre ou de l’immunité à la toxoplasmose.
 
-Pour maintenir le guide, modifier `js/data.js`, vérifier les recommandations auprès des sources primaires puis actualiser la date. `js/rules.js` contient séparément les règles partielles de repérage des produits.
+Pour maintenir le guide, modifier `js/data.js` (guide) ou `js/recipes.js` (nouvelles recettes), vérifier les recommandations auprès des sources primaires puis actualiser la date. `js/rules.js` contient séparément les règles partielles de repérage des produits.
 
 ## Accès API et réseau
 
@@ -66,7 +69,8 @@ Pour maintenir le guide, modifier `js/data.js`, vérifier les recommandations au
 ```text
 index.html              Point d’entrée
 styles.css              Interface, responsive, accessibilité, impression
-js/data.js              Guide éditorial, recettes, sources
+js/data.js              Guide éditorial, recettes initiales, sources
+js/recipes.js           90 recettes originales et 9 collections
 js/rules.js             Repérage des précautions + validation des codes
 js/api.js               Client OFF, normalisation, cache, limites, annulation
 js/icons.js             Icônes et illustrations SVG natives

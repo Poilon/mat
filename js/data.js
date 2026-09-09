@@ -8,7 +8,8 @@
     ministry: { name: 'Ministère de la Santé', title: 'Réduire les risques alimentaires', url: 'https://sante.gouv.fr/archives/archives-presse/archives-breves/article/femmes-enceintes-et-jeunes-enfants-comment-reduire-les-risques-alimentaires' },
     agriculture: { name: 'Ministère de l’Agriculture', title: 'Manger cru : risques et prévention', url: 'https://agriculture.gouv.fr/manger-cru-quels-sont-les-risques-et-comment-les-eviter' },
     efsa: { name: 'EFSA', title: 'La caféine dans l’alimentation', url: 'https://www.efsa.europa.eu/fr/topics/topic/caffeine' },
-    off: { name: 'Open Food Facts', title: 'Base collaborative de produits alimentaires', url: 'https://world.openfoodfacts.org/' }
+    off: { name: 'Open Food Facts', title: 'Base collaborative de produits alimentaires', url: 'https://world.openfoodfacts.org/' },
+    temperature: { name: 'FoodSafety.gov · autorités sanitaires américaines', title: 'Températures minimales de cuisson, notamment 74 °C pour la volaille', url: 'https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures' }
   };
   const statuses = {
     compatible: { label: 'Compatible', short: 'Compatible', icon: 'check', description: 'Compatible dans les conditions de préparation indiquées, en respectant l’hygiène et la conservation.' },
@@ -193,7 +194,11 @@
       safety: 'Vérifiez la mention « lait pasteurisé » sur la ricotta et respectez sa conservation.', allergens: 'Blé (gluten), lait. Œuf possible selon les pâtes.'
     }
   ];
-  const data = { sources, statuses, categories, groups, foods, recipes, reviewed: '9 septembre 2026', reviewedISO: '2026-09-09' };
+  const book = typeof module !== 'undefined' && module.exports ? require('./recipes.js') : root.MietteRecipeBook;
+  const originalCollections = ['bowls', 'four', 'italie', 'brunch', 'soupes', 'bowls', 'four', 'douceurs', 'four', 'italie'];
+  recipes.forEach((recipe, index) => { recipe.collection = originalCollections[index]; });
+  recipes.push(...book.recipes);
+  const data = { sources, statuses, categories, groups, foods, recipes, recipeCollections: book.collections, reviewed: '9 septembre 2026', reviewedISO: '2026-09-09' };
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
   root.MietteData = data;
 })(typeof window !== 'undefined' ? window : globalThis);

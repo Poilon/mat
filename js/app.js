@@ -11,7 +11,10 @@
   const recipesById = new Map(D.recipes.map(r => [r.id, r]));
   const productMap = new Map();
   const mealLabels = { lunch: 'Déjeuner', dinner: 'Dîner' };
-  const recipeTypes = { all: 'Toutes les envies', lunch: 'Déjeuner', dinner: 'Dîner', breakfast: 'Petit-déjeuner', snack: 'Goûter' };
+  const recipeTypes = { all: 'Tous les repas', lunch: 'Déjeuner', dinner: 'Dîner', breakfast: 'Petit-déjeuner', snack: 'Goûter', dessert: 'Dessert', apero: 'À partager' };
+  const recipePageSize = 12;
+  const recipeHighlights = ['tacos-cabillaud', 'gnocchis-pesto', 'pancakes-citron-ricotta', 'burger-poulet-croustillant', 'brownie-chocolat-noisette', 'dhal-coco', 'bowl-patate-tahini', 'lasagnes-epinards-ricotta', 'soupe-minestrone', 'muffins-myrtille', 'houmous-betterave', 'sunny-bowl'];
+  const recipeOrder = new Map([...recipeHighlights, ...D.recipes.filter(r => !recipeHighlights.includes(r.id)).map(r => r.id)].map((id, i) => [id, i]));
   const labels = { accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données' };
   let storageAvailable = true;
   let store = readStore();
@@ -127,13 +130,13 @@
     return `<form id="${id}" class="search-box" role="search">${icon('search', 21)}<label class="sr-only" for="${id}-input">${source === 'off' ? 'Nom, marque ou code-barres du produit' : 'Rechercher un aliment'}</label><input id="${id}-input" name="q" type="search" placeholder="${source === 'off' ? 'Un produit, une marque ou un code-barres…' : 'Un aliment, une envie, une petite question…'}" value="${escape(value)}" maxlength="150" autocomplete="off"><button type="button" class="search-scan" data-action="scan" aria-label="Rechercher par code-barres" title="Rechercher par code-barres">${icon('scan', 20)}</button><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form>`;
   }
   function homePage() {
-    const featuredRecipes = store.vegetarian ? D.recipes.filter(r => r.vegetarian).slice(0, 3) : D.recipes.slice(0, 3);
+    const featuredRecipes = recipeHighlights.map(id => recipesById.get(id)).filter(r => !store.vegetarian || r.vegetarian).slice(0, 3);
     return `<div class="page-heading"><div><h1>${store.name ? `Bonjour ${escape(store.name)},` : 'Bonjour, vous.'} ${icon('sun', 23)}</h1><p>Une nouvelle journée pour prendre soin de vous, et de bébé.</p></div><span class="heading-pill">${icon('leaf', 13)} Chaque petit choix compte</span></div>
       <section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><span class="eyebrow">${icon('sparkle', 13)} VOTRE COMPAGNON DE GROSSESSE</span><h2 id="hero-title">Bien manger,<br><em>l’esprit léger.</em></h2><p>Des réponses à vos envies et des recettes à aimer. Tout pour une assiette sereine, pendant la grossesse.</p><div class="hero-actions"><a class="btn btn-primary" href="#aliments">Explorer les aliments ${icon('arrow', 16)}</a><a class="btn-text" href="#recettes">En cuisine ${icon('chevron', 13)}</a></div></div><div class="hero-visual"><div class="hero-photo-frame"><img src="assets/hero.jpg" alt="Une salade colorée avec de l’avocat, des légumes et de la grenade" fetchpriority="high" width="1200" height="800"></div>${icon('sparkle', 32).replace('<svg', '<svg class="hero-decoration"')}<div class="hero-badge"><div class="badge-icon">${icon('check', 19)}</div><div><b>Un peu de douceur dans l’assiette</b><span>Et beaucoup d’attention pour vous.</span></div></div></div></section>
       <div class="trust-row"><span>${icon('shield', 13)}Recommandations publiques citées</span><span>${icon('globe', 13)}Recherche Open Food Facts</span><span>${icon('lock', 13)}Votre carnet reste chez vous</span></div>
       <section aria-labelledby="search-title"><div class="section-heading"><div><h2 id="search-title">Et ça, je peux en manger ?</h2><p>Les bons repères, à portée de fourchette.</p></div><a href="#aliments" class="btn-text">Tout explorer ${icon('arrow', 15)}</a></div>${searchForm('home-search')}<div class="suggestions"><span>Une petite envie de…</span>${['Mozzarella', 'Saumon', 'Café', 'Œufs'].map(q => `<a class="suggestion" href="${href('aliments', { q })}">${q}</a>`).join('')}</div>
       <div class="home-content-grid"><div><div class="popular-heading"><h3>Souvent dans vos assiettes</h3><span>Le guide Miette</span></div><div class="food-grid">${D.foods.slice(0, 4).map(foodCard).join('')}</div></div><div class="tip-card"><div class="tip-icon">${icon('leaf', 20)}</div><div class="tip-text"><p class="eyebrow">LE PETIT REPÈRE DU JOUR</p><h3>Le cru, ça se prépare.</h3><p>Fruits, légumes, herbes fraîches : un lavage soigneux à l’eau potable, même avant de les éplucher.</p></div><a href="#guide" class="btn-text">Les bons gestes ${icon('arrow', 13)}</a></div></div></section>
-      <section class="recipes-section" aria-labelledby="recipes-title"><div class="section-heading"><div><h2 id="recipes-title">Un peu d’inspiration au menu</h2><p>Des idées simples, gourmandes et pleines de couleurs.</p></div><a class="btn-text" href="#recettes">Toutes les recettes ${icon('arrow', 15)}</a></div><div class="recipe-grid">${featuredRecipes.map(recipeCard).join('')}</div></section>
+      <section class="recipes-section" aria-labelledby="recipes-title"><div class="section-heading"><div><h2 id="recipes-title">Un peu d’inspiration au menu</h2><p>${D.recipes.length} recettes, des petits matins aux grandes envies.</p></div><a class="btn-text" href="#recettes">Toutes les recettes ${icon('arrow', 15)}</a></div><div class="recipe-grid">${featuredRecipes.map(recipeCard).join('')}</div></section>
       <div class="home-footer-note">${icon('heart', 25)}<p>Chaque grossesse est unique. Miette vous donne des repères généraux ; votre sage-femme ou médecin vous accompagne personnellement. <a href="#sources">Comprendre nos conseils</a></p></div>`;
   }
   function explorePage() {
@@ -182,12 +185,59 @@
     if (generation === requestGeneration) updateAPIResults();
   }
   function updateAPIResults() { const el = $('#off-results'); if (el) { el.setAttribute('aria-busy', String(apiState.loading)); el.innerHTML = offResults(); } }
+  function recipeSettings() {
+    const requestedType = route.params.get('type');
+    return {
+      type: Object.hasOwn(recipeTypes, requestedType) ? requestedType : 'all',
+      collection: D.recipeCollections.some(c => c.id === route.params.get('collection')) ? route.params.get('collection') : 'all',
+      vegetarian: route.params.get('vegetarien') === '1' || (store.vegetarian && !route.params.has('vegetarien')),
+      duration: [20, 30, 45].includes(Number(route.params.get('duree'))) ? Number(route.params.get('duree')) : 0,
+      sort: ['rapide', 'az'].includes(route.params.get('tri')) ? route.params.get('tri') : 'inspiration',
+      q: R.normalize(route.params.get('q') || '').trim()
+    };
+  }
+  function recipeMatches(recipe, query) {
+    const text = R.normalize(recipe.title + ' ' + recipe.ingredients.map(i => i.name).join(' '));
+    return query.split(/\s+/).filter(Boolean).every(word => text.includes(word));
+  }
+  function filteredRecipes() {
+    const s = recipeSettings();
+    return D.recipes.filter(r => (!s.vegetarian || r.vegetarian) && (s.type === 'all' || r.type === s.type) && (s.collection === 'all' || r.collection === s.collection) && (!s.duration || r.time <= s.duration) && recipeMatches(r, s.q))
+      .sort((a, b) => s.sort === 'rapide' ? a.time - b.time || a.title.localeCompare(b.title, 'fr') : s.sort === 'az' ? a.title.localeCompare(b.title, 'fr') : recipeOrder.get(a.id) - recipeOrder.get(b.id));
+  }
+  function recipeResults() {
+    const recipes = filteredRecipes();
+    const requestedPage = Number(route.params.get('page') || 1);
+    const page = Number.isFinite(requestedPage) ? Math.max(1, Math.min(Math.ceil(D.recipes.length / recipePageSize), Math.trunc(requestedPage))) : 1;
+    const visible = recipes.slice(0, page * recipePageSize);
+    return `<div class="results-meta"><span id="recipe-count" role="status">${recipes.length} recette${recipes.length > 1 ? 's' : ''} pour se faire plaisir</span><span>Portions ajustables · 1 à 8 personnes</span></div>${recipes.length ? `<div class="recipe-grid">${visible.map(recipeCard).join('')}</div><div class="recipe-pagination"><p>${visible.length} sur ${recipes.length} recettes</p>${visible.length < recipes.length ? `<button class="btn btn-outline" data-action="more-recipes">Encore des bonnes idées ${icon('plus', 16)}</button>` : `<span class="recipe-end">${icon('heart', 14)}Vous avez fait le tour de ces envies.</span>`}</div>` : empty('Une autre petite envie ?', 'Essayez un autre ingrédient ou élargissez les filtres.', '<button class="btn btn-secondary" data-action="reset-recipes">Réinitialiser les filtres</button>', 'recipe')}`;
+  }
   function recipePage() {
-    const type = route.params.get('type') || 'all';
-    const vegetarian = route.params.get('vegetarien') === '1' || (store.vegetarian && !route.params.has('vegetarien'));
-    const q = R.normalize(route.params.get('q') || '');
-    const recipes = D.recipes.filter(r => (!vegetarian || r.vegetarian) && (type === 'all' || type === r.type) && (!q || R.normalize(r.title + ' ' + r.ingredients.map(i => i.name).join(' ')).includes(q)));
-    return `<div class="recipes-page">${heading('De bonnes choses à partager.', 'Des recettes accessibles, des ingrédients du quotidien et les précautions pour les préparer.')}<form id="recipe-search" class="search-box" role="search">${icon('search', 20)}<label class="sr-only" for="recipe-query">Rechercher une recette ou un ingrédient</label><input id="recipe-query" name="q" type="search" maxlength="100" value="${escape(route.params.get('q') || '')}" placeholder="Une recette, un ingrédient…"><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><div class="category-list recipe-filters" role="group" aria-label="Type de repas">${Object.entries(recipeTypes).map(([id, label]) => `<button class="category-chip ${type === id ? 'active' : ''}" data-action="recipe-type" data-type="${id}" aria-pressed="${type === id}">${label}</button>`).join('')}<button class="category-chip ${vegetarian ? 'active' : ''}" data-action="vegetarian" aria-pressed="${vegetarian}">${icon('leaf', 15)}Végétarien</button></div><div class="results-meta"><span>${recipes.length} recette${recipes.length > 1 ? 's' : ''} pour se faire plaisir</span><span>Portions ajustables</span></div>${recipes.length ? `<div class="recipe-grid">${recipes.map(recipeCard).join('')}</div>` : empty('Une autre petite envie ?', 'Essayez un autre ingrédient ou élargissez les filtres.', '<a class="btn btn-secondary" href="#recettes">Voir les recettes</a>', 'recipe')}<p class="photo-caption">Photos d’inspiration. Les ingrédients et les préparations à suivre figurent dans les fiches.</p></div>`;
+    const s = recipeSettings();
+    return `<div class="recipes-page"><section class="recipe-welcome" aria-labelledby="recipe-welcome-title"><div><span class="eyebrow">LE GRAND CARNET GOURMAND</span><h1 id="recipe-welcome-title">${D.recipes.length} façons<br>de se <em>régaler.</em></h1><p>Des brunchs qui donnent envie de se lever, des dîners à partager et une petite place pour le dessert.</p><span class="recipe-welcome-note">${icon('shield', 15)}Les précautions grossesse dans chaque fiche</span></div><div class="recipe-welcome-photos" aria-hidden="true"><img src="assets/recipes/tacos.jpg" alt="" width="760" height="530"><img src="assets/recipes/pancakes.jpg" alt="" width="760" height="530"><span>${icon('heart', 19)} Fait maison, avec amour.</span></div></section>
+      <section class="recipe-collection-section" aria-labelledby="collections-title"><div class="section-heading"><div><h2 id="collections-title">De quoi avez-vous envie ?</h2><p>${D.recipeCollections.length} collections pour trouver l’inspiration.</p></div><button class="btn-text" data-action="recipe-collection" data-collection="all" aria-pressed="${s.collection === 'all'}">Tout explorer ${icon('arrow', 15)}</button></div><div class="recipe-collections" role="group" aria-label="Collections de recettes">${D.recipeCollections.map(c => `<button class="recipe-collection ${s.collection === c.id ? 'active' : ''}" data-action="recipe-collection" data-collection="${c.id}" aria-pressed="${s.collection === c.id}"><img src="assets/${c.image}.jpg" alt="" loading="lazy" width="180" height="120"><span><b>${c.label}</b><small>${D.recipes.filter(r => r.collection === c.id).length} recettes ${icon('arrow', 12)}</small></span></button>`).join('')}</div></section>
+      <form id="recipe-search" class="search-box" role="search">${icon('search', 20)}<label class="sr-only" for="recipe-query">Rechercher une recette ou un ingrédient</label><input id="recipe-query" name="q" type="search" maxlength="100" value="${escape(route.params.get('q') || '')}" placeholder="Un ingrédient, un plat… chocolat, tacos, courgette"><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form>
+      <div class="category-list recipe-filters" role="group" aria-label="Type de repas">${Object.entries(recipeTypes).map(([id, label]) => `<button class="category-chip ${s.type === id ? 'active' : ''}" data-action="recipe-type" data-type="${id}" aria-pressed="${s.type === id}">${label}</button>`).join('')}</div>
+      <div class="recipe-toolbar"><button class="category-chip ${s.vegetarian ? 'active' : ''}" data-action="vegetarian" aria-pressed="${s.vegetarian}">${icon('leaf', 15)}Végétarien</button><div class="recipe-select"><label for="recipe-duration">${icon('clock', 14)}Temps total</label><select id="recipe-duration"><option value="0">J’ai le temps</option>${[20, 30, 45].map(n => `<option value="${n}" ${s.duration === n ? 'selected' : ''}>${n} min maximum</option>`).join('')}</select></div><div class="recipe-select"><label for="recipe-sort">Trier par</label><select id="recipe-sort"><option value="inspiration">Nos inspirations</option><option value="rapide" ${s.sort === 'rapide' ? 'selected' : ''}>Les plus rapides</option><option value="az" ${s.sort === 'az' ? 'selected' : ''}>Nom, de A à Z</option></select></div></div>
+      <div id="recipe-active-filters">${recipeActiveFilters()}</div><div id="recipe-results">${recipeResults()}</div><p class="photo-caption">Photos d’inspiration. Les ingrédients et les préparations à suivre figurent dans les fiches.</p></div>`;
+  }
+  function recipeActiveFilters() {
+    const s = recipeSettings();
+    const collection = D.recipeCollections.find(c => c.id === s.collection);
+    const labels = [collection?.label, s.type !== 'all' && recipeTypes[s.type], s.duration && `${s.duration} min maximum`, s.vegetarian && 'Végétarien', s.q && `« ${route.params.get('q')} »`].filter(Boolean);
+    return labels.length ? `<div class="recipe-active"><span>${labels.map(escape).join(' · ')}</span><button class="btn-text" data-action="reset-recipes">Tout effacer ${icon('close', 12)}</button></div>` : '';
+  }
+  function updateRecipeFilters(changes) {
+    const params = { ...Object.fromEntries(route.params), ...changes, page: null };
+    history.replaceState(null, '', href('recettes', params));
+    route = getRoute();
+    const s = recipeSettings();
+    document.querySelectorAll('[data-action="recipe-collection"], [data-action="recipe-type"], [data-action="vegetarian"]').forEach(button => {
+      const active = button.dataset.action === 'recipe-collection' ? button.dataset.collection === s.collection : button.dataset.action === 'recipe-type' ? button.dataset.type === s.type : s.vegetarian;
+      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    });
+    $('#recipe-active-filters').innerHTML = recipeActiveFilters();
+    $('#recipe-results').innerHTML = recipeResults();
   }
   function favoritesPage() {
     const foods = store.favorites.filter(f => f.startsWith('food:')).map(f => foodsById.get(f.slice(5)) || productMap.get(f.slice(5))).filter(Boolean);
@@ -291,7 +341,7 @@
   function recipeDetail(id, servings = 2) {
     const r = recipesById.get(id); if (!r) return;
     const portions = Math.max(1, Math.min(8, servings));
-    openDialog(`<img class="dialog-recipe-photo" src="assets/${r.image}.jpg" alt="Photo d’inspiration culinaire"><div class="dialog-content"><span class="eyebrow">UNE RECETTE À AIMER</span><h2 id="dialog-title">${r.title}</h2><div class="dialog-recipe-meta"><span>${icon('clock', 15)}${r.time} minutes</span><span>${icon('users', 15)}${portions} personne${portions > 1 ? 's' : ''}</span><span>${icon(r.vegetarian ? 'leaf' : 'recipe', 15)}${r.tags[0]}</span></div><p class="muted small">${r.subtitle}</p><div class="servings-control"><h3>Les bonnes choses à prévoir</h3><div class="stepper"><button data-action="servings" data-delta="-1" aria-label="Réduire le nombre de portions" ${portions === 1 ? 'disabled' : ''}>${icon('minus', 13)}</button><span aria-live="polite">${portions} pers.</span><button data-action="servings" data-delta="1" aria-label="Augmenter le nombre de portions" ${portions === 8 ? 'disabled' : ''}>${icon('plus', 13)}</button></div></div><ul class="ingredients-list">${r.ingredients.map(i => `<li>${i.name}<b>${number(i.quantity * portions / r.servings)} ${i.unit}</b></li>`).join('')}</ul><p class="allergens"><strong>Allergènes :</strong> ${r.allergens}</p><h3>On passe en cuisine ?</h3><ol class="steps-list">${r.steps.map(t => `<li>${t}</li>`).join('')}</ol><div class="advice-box">${icon('shield', 16)} <strong>Le petit repère grossesse</strong><p>${r.safety}</p></div><div class="dialog-actions"><button class="btn btn-primary" data-action="recipe-shopping" data-id="${r.id}" data-servings="${portions}">${icon('bag', 16)}Ajouter à mes courses</button><button class="btn btn-outline" data-action="plan-recipe" data-id="${r.id}">${icon('calendar', 16)}Au menu</button><button class="btn btn-outline" data-action="favorite" data-kind="recipe" data-id="${r.id}">${icon('heart', 16)}${favorite('recipe', r.id) ? 'Retirer' : 'Garder'}</button></div><p class="dialog-disclaimer">Temps de cuisson indicatifs. Suivez les ingrédients écrits, les précautions et vos consignes médicales. Les photos illustrent une idée de plat.</p>${sourceFooter(['spf', 'toxo'])}</div>`, { type: 'recipe', id, servings: portions });
+    openDialog(`<img class="dialog-recipe-photo" src="assets/${r.image}.jpg" alt="Photo d’inspiration culinaire"><div class="dialog-content"><span class="eyebrow">UNE RECETTE À AIMER</span><h2 id="dialog-title">${r.title}</h2><div class="dialog-recipe-meta"><span>${icon('clock', 15)}${r.time} minutes</span><span>${icon('users', 15)}${portions} personne${portions > 1 ? 's' : ''}</span><span>${icon(r.vegetarian ? 'leaf' : 'recipe', 15)}${r.tags[0]}</span></div><p class="muted small">${r.subtitle}</p><div class="servings-control"><h3>Les bonnes choses à prévoir</h3><div class="stepper"><button data-action="servings" data-delta="-1" aria-label="Réduire le nombre de portions" ${portions === 1 ? 'disabled' : ''}>${icon('minus', 13)}</button><span aria-live="polite">${portions} pers.</span><button data-action="servings" data-delta="1" aria-label="Augmenter le nombre de portions" ${portions === 8 ? 'disabled' : ''}>${icon('plus', 13)}</button></div></div><ul class="ingredients-list">${r.ingredients.map(i => `<li>${i.name}<b>${number(i.quantity * portions / r.servings)} ${i.unit}</b></li>`).join('')}</ul><p class="allergens"><strong>Allergènes :</strong> ${r.allergens}</p>${portions !== r.servings ? `<p class="portion-note">Quantités ajustées pour ${portions} personne${portions > 1 ? 's' : ''}. Adaptez aussi le nombre de moules et de fournées : les étapes décrivent la recette de base pour ${r.servings} personnes.</p>` : ''}<h3>On passe en cuisine ?</h3><ol class="steps-list">${r.steps.map(t => `<li>${t}</li>`).join('')}</ol><div class="advice-box">${icon('shield', 16)} <strong>Le petit repère grossesse</strong><p>${r.safety}</p></div><div class="dialog-actions"><button class="btn btn-primary" data-action="recipe-shopping" data-id="${r.id}" data-servings="${portions}">${icon('bag', 16)}Ajouter à mes courses</button><button class="btn btn-outline" data-action="plan-recipe" data-id="${r.id}">${icon('calendar', 16)}Au menu</button><button class="btn btn-outline" data-action="favorite" data-kind="recipe" data-id="${r.id}">${icon('heart', 16)}${favorite('recipe', r.id) ? 'Retirer' : 'Garder'}</button></div><p class="dialog-disclaimer">Temps de cuisson indicatifs. Suivez les ingrédients écrits, les précautions et vos consignes médicales. Les photos illustrent une idée de plat.</p>${sourceFooter(r.sources || ['spf', 'toxo'])}</div>`, { type: 'recipe', id, servings: portions });
   }
   function toggleFavorite(kind, id) {
     if (!['food', 'recipe'].includes(kind)) return;
@@ -315,7 +365,7 @@
   }
   function pickRecipe(date, meal) {
     const recipes = store.vegetarian ? D.recipes.filter(r => r.vegetarian) : D.recipes;
-    openDialog(`<div class="dialog-content"><span class="eyebrow">MON MENU</span><h2 id="dialog-title">Une envie pour ${meal === 'dinner' ? 'le dîner' : 'le déjeuner'} ?</h2><p class="muted small">${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · recettes pour deux personnes</p><div class="picker-list">${recipes.map(r => `<button class="picker-recipe" data-action="assign-recipe" data-id="${r.id}" data-date="${date}" data-meal="${meal}"><img src="assets/${r.image}.jpg" alt=""><div><b>${r.title}</b><span>${r.time} min · ${r.vegetarian ? 'Végétarien' : 'Poisson'}</span></div>${icon('plus', 17)}</button>`).join('')}</div></div>`, { type: 'picker' });
+    openDialog(`<div class="dialog-content"><span class="eyebrow">MON MENU</span><h2 id="dialog-title">Une envie pour ${meal === 'dinner' ? 'le dîner' : 'le déjeuner'} ?</h2><p class="muted small">${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · recettes pour deux personnes</p><div class="picker-search field"><label for="picker-query">Trouver un plat ou un ingrédient</label><input class="text-input" id="picker-query" type="search" maxlength="100" placeholder="Curry, gnocchis, poulet…"></div><p id="picker-count" class="muted small" role="status">${recipes.length} recettes à choisir</p><div class="picker-list">${recipes.map(r => `<button class="picker-recipe" data-action="assign-recipe" data-id="${r.id}" data-date="${date}" data-meal="${meal}"><img src="assets/${r.image}.jpg" alt="" loading="lazy" width="68" height="52"><div><b>${r.title}</b><span>${r.time} min · ${r.vegetarian ? 'Végétarien' : 'Viande ou poisson'}</span></div>${icon('plus', 17)}</button>`).join('')}</div></div>`, { type: 'picker' });
   }
   function planRecipe(id) {
     const r = recipesById.get(id); if (!r) return;
@@ -427,8 +477,18 @@
       case 'close-menu': closeMenu(); $('[data-action="menu"]')?.focus(); break;
       case 'category': go('aliments', { ...params, categorie: trigger.dataset.category }); break;
       case 'status': go('aliments', { ...params, statut: trigger.dataset.filter }); break;
-      case 'recipe-type': go('recettes', { ...params, type: trigger.dataset.type }); break;
-      case 'vegetarian': { const active = route.params.get('vegetarien') === '1' || (store.vegetarian && !route.params.has('vegetarien')); go('recettes', { ...params, vegetarien: active ? '0' : '1' }); break; }
+      case 'recipe-type': updateRecipeFilters({ type: trigger.dataset.type }); break;
+      case 'recipe-collection': updateRecipeFilters({ collection: trigger.dataset.collection }); break;
+      case 'vegetarian': updateRecipeFilters({ vegetarien: recipeSettings().vegetarian ? '0' : '1' }); break;
+      case 'reset-recipes': go('recettes', { vegetarien: '0' }); break;
+      case 'more-recipes': {
+        const shown = document.querySelectorAll('#recipe-results .recipe-card').length;
+        route.params.set('page', String(Math.floor(shown / recipePageSize) + 1));
+        history.replaceState(null, '', href('recettes', Object.fromEntries(route.params)));
+        $('#recipe-results').innerHTML = recipeResults();
+        document.querySelectorAll('#recipe-results .recipe-card-open')[shown]?.focus({ preventScroll: true });
+        break;
+      }
       case 'find-product': $('#detail-dialog').close(); go('aliments', { source: 'off', q: trigger.dataset.query }); break;
       case 'retry-api': searchAPI(Boolean(apiState.products.length)); break;
       case 'more-products': searchAPI(true); break;
@@ -461,7 +521,7 @@
       const numeric = /^\d[\d\s-]+$/.test(q);
       const source = numeric || (form.id === 'explore-search' && route.params.get('source') === 'off') ? 'off' : 'guide';
       go('aliments', { ...(form.id === 'explore-search' ? Object.fromEntries(route.params) : {}), q, source });
-    } else if (form.id === 'recipe-search') go('recettes', { ...Object.fromEntries(route.params), q: String(data.get('q') || '').trim() });
+    } else if (form.id === 'recipe-search') updateRecipeFilters({ q: String(data.get('q') || '').trim() });
     else if (form.id === 'shopping-add') {
       const name = String(data.get('item') || '').trim(); if (!name) return;
       store.shopping.push({ id: uniqueId(), name: name.slice(0, 150), quantity: 0, unit: '', checked: false }); persist(); rerender(); $('#shopping-input')?.focus();
@@ -476,6 +536,17 @@
     }
   });
   document.addEventListener('input', event => {
+    if (event.target.id === 'recipe-query') updateRecipeFilters({ q: event.target.value.trim() });
+    if (event.target.id === 'picker-query') {
+      const query = R.normalize(event.target.value);
+      let count = 0;
+      document.querySelectorAll('.picker-recipe').forEach(button => {
+        const match = recipeMatches(recipesById.get(button.dataset.id), query);
+        button.hidden = !match;
+        if (match) count++;
+      });
+      $('#picker-count').textContent = count ? `${count} recette${count > 1 ? 's' : ''} à choisir` : 'Aucune recette : essayez un autre ingrédient.';
+    }
     if (event.target.id === 'explore-search-input' && route.params.get('source') !== 'off') {
       const value = event.target.value.trim();
       if (value) route.params.set('q', value); else route.params.delete('q');
@@ -484,6 +555,8 @@
     }
   });
   document.addEventListener('change', event => {
+    if (event.target.id === 'recipe-duration') updateRecipeFilters({ duree: Number(event.target.value) || null });
+    if (event.target.id === 'recipe-sort') updateRecipeFilters({ tri: event.target.value });
     if (event.target.matches('[data-shopping-id]')) {
       const item = store.shopping.find(i => i.id === event.target.dataset.shoppingId);
       if (item) { item.checked = event.target.checked; persist(); $('#shopping-count').textContent = `${store.shopping.filter(i => i.checked).length} sur ${store.shopping.length} articles dans votre panier`; }

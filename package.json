@@ -1,6 +1,6 @@
 {
   "name": "miette",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Le compagnon alimentaire de la grossesse — HTML, CSS et JavaScript, sans backend.",
   "scripts": {
