@@ -1,0 +1,534 @@
+(() => {
+  'use strict';
+  const D = window.MietteData;
+  const R = window.MietteRules;
+  const API = window.MietteAPI;
+  const { icon, food: art } = window.MietteIcons;
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const STORAGE_KEY = 'miette-notebook-v1';
+  const foodsById = new Map(D.foods.map(f => [f.id, f]));
+  const recipesById = new Map(D.recipes.map(r => [r.id, r]));
+  const productMap = new Map();
+  const mealLabels = { lunch: 'Déjeuner', dinner: 'Dîner' };
+  const recipeTypes = { all: 'Toutes les envies', lunch: 'Déjeuner', dinner: 'Dîner', breakfast: 'Petit-déjeuner', snack: 'Goûter' };
+  const labels = { accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données' };
+  let storageAvailable = true;
+  let store = readStore();
+  let route = getRoute();
+  let apiState = { key: '', query: '', products: [], count: 0, page: 1, loading: false, error: '', hasMore: false, cached: false };
+  let apiAbort = null;
+  let requestGeneration = 0;
+  let dialogContext = null;
+  let cameraStream = null;
+  let cameraGeneration = 0;
+  let cameraTimer = null;
+  let lastDialogTrigger = null;
+  let installPrompt = null;
+
+  function readStore() {
+    const defaults = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] };
+    try {
+      const testKey = 'miette-storage-check';
+      localStorage.setItem(testKey, '1'); localStorage.removeItem(testKey);
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!raw || typeof raw !== 'object') return defaults;
+      defaults.name = typeof raw.name === 'string' ? raw.name.slice(0, 30) : '';
+      defaults.vegetarian = raw.vegetarian === true;
+      if (Array.isArray(raw.products)) defaults.products = raw.products.slice(0, 100).map(API.toProduct).filter(Boolean);
+      defaults.products.forEach(p => productMap.set(p.id, p));
+      if (Array.isArray(raw.favorites)) defaults.favorites = [...new Set(raw.favorites.filter(v => typeof v === 'string' && /^(food|recipe):[\w-]+$/.test(v)))].slice(0, 300);
+      if (raw.menus && typeof raw.menus === 'object') Object.entries(raw.menus).slice(0, 1000).forEach(([date, slots]) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !slots || typeof slots !== 'object') return;
+        defaults.menus[date] = {};
+        ['lunch', 'dinner'].forEach(meal => { if (recipesById.has(slots[meal])) defaults.menus[date][meal] = slots[meal]; });
+      });
+      if (Array.isArray(raw.shopping)) defaults.shopping = raw.shopping.filter(v => v && typeof v.id === 'string' && typeof v.name === 'string').slice(0, 500).map(v => ({ id: v.id.slice(0, 100), name: v.name.slice(0, 150), quantity: typeof v.quantity === 'number' && Number.isFinite(v.quantity) ? Math.max(0, v.quantity) : 0, unit: typeof v.unit === 'string' ? v.unit.slice(0, 20) : '', checked: v.checked === true }));
+      return defaults;
+    } catch (_) { storageAvailable = false; return defaults; }
+  }
+  function persist() {
+    try {
+      store.products = [...productMap.values()].filter(p => store.favorites.includes('food:' + p.id)).slice(0, 100);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      return true;
+    } catch (_) {
+      if (storageAvailable) toast('Votre navigateur ne peut plus enregistrer le carnet. Les changements restent disponibles dans cet onglet.', 'info');
+      storageAvailable = false;
+      return false;
+    }
+  }
+  function getRoute() {
+    const [path, query = ''] = location.hash.slice(1).split('?');
+    return { page: Object.hasOwn(labels, path) ? path : 'accueil', params: new URLSearchParams(query) };
+  }
+  function href(page, params = {}) {
+    const entries = Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined && v !== 'all');
+    const q = new URLSearchParams(entries).toString();
+    return '#' + page + (q ? '?' + q : '');
+  }
+  function go(page, params = {}) {
+    const next = href(page, params);
+    if (location.hash === next) renderRoute(); else location.hash = next;
+  }
+  function localDate(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+  function monday(weekOffset = 0) {
+    const d = new Date(); d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + weekOffset * 7);
+    return d;
+  }
+  function weekOffset() { const n = Number(route.params.get('semaine') || 0); return Number.isFinite(n) ? Math.max(-52, Math.min(52, Math.trunc(n))) : 0; }
+  function weekDates() { const first = monday(weekOffset()); return Array.from({ length: 7 }, (_, i) => { const d = new Date(first); d.setDate(d.getDate() + i); return d; }); }
+  function number(value) { return Number.isInteger(value) ? String(value) : Number(value.toFixed(2)).toLocaleString('fr-FR'); }
+  function favorite(kind, id) { return store.favorites.includes(kind + ':' + id); }
+  function badge(status) { const s = D.statuses[status] || D.statuses.unknown; return `<span class="status-badge status-${escape(status)}">${icon(s.icon, 12)}${s.label}</span>`; }
+  function favoriteButton(kind, id) {
+    const active = favorite(kind, id);
+    return `<button class="favorite-button ${active ? 'is-favorite' : ''}" data-action="favorite" data-kind="${kind}" data-id="${escape(id)}" aria-label="${active ? 'Retirer des favoris' : 'Ajouter aux favoris'}" aria-pressed="${active}">${icon('heart', 14)}</button>`;
+  }
+  function sourceLink(id) { const s = D.sources[id]; return s ? `<a class="source-link" href="${s.url}" target="_blank" rel="noopener noreferrer">${escape(s.name)} ${icon('external', 12)}</a>` : ''; }
+  function sourceFooter(ids) { return `<div class="sources-inline"><p>REPÈRES CONSULTÉS LE ${D.reviewed.toUpperCase()}</p>${[...new Set(ids)].map(sourceLink).join('')}</div>`; }
+  function foodCard(f) {
+    return `<article class="food-card" data-category="${escape(f.category)}">
+      ${favoriteButton('food', f.id)}
+      <button class="food-card-open" data-action="food" data-id="${escape(f.id)}" aria-label="Voir les précautions : ${escape(f.name)}">
+        <div class="food-art-wrap">${f.origin === 'off' && f.image_front_small_url ? `<img class="product-image" src="${escape(f.image_front_small_url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : art(f.art)}</div>
+        <div class="food-card-content"><h3>${escape(f.name)}</h3>${badge(f.status)}<p>${escape(f.origin === 'off' && f.brands ? f.brands : f.summary)}</p></div>
+      </button>
+    </article>`;
+  }
+  function recipeCard(r) {
+    return `<article class="recipe-card">${favoriteButton('recipe', r.id)}<button class="recipe-card-open" data-action="recipe" data-id="${r.id}">
+      <div class="recipe-photo"><img src="assets/${r.image}.jpg" alt="" loading="lazy"><span class="recipe-time">${icon('clock', 12)} ${r.time} min</span></div>
+      <div class="recipe-card-content"><h3>${r.title}</h3>${route.page === 'recettes' ? `<p class="recipe-intro">${r.subtitle}</p>` : ''}<div class="recipe-tags"><span>${icon(r.vegetarian ? 'leaf' : 'recipe', 12)}${r.tags[0]}</span><span>${r.tags[1]}</span></div></div>
+    </button></article>`;
+  }
+  function heading(title, subtitle, extra = '') { return `<div class="page-heading subpage-heading"><div><h1>${title}</h1><p>${subtitle}</p></div>${extra}</div>`; }
+  function empty(title, description, link = '', iconName = 'leaf') { return `<div class="empty-state">${icon(iconName, 38)}<h2>${title}</h2><p>${description}</p>${link}</div>`; }
+
+  function sidebar() {
+    const links = [['accueil', 'home', 'Mon quotidien'], ['aliments', 'search', 'Explorer les aliments'], ['recettes', 'recipe', 'Idées de recettes']];
+    const notebook = [['favoris', 'heart', 'Mes favoris'], ['menus', 'calendar', 'Mes menus'], ['courses', 'bag', 'Ma liste de courses']];
+    const nav = ([page, symbol, label]) => `<a href="#${page}" class="nav-link ${route.page === page ? 'active' : ''}" ${route.page === page ? 'aria-current="page"' : ''}>${icon(symbol, 18)}<span>${label}</span>${page === 'favoris' && store.favorites.length ? `<span class="nav-count">${store.favorites.length}</span>` : ''}</a>`;
+    return `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Fermer le menu">${icon('close')}</button>
+      <a class="brand" href="#accueil" aria-label="Miette, accueil"><img src="assets/icon.svg" alt="" width="37" height="37"><span class="wordmark">miette</span></a><p class="brand-tagline">Bien manger, à deux.</p>
+      <nav aria-label="Navigation principale"><p class="nav-label">AU QUOTIDIEN</p>${links.map(nav).join('')}<p class="nav-label secondary">MON PETIT CARNET</p>${notebook.map(nav).join('')}<p class="nav-label secondary">POUR M’ACCOMPAGNER</p>${nav(['guide', 'book', 'Les bons repères'])}</nav>
+      <div class="sidebar-bottom"><div class="sidebar-note">${icon('leaf', 53)}<h3>Un jour à la fois.</h3><p>Pas besoin d’être parfaite.<br>Juste de prendre soin de vous.</p></div><a class="sidebar-help" href="#sources">${icon('shield', 14)}Des repères, en toute transparence</a></div>`;
+  }
+  function topbar() {
+    return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb">${icon('leaf', 16)}<span>Miette</span>${icon('chevron', 11)}<b>${labels[route.page]}</b></div><div class="topbar-right"><span class="topbar-note">${icon('heart', 13)}Pensé pour vous & bébé</span><a href="#profil" class="profile-trigger" aria-label="Personnaliser mon espace"><span class="avatar">${escape(store.name ? store.name.charAt(0).toUpperCase() : 'M')}</span><span>${escape(store.name || 'Mon espace')}</span>${icon('down', 13)}</a></div>`;
+  }
+  function footer() {
+    return `<footer class="footer"><span><span class="footer-brand">miette</span> &nbsp; Fait avec attention, pour vous deux <span class="footer-heart">♡</span></span><div class="footer-links"><a href="#sources">Sources & méthode</a><a href="#confidentialite">Vos données</a><span>© 2026 Miette</span></div></footer>`;
+  }
+  function searchForm(id, value = '', source = 'guide') {
+    return `<form id="${id}" class="search-box" role="search">${icon('search', 21)}<label class="sr-only" for="${id}-input">${source === 'off' ? 'Nom, marque ou code-barres du produit' : 'Rechercher un aliment'}</label><input id="${id}-input" name="q" type="search" placeholder="${source === 'off' ? 'Un produit, une marque ou un code-barres…' : 'Un aliment, une envie, une petite question…'}" value="${escape(value)}" maxlength="150" autocomplete="off"><button type="button" class="search-scan" data-action="scan" aria-label="Rechercher par code-barres" title="Rechercher par code-barres">${icon('scan', 20)}</button><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form>`;
+  }
+  function homePage() {
+    const featuredRecipes = store.vegetarian ? D.recipes.filter(r => r.vegetarian).slice(0, 3) : D.recipes.slice(0, 3);
+    return `<div class="page-heading"><div><h1>${store.name ? `Bonjour ${escape(store.name)},` : 'Bonjour, vous.'} ${icon('sun', 23)}</h1><p>Une nouvelle journée pour prendre soin de vous, et de bébé.</p></div><span class="heading-pill">${icon('leaf', 13)} Chaque petit choix compte</span></div>
+      <section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><span class="eyebrow">${icon('sparkle', 13)} VOTRE COMPAGNON DE GROSSESSE</span><h2 id="hero-title">Bien manger,<br><em>l’esprit léger.</em></h2><p>Des réponses à vos envies et des recettes à aimer. Tout pour une assiette sereine, pendant la grossesse.</p><div class="hero-actions"><a class="btn btn-primary" href="#aliments">Explorer les aliments ${icon('arrow', 16)}</a><a class="btn-text" href="#recettes">En cuisine ${icon('chevron', 13)}</a></div></div><div class="hero-visual"><div class="hero-photo-frame"><img src="assets/hero.jpg" alt="Une salade colorée avec de l’avocat, des légumes et de la grenade" fetchpriority="high" width="1200" height="800"></div>${icon('sparkle', 32).replace('<svg', '<svg class="hero-decoration"')}<div class="hero-badge"><div class="badge-icon">${icon('check', 19)}</div><div><b>Un peu de douceur dans l’assiette</b><span>Et beaucoup d’attention pour vous.</span></div></div></div></section>
+      <div class="trust-row"><span>${icon('shield', 13)}Recommandations publiques citées</span><span>${icon('globe', 13)}Recherche Open Food Facts</span><span>${icon('lock', 13)}Votre carnet reste chez vous</span></div>
+      <section aria-labelledby="search-title"><div class="section-heading"><div><h2 id="search-title">Et ça, je peux en manger ?</h2><p>Les bons repères, à portée de fourchette.</p></div><a href="#aliments" class="btn-text">Tout explorer ${icon('arrow', 15)}</a></div>${searchForm('home-search')}<div class="suggestions"><span>Une petite envie de…</span>${['Mozzarella', 'Saumon', 'Café', 'Œufs'].map(q => `<a class="suggestion" href="${href('aliments', { q })}">${q}</a>`).join('')}</div>
+      <div class="home-content-grid"><div><div class="popular-heading"><h3>Souvent dans vos assiettes</h3><span>Le guide Miette</span></div><div class="food-grid">${D.foods.slice(0, 4).map(foodCard).join('')}</div></div><div class="tip-card"><div class="tip-icon">${icon('leaf', 20)}</div><div class="tip-text"><p class="eyebrow">LE PETIT REPÈRE DU JOUR</p><h3>Le cru, ça se prépare.</h3><p>Fruits, légumes, herbes fraîches : un lavage soigneux à l’eau potable, même avant de les éplucher.</p></div><a href="#guide" class="btn-text">Les bons gestes ${icon('arrow', 13)}</a></div></div></section>
+      <section class="recipes-section" aria-labelledby="recipes-title"><div class="section-heading"><div><h2 id="recipes-title">Un peu d’inspiration au menu</h2><p>Des idées simples, gourmandes et pleines de couleurs.</p></div><a class="btn-text" href="#recettes">Toutes les recettes ${icon('arrow', 15)}</a></div><div class="recipe-grid">${featuredRecipes.map(recipeCard).join('')}</div></section>
+      <div class="home-footer-note">${icon('heart', 25)}<p>Chaque grossesse est unique. Miette vous donne des repères généraux ; votre sage-femme ou médecin vous accompagne personnellement. <a href="#sources">Comprendre nos conseils</a></p></div>`;
+  }
+  function explorePage() {
+    const source = route.params.get('source') === 'off' ? 'off' : 'guide';
+    const q = route.params.get('q') || '';
+    return `${heading('Les bons choix commencent ici.', 'Un aliment du quotidien ou un produit en rayon : retrouvons les précautions qui comptent.')}
+      <div class="tabs" role="group" aria-label="Source de la recherche"><a href="${href('aliments', { q, source: 'guide' })}" class="tab ${source === 'guide' ? 'active' : ''}" ${source === 'guide' ? 'aria-current="true"' : ''}>${icon('leaf', 16)}Le guide des aliments</a><a href="${href('aliments', { q, source: 'off' })}" class="tab ${source === 'off' ? 'active' : ''}" ${source === 'off' ? 'aria-current="true"' : ''}>${icon('scan', 16)}Les produits en rayon</a></div>
+      ${searchForm('explore-search', q, source)}
+      ${source === 'guide' ? `<div class="category-list" role="group" aria-label="Catégorie d’aliments">${D.categories.map(c => `<button class="category-chip ${(route.params.get('categorie') || 'all') === c.id ? 'active' : ''}" data-action="category" data-category="${c.id}" aria-pressed="${(route.params.get('categorie') || 'all') === c.id}">${icon(c.icon, 16)}${c.label}</button>`).join('')}</div><div class="filter-row" role="group" aria-label="Filtrer les précautions"><span class="filter-label">Afficher :</span>${[['all', 'Tous'], ...Object.entries(D.statuses).map(([k, v]) => [k, v.label])].map(([id, label]) => `<button class="filter-chip ${(route.params.get('statut') || 'all') === id ? 'active' : ''}" data-action="status" data-filter="${id}" aria-pressed="${(route.params.get('statut') || 'all') === id}">${label}</button>`).join('')}</div><div id="food-results" aria-live="polite">${guideResults()}</div><div class="legend">${icon('info', 15)}<span><b>Compatible</b> signifie « dans les conditions de préparation indiquées ». Ouvrez la fiche pour les connaître.</span></div>` : `<div class="suggestions"><span>Recherche par nom, marque ou code-barres · Sur validation uniquement</span></div><div class="off-note">${icon('info', 19)}<p>Les fiches <a href="https://world.openfoodfacts.org/" target="_blank" rel="noopener noreferrer">Open Food Facts</a> sont collaboratives. Miette repère certaines précautions, mais ne peut pas certifier qu’un produit convient à la grossesse. Vérifiez toujours l’emballage.</p></div><div id="off-results" aria-live="polite" aria-busy="${apiState.loading}">${offResults()}</div>`}`;
+  }
+  function guideResults() {
+    const q = R.normalize(route.params.get('q') || '');
+    const category = route.params.get('categorie') || 'all';
+    const status = route.params.get('statut') || 'all';
+    const matches = D.foods.filter(f => (category === 'all' || f.category === category) && (status === 'all' || f.status === status) && (!q || q.split(' ').every(part => R.normalize(f.name + ' ' + f.aliases).split(/[^a-z0-9]+/).some(word => word.startsWith(part)))));
+    return `<div class="results-meta"><span>${matches.length} aliment${matches.length > 1 ? 's' : ''} ${q ? `pour « ${escape(route.params.get('q'))} »` : 'pour mieux vous repérer'}</span><span>Guide consultable hors connexion</span></div>${matches.length ? `<div class="food-grid explore-grid">${matches.map(foodCard).join('')}</div>` : empty('Cette envie mérite une recherche.', 'Aucun aliment du guide ne correspond à ces filtres. Essayez un nom plus simple ou cherchez le produit dans Open Food Facts.', `<a class="btn btn-primary" href="${href('aliments', { source: 'off', q: route.params.get('q') || '' })}">Chercher un produit ${icon('arrow', 16)}</a>`, 'search')}`;
+  }
+  function offResults() {
+    const q = route.params.get('q') || '';
+    if (!q) return `<div class="off-empty"><div class="off-empty-icon">${icon('scan', 29)}</div><h3>Votre rayon, à portée de main.</h3><p>Recherchez parmi les produits de la base mondiale Open Food Facts, ou saisissez le code-barres de votre emballage.</p><button class="btn btn-secondary" data-action="scan">${icon('scan', 16)}Utiliser un code-barres</button></div>`;
+    if (apiState.loading && !apiState.products.length) return `<p class="loading-caption">À la recherche de « ${escape(q)} » dans Open Food Facts…</p><div class="food-grid explore-grid">${Array.from({ length: 4 }, () => '<div class="skeleton" aria-hidden="true"></div>').join('')}</div>`;
+    const error = apiState.error ? `<div class="error-panel" role="alert"><h3>La recherche n’a pas abouti.</h3><p>${escape(apiState.error)}</p><button class="btn btn-outline" data-action="retry-api">${icon('refresh', 15)}Réessayer</button></div>` : '';
+    if (!apiState.products.length) return error || empty('Aucun produit trouvé.', 'Vérifiez le nom ou le code-barres. La base est collaborative : tous les produits ne sont pas encore renseignés.', `<a href="${href('aliments', { q })}" class="btn btn-secondary">Chercher dans le guide ${icon('arrow', 15)}</a>`, 'search');
+    return `${error}<div class="results-meta"><span>${apiState.products.length} produits affichés · ${apiState.count.toLocaleString('fr-FR')} trouvés</span><span>${apiState.cached ? 'Résultats en cache · moins de 24 h' : 'Données Open Food Facts'}</span></div><div class="food-grid explore-grid">${apiState.products.map(foodCard).join('')}</div>${apiState.hasMore ? `<div class="load-more"><button class="btn btn-outline" data-action="more-products" ${apiState.loading ? 'disabled' : ''}>${apiState.loading ? '<span class="spinner"></span> Recherche en cours…' : `Voir plus de produits ${icon('plus', 15)}`}</button></div>` : ''}<p class="legal-copy small">Données : Open Food Facts, licence ODbL. Images des produits : CC BY-SA. Les fiches restent à vérifier sur l’emballage.</p>`;
+  }
+  async function searchAPI(more = false) {
+    const q = route.params.get('q') || '';
+    if (!q) return;
+    if (apiAbort) apiAbort.abort();
+    apiAbort = new AbortController();
+    const generation = ++requestGeneration;
+    const page = more ? apiState.page + 1 : 1;
+    if (!more) apiState = { key: q, query: q, products: [], count: 0, page: 1, loading: true, error: '', hasMore: false, cached: false };
+    else { apiState.loading = true; apiState.error = ''; }
+    updateAPIResults();
+    try {
+      const result = await API.request(q, page, apiAbort.signal);
+      if (generation !== requestGeneration) return;
+      result.products.forEach(p => productMap.set(p.id, p));
+      const combined = more ? [...apiState.products, ...result.products] : result.products;
+      apiState = { ...result, key: q, query: q, products: [...new Map(combined.map(p => [p.id, p])).values()], loading: false, error: '' };
+    } catch (err) {
+      if (generation !== requestGeneration || err.name === 'AbortError') return;
+      apiState.loading = false; apiState.error = err.message;
+    }
+    if (generation === requestGeneration) updateAPIResults();
+  }
+  function updateAPIResults() { const el = $('#off-results'); if (el) { el.setAttribute('aria-busy', String(apiState.loading)); el.innerHTML = offResults(); } }
+  function recipePage() {
+    const type = route.params.get('type') || 'all';
+    const vegetarian = route.params.get('vegetarien') === '1' || (store.vegetarian && !route.params.has('vegetarien'));
+    const q = R.normalize(route.params.get('q') || '');
+    const recipes = D.recipes.filter(r => (!vegetarian || r.vegetarian) && (type === 'all' || type === r.type) && (!q || R.normalize(r.title + ' ' + r.ingredients.map(i => i.name).join(' ')).includes(q)));
+    return `<div class="recipes-page">${heading('De bonnes choses à partager.', 'Des recettes accessibles, des ingrédients du quotidien et les précautions pour les préparer.')}<form id="recipe-search" class="search-box" role="search">${icon('search', 20)}<label class="sr-only" for="recipe-query">Rechercher une recette ou un ingrédient</label><input id="recipe-query" name="q" type="search" maxlength="100" value="${escape(route.params.get('q') || '')}" placeholder="Une recette, un ingrédient…"><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><div class="category-list recipe-filters" role="group" aria-label="Type de repas">${Object.entries(recipeTypes).map(([id, label]) => `<button class="category-chip ${type === id ? 'active' : ''}" data-action="recipe-type" data-type="${id}" aria-pressed="${type === id}">${label}</button>`).join('')}<button class="category-chip ${vegetarian ? 'active' : ''}" data-action="vegetarian" aria-pressed="${vegetarian}">${icon('leaf', 15)}Végétarien</button></div><div class="results-meta"><span>${recipes.length} recette${recipes.length > 1 ? 's' : ''} pour se faire plaisir</span><span>Portions ajustables</span></div>${recipes.length ? `<div class="recipe-grid">${recipes.map(recipeCard).join('')}</div>` : empty('Une autre petite envie ?', 'Essayez un autre ingrédient ou élargissez les filtres.', '<a class="btn btn-secondary" href="#recettes">Voir les recettes</a>', 'recipe')}<p class="photo-caption">Photos d’inspiration. Les ingrédients et les préparations à suivre figurent dans les fiches.</p></div>`;
+  }
+  function favoritesPage() {
+    const foods = store.favorites.filter(f => f.startsWith('food:')).map(f => foodsById.get(f.slice(5)) || productMap.get(f.slice(5))).filter(Boolean);
+    const recipes = store.favorites.filter(f => f.startsWith('recipe:')).map(f => recipesById.get(f.slice(7))).filter(Boolean);
+    return `${heading('Vos petits coups de cœur.', 'Les aliments et les recettes que vous voulez retrouver, tout simplement.')}${!foods.length && !recipes.length ? empty('Votre carnet n’attend que vous.', 'Touchez le petit cœur sur une fiche aliment ou une recette pour la retrouver ici.', '<a class="btn btn-primary" href="#aliments">Explorer les aliments ' + icon('arrow', 16) + '</a>', 'heart') : `${foods.length ? `<div class="section-heading"><h2>Mes aliments <span class="muted small">(${foods.length})</span></h2></div><div class="food-grid explore-grid">${foods.map(foodCard).join('')}</div>` : ''}${recipes.length ? `<section class="recipes-section"><div class="section-heading"><h2>Mes recettes <span class="muted small">(${recipes.length})</span></h2></div><div class="recipe-grid">${recipes.map(recipeCard).join('')}</div></section>` : ''}`}`;
+  }
+  function plannerPage() {
+    const dates = weekDates();
+    const start = dates[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    const end = dates[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+    let count = 0;
+    dates.forEach(d => { count += Object.values(store.menus[localDate(d)] || {}).filter(id => recipesById.has(id)).length; });
+    return `${heading('Une semaine à votre goût.', 'Un peu d’organisation pour laisser plus de place aux petits bonheurs.')}<div class="planner-top"><div class="week-controls"><a href="${href('menus', { semaine: weekOffset() - 1 })}" class="icon-button" aria-label="Semaine précédente">${icon('chevron', 16).replace('<svg', '<svg class="rotate"')}</a><span>${start} — ${end}</span><a href="${href('menus', { semaine: weekOffset() + 1 })}" class="icon-button" aria-label="Semaine suivante">${icon('chevron', 16)}</a></div><a href="#menus" class="btn btn-outline">Cette semaine</a></div><div class="planner-grid">${dates.map(d => {
+      const date = localDate(d);
+      return `<section class="planner-day" aria-label="${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}"><div class="day-heading ${date === localDate() ? 'today' : ''}"><span>${d.toLocaleDateString('fr-FR', { weekday: 'short' })}</span><b>${d.getDate()}</b></div>${Object.entries(mealLabels).map(([meal, label]) => {
+        const r = recipesById.get(store.menus[date]?.[meal]);
+        return `<div class="meal-slot"><span class="meal-slot-label">${label}</span>${r ? `<button class="icon-button remove-meal" data-action="remove-meal" data-date="${date}" data-meal="${meal}" aria-label="Retirer ${escape(r.title)} du ${label.toLowerCase()} du ${date}">${icon('close', 12)}</button><button class="planned-recipe" data-action="recipe" data-id="${r.id}"><img src="assets/${r.image}.jpg" alt="" loading="lazy"><b>${r.title}</b></button>` : `<button class="add-meal" data-action="pick-recipe" data-date="${date}" data-meal="${meal}" aria-label="Ajouter le ${label.toLowerCase()} du ${date}">${icon('plus', 18)}Choisir une recette</button>`}</div>`;
+      }).join('')}</section>`;
+    }).join('')}</div><div class="planner-info"><div><strong>${count ? `${count} repas au programme` : 'Une page blanche pleine de possibilités'}</strong>Les recettes sont prévues pour deux personnes. Ce carnet organise vos envies ; il ne prescrit pas un régime alimentaire.</div><button class="btn btn-primary" data-action="week-shopping" ${!count ? 'disabled' : ''}>${icon('bag', 16)}Préparer mes courses</button></div>`;
+  }
+  function shoppingPage() {
+    const done = store.shopping.filter(i => i.checked).length;
+    return `${heading('Et hop, dans le panier.', 'Votre liste de courses, à compléter et à cocher au fil des rayons.')}<div class="shopping-layout"><section><form id="shopping-add" class="shopping-add"><label class="sr-only" for="shopping-input">Ajouter un article à la liste</label><input class="text-input" id="shopping-input" name="item" placeholder="Un petit quelque chose à ajouter…" maxlength="150" required><button class="btn btn-primary" type="submit">${icon('plus', 16)}Ajouter</button></form><p class="shopping-count" id="shopping-count">${done} sur ${store.shopping.length} article${store.shopping.length > 1 ? 's' : ''} dans votre panier</p>${store.shopping.length ? `<div class="shopping-list">${store.shopping.map(i => `<div class="shopping-item"><input id="item-${escape(i.id)}" type="checkbox" data-shopping-id="${escape(i.id)}" ${i.checked ? 'checked' : ''}><label for="item-${escape(i.id)}">${escape(i.name)}<span>${i.quantity ? `${number(i.quantity)} ${escape(i.unit)}` : ''}</span></label><button class="icon-button" data-action="remove-item" data-id="${escape(i.id)}" aria-label="Supprimer ${escape(i.name)}">${icon('close', 14)}</button></div>`).join('')}</div>` : empty('On prépare quelque chose de bon ?', 'Ajoutez les ingrédients d’une recette ou de vos menus en un geste.', '<a href="#recettes" class="btn btn-secondary">Trouver une recette ' + icon('arrow', 15) + '</a>', 'bag')}</section><aside class="shopping-aside">${icon('bag', 31)}<h3>Moins d’oubli,<br>plus de tranquillité.</h3><p>Ajoutez les ingrédients depuis une recette ou depuis votre semaine de menus. Les quantités identiques s’additionnent.</p><button class="btn btn-outline" data-action="download-shopping">${icon('download', 15)}Exporter ma liste</button><button class="btn btn-outline" data-action="clear-checked">${icon('check', 15)}Retirer les articles cochés</button><a href="#menus" class="btn-text">Organiser mes menus ${icon('arrow', 15)}</a></aside></div>`;
+  }
+  function guidePage() {
+    const cards = [
+      ['drop', 'Un lavage tout en attention.', 'Lavez fruits, légumes et herbes à l’eau potable. Retirez la terre avant de les éplucher ou les couper. Au restaurant, si la préparation est incertaine, préférez les légumes cuits.', 'toxo'],
+      ['fire', 'Bien cuit, jusqu’au cœur.', 'Viandes et poissons se mangent entièrement cuits. Pour les œufs, le blanc et le jaune doivent être fermes. Une marinade, un simple réchauffage ou une congélation ne remplace pas une cuisson adaptée.', 'ministry'],
+      ['fridge', 'Le froid a son importance.', 'Maintenez le réfrigérateur à 4 °C maximum. Respectez la date limite et les consignes après ouverture. Réfrigérez rapidement les restes et réchauffez-les uniformément.', 'spf'],
+      ['milk', 'Tous les fromages sont différents.', 'Les pâtes pressées cuites, sans croûte, sont possibles. Le lait pasteurisé ne suffit pas à rendre compatible un fromage à pâte molle comme le brie. Lisez la fiche de chaque famille.', 'agriculture'],
+      ['fish', 'Du poisson, et de la variété.', 'Variez les espèces et limitez les poissons prédateurs comme le thon, même en conserve. Évitez notamment l’espadon et le requin. La cuisson ne retire pas le mercure.', 'ameli'],
+      ['cup', 'Un œil sur ce qu’on boit.', 'Le repère est zéro alcool. Pour la caféine, Miette retient la limite EFSA de 200 mg par jour pendant la grossesse, toutes sources additionnées. L’eau potable reste la boisson à privilégier.', 'efsa']
+    ];
+    return `${heading('Des repères pour être plus sereine.', 'Quelques gestes utiles à garder en tête, tout au long de la grossesse.')}<div class="guide-grid">${cards.map(([symbol, title, text, source]) => `<article class="guide-card"><div class="tip-icon">${icon(symbol, 21)}</div><h2>${title}</h2><p>${text}</p>${sourceLink(source)}</article>`).join('')}</div><section class="faq-section"><h2>Les questions qui reviennent.</h2>${[
+      ['Je suis immunisée contre la toxoplasmose. Est-ce que tout change ?', 'L’immunité à la toxoplasmose ne protège pas de la listériose, de la salmonellose ni des contaminants. Les repères de Miette ne relâchent donc pas les autres précautions. Votre sage-femme ou médecin pourra préciser celles qui vous concernent.'],
+      ['Pourquoi un produit reste-t-il « À vérifier » ?', 'Open Food Facts est une base collaborative. Le nom, les ingrédients ou la catégorie ne précisent pas toujours la pasteurisation, la cuisson ou la conservation. Une absence d’alerte détectée ne prouve pas la compatibilité d’un produit.'],
+      ['Un bon Nutri-Score signifie-t-il que je peux en manger ?', 'Le Nutri-Score renseigne sur la composition nutritionnelle générale. Il ne certifie ni la sécurité microbiologique, ni la cuisson, ni la compatibilité avec la grossesse. Miette ne l’utilise pas pour autoriser un aliment.'],
+      ['Ces conseils sont-ils personnalisés pour ma grossesse ?', 'Non. Le guide donne des repères généraux français. Il ne prend pas en charge les allergies, le diabète gestationnel, les traitements ou une situation médicale particulière. Pour les adapter, parlez-en à votre professionnel de santé.'],
+      ['J’ai déjà mangé un aliment indiqué « À éviter ».', 'Cette mention ne signifie pas que vous êtes infectée. En cas d’inquiétude, de fièvre ou d’autres symptômes, contactez votre sage-femme ou médecin et précisez l’aliment consommé. Miette ne peut pas évaluer une exposition individuelle.'],
+      ['Est-ce que Miette fonctionne sans Internet ?', 'Après une première ouverture depuis un hébergement HTTPS ou localhost, le guide, les recettes et votre carnet sont mis en cache pour une utilisation hors connexion. Une nouvelle recherche Open Food Facts nécessite Internet ; les résultats déjà consultés peuvent rester disponibles en cache pendant 24 heures.']
+    ].map(([q, a]) => `<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section><div class="home-footer-note">${icon('book', 23)}<p>Les sources et la méthode sont accessibles à tout moment. <a href="#sources">Voir les références et les limites du guide</a></p></div>`;
+  }
+  function sourcesPage() {
+    return `${heading('La confiance commence par la clarté.', 'Voici d’où viennent nos repères, et ce que Miette peut vous apporter.')}<div class="advice-box"><p><strong>Miette est un outil d’information générale.</strong> Les fiches éditoriales sont préparées à partir des recommandations publiques ci-dessous. Elles n’ont pas fait l’objet d’une validation clinique indépendante et ne remplacent pas un avis médical.</p><p>Références consultées le ${D.reviewed}. Pays de référence : France. Les recommandations peuvent évoluer.</p></div><div class="sources-list">${Object.values(D.sources).map(s => `<a class="source-row" href="${s.url}" target="_blank" rel="noopener noreferrer"><div><b>${s.name}</b><span>${s.title}</span></div>${icon('external', 18)}</a>`).join('')}</div><div class="legal-copy"><h3>Deux sources, deux niveaux d’information</h3><p>Le guide local comporte ${D.foods.length} aliments et familles alimentaires avec leurs conditions de préparation. Il n’est pas exhaustif. La recherche de produits interroge la base mondiale Open Food Facts à la demande ; elle ne télécharge pas tous les produits.</p><p>Pour un produit Open Food Facts, des règles repèrent certains termes de la dénomination, des catégories et des ingrédients en français ou en anglais. Les règles sont partielles, peuvent manquer une information ou interpréter un terme à tort. La cuisson réelle, la chaîne du froid, les rappels de lots et la qualité du lavage ne peuvent pas être vérifiés. Aucun produit n’est automatiquement déclaré « Compatible ».</p><h3>Comprendre les indications</h3>${Object.values(D.statuses).map(s => `<p><strong>${s.label}.</strong> ${s.description}</p>`).join('')}<h3>Recettes et photographie</h3><p>Les ${D.recipes.length} recettes sont des propositions culinaires originales. Les temps de cuisson sont indicatifs ; vérifiez toujours la cuisson complète et les indications du fabricant. Elles ne constituent pas un programme nutritionnel individualisé. Les photos sont des images d’inspiration et peuvent différer du plat décrit.</p><p>Photographies : <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a>. Illustrations vectorielles créées pour Miette. Polices DM Sans et Lora sous licence SIL Open Font License.</p><h3>Open Food Facts et réutilisation</h3><p>Les données de produits appartiennent à la base collaborative <a href="https://world.openfoodfacts.org/" target="_blank" rel="noopener noreferrer">Open Food Facts</a>, sous <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">licence ODbL</a>. Les contenus individuels sont sous Database Contents License et les images de produits sous CC BY-SA. Chaque fiche contient un lien vers sa source. Ces données sont distinctes du guide Miette.</p></div>`;
+  }
+  function profilePage() {
+    return `${heading('Un espace qui vous ressemble.', 'Quelques préférences, pour retrouver vos envies plus facilement.')}<form id="profile-form" class="profile-panel"><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Uniquement enregistré dans votre navigateur.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce filtre ne gère pas les allergies ni les besoins médicaux.</p></div><div class="form-actions"><button class="btn btn-primary" type="submit">${icon('check', 15)}Enregistrer</button><a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div></form>${installPrompt ? '<button class="btn btn-secondary" data-action="install" style="margin-top:20px">' + icon('download', 16) + 'Installer Miette sur cet appareil</button>' : ''}`;
+  }
+  function privacyPage() {
+    return `${heading('Votre carnet reste chez vous.', 'Pas de compte à créer. Vous gardez la main sur vos données.')}<div class="profile-panel legal-copy"><h3>Ce qui est enregistré</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses sont enregistrés dans le stockage local de ce navigateur. Il n’y a pas de synchronisation entre appareils. Effacer les données du navigateur efface ce carnet.</p><h3>Les connexions extérieures</h3><p>Les recherches et codes-barres sont transmis à Open Food Facts uniquement quand vous lancez une recherche. Ce service reçoit alors les informations habituelles de connexion, dont l’adresse IP. Les images des produits sont chargées depuis Open Food Facts. Aucun carnet ni prénom ne lui est transmis.</p><p>Les photographies et polices du guide sont incluses dans l’app. Miette ne contient ni mesure d’audience ni publicité. La caméra, si utilisée, est analysée localement par le navigateur ; aucune image n’est envoyée. Elle est arrêtée à la fermeture du scanner.</p><h3>Enregistrer une copie</h3><p>L’export contient les données de votre carnet dans un fichier JSON lisible. Il n’inclut pas le cache des recherches.</p><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><h3>Effacer sur cet appareil</h3><p>Les favoris, les menus, les courses, votre prénom et le cache des produits seront supprimés. Le guide restera disponible.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button></div>`;
+  }
+  function renderRoute() {
+    const oldPage = route.page;
+    route = getRoute();
+    if ($('#detail-dialog').open) $('#detail-dialog').close();
+    closeMenu();
+    const isOFF = route.page === 'aliments' && route.params.get('source') === 'off';
+    if (!isOFF && apiState.loading) {
+      apiAbort?.abort(); requestGeneration++; apiState.loading = false; apiState.key = '';
+    }
+    $('#sidebar').innerHTML = sidebar();
+    $('#topbar').innerHTML = topbar();
+    const pages = { accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage };
+    $('#main').innerHTML = `<div class="page-content">${pages[route.page]()}</div>${footer()}`;
+    syncSidebar();
+    document.title = `${labels[route.page]} — Miette`;
+    if (oldPage !== route.page) window.scrollTo({ top: 0, behavior: 'instant' });
+    if (isOFF) {
+      const q = route.params.get('q') || '';
+      if (!q) { apiAbort?.abort(); requestGeneration++; apiState = { key: '', products: [], loading: false, error: '', count: 0 }; }
+      else if (q !== apiState.key) searchAPI();
+    }
+  }
+  function rerender() { const y = window.scrollY; renderRoute(); window.scrollTo({ top: y, behavior: 'instant' }); }
+  function openDialog(content, context) {
+    stopCamera();
+    const dialog = $('#detail-dialog');
+    if (!dialog.open) lastDialogTrigger = document.activeElement;
+    dialogContext = context;
+    dialog.innerHTML = `<button class="dialog-close" data-action="close-dialog" aria-label="Fermer la fiche" autofocus>${icon('close', 19)}</button>${content}`;
+    if (!dialog.open) dialog.showModal();
+    dialog.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+  }
+  function foodDetail(id) {
+    const f = foodsById.get(id) || productMap.get(id);
+    if (!f) { toast('Cette fiche n’est plus disponible.', 'info'); return; }
+    const isOFF = f.origin === 'off';
+    const related = D.recipes.filter(r => r.foods.includes(id)).slice(0, 2);
+    const top = `<div class="dialog-food-top"><div class="dialog-food-art">${isOFF && f.image_front_small_url ? `<img src="${escape(f.image_front_small_url)}" alt="${escape(f.name)}" referrerpolicy="no-referrer">` : art(f.art)}</div><div class="dialog-food-heading"><span class="eyebrow">${isOFF ? 'PRODUIT OPEN FOOD FACTS' : 'LE GUIDE MIETTE'}</span><h2 id="dialog-title">${escape(f.name)}</h2>${badge(f.status)}<p>${escape(isOFF ? [f.brands, f.quantity].filter(Boolean).join(' · ') : f.summary)}</p></div></div>`;
+    let body;
+    if (isOFF) {
+      const a = f.analysis;
+      const nutrition = [['energy-kcal_100g', 'Énergie', 'kcal'], ['fat_100g', 'Matières grasses', 'g'], ['sugars_100g', 'Sucres', 'g'], ['proteins_100g', 'Protéines', 'g'], ['fiber_100g', 'Fibres', 'g'], ['salt_100g', 'Sel', 'g']].filter(([key]) => Number.isFinite(f.nutriments[key]));
+      body = `<div class="advice-box ${f.status}"><p><strong>Cette fiche ne certifie pas la compatibilité avec la grossesse.</strong></p><p>${escape(a.reason)} Les informations sont collaboratives et peuvent être incomplètes. Lisez l’étiquette et demandez conseil en cas de doute.</p></div>${a.missing.length ? `<p class="missing-data">${icon('info', 14)} ${a.missing.map(escape).join(' · ')}</p>` : ''}<h3>${a.flags.length ? 'Les points à vérifier' : 'Pas de précaution reconnue automatiquement'}</h3>${a.flags.length ? a.flags.map(flag => `<div class="risk-flag"><h4>${icon(D.statuses[flag.status].icon, 15)}${escape(flag.title)}</h4><p>${escape(flag.text)}</p>${sourceLink(flag.source)}</div>`).join('') : '<p class="ingredient-text">L’absence de signal détecté ne prouve pas l’absence de risque. Vérifiez la préparation, le traitement thermique, la conservation et la liste complète des ingrédients.</p>'}<h3>Les ingrédients renseignés</h3><p class="ingredient-text">${escape(f.ingredients_text_fr || f.ingredients_text || 'La liste des ingrédients n’est pas renseignée. Consultez l’emballage.')}</p><p class="allergens"><strong>Allergènes déclarés :</strong> ${f.allergens_tags.length ? escape(f.allergens_tags.map(t => t.replace(/^\w{2}:/, '')).join(', ')) : 'Non renseignés — cela ne signifie pas qu’il n’y en a pas.'} Vérifiez l’étiquette.</p>${nutrition.length ? `<h3>Valeurs déclarées pour 100 g / 100 ml</h3><div class="nutrition-grid">${nutrition.map(([k, label, unit]) => `<div class="nutrition-item"><b>${number(f.nutriments[k])} ${unit}</b><span>${label}</span></div>`).join('')}</div><p class="dialog-disclaimer">Ces valeurs nutritionnelles ne déterminent pas la sécurité du produit pendant la grossesse.</p>` : ''}<div class="sources-inline"><p>CODE-BARRES : ${escape(f.code)} · DONNÉES COLLABORATIVES ODBL</p><a class="source-link" href="https://world.openfoodfacts.org/product/${encodeURIComponent(f.code)}" target="_blank" rel="noopener noreferrer">Voir la fiche originale Open Food Facts ${icon('external', 13)}</a></div>`;
+    } else {
+      body = `<div class="advice-box ${f.status}"><p>${escape(f.reason)}</p></div><h3>${icon('recipe', 17)} Dans votre cuisine</h3><ul class="preparation-list">${f.preparation.map(t => `<li>${icon('check', 17)}<span>${escape(t)}</span></li>`).join('')}</ul>${related.length ? `<h3>Et si on le cuisinait ?</h3><div class="mini-recipes">${related.map(r => `<button class="mini-recipe" data-action="recipe" data-id="${r.id}"><img src="assets/${r.image}.jpg" alt=""><span>${r.title}</span></button>`).join('')}</div>` : ''}${sourceFooter(f.sources)}`;
+    }
+    openDialog(`<div class="dialog-content">${top}${body}<div class="dialog-actions"><button class="btn btn-secondary" data-action="favorite" data-kind="food" data-id="${escape(id)}">${icon('heart', 16)}${favorite('food', id) ? 'Retirer des favoris' : 'Garder dans mes favoris'}</button>${!isOFF ? `<button class="btn btn-outline" data-action="find-product" data-query="${escape(f.name)}">${icon('scan', 16)}Chercher un produit</button>` : ''}</div><p class="dialog-disclaimer">Repères généraux. La conservation, la préparation, vos allergies et votre situation personnelle restent à prendre en compte. Un doute ? Votre sage-femme ou médecin peut vous aider.</p></div>`, { type: 'food', id });
+  }
+  function recipeDetail(id, servings = 2) {
+    const r = recipesById.get(id); if (!r) return;
+    const portions = Math.max(1, Math.min(8, servings));
+    openDialog(`<img class="dialog-recipe-photo" src="assets/${r.image}.jpg" alt="Photo d’inspiration culinaire"><div class="dialog-content"><span class="eyebrow">UNE RECETTE À AIMER</span><h2 id="dialog-title">${r.title}</h2><div class="dialog-recipe-meta"><span>${icon('clock', 15)}${r.time} minutes</span><span>${icon('users', 15)}${portions} personne${portions > 1 ? 's' : ''}</span><span>${icon(r.vegetarian ? 'leaf' : 'recipe', 15)}${r.tags[0]}</span></div><p class="muted small">${r.subtitle}</p><div class="servings-control"><h3>Les bonnes choses à prévoir</h3><div class="stepper"><button data-action="servings" data-delta="-1" aria-label="Réduire le nombre de portions" ${portions === 1 ? 'disabled' : ''}>${icon('minus', 13)}</button><span aria-live="polite">${portions} pers.</span><button data-action="servings" data-delta="1" aria-label="Augmenter le nombre de portions" ${portions === 8 ? 'disabled' : ''}>${icon('plus', 13)}</button></div></div><ul class="ingredients-list">${r.ingredients.map(i => `<li>${i.name}<b>${number(i.quantity * portions / r.servings)} ${i.unit}</b></li>`).join('')}</ul><p class="allergens"><strong>Allergènes :</strong> ${r.allergens}</p><h3>On passe en cuisine ?</h3><ol class="steps-list">${r.steps.map(t => `<li>${t}</li>`).join('')}</ol><div class="advice-box">${icon('shield', 16)} <strong>Le petit repère grossesse</strong><p>${r.safety}</p></div><div class="dialog-actions"><button class="btn btn-primary" data-action="recipe-shopping" data-id="${r.id}" data-servings="${portions}">${icon('bag', 16)}Ajouter à mes courses</button><button class="btn btn-outline" data-action="plan-recipe" data-id="${r.id}">${icon('calendar', 16)}Au menu</button><button class="btn btn-outline" data-action="favorite" data-kind="recipe" data-id="${r.id}">${icon('heart', 16)}${favorite('recipe', r.id) ? 'Retirer' : 'Garder'}</button></div><p class="dialog-disclaimer">Temps de cuisson indicatifs. Suivez les ingrédients écrits, les précautions et vos consignes médicales. Les photos illustrent une idée de plat.</p>${sourceFooter(['spf', 'toxo'])}</div>`, { type: 'recipe', id, servings: portions });
+  }
+  function toggleFavorite(kind, id) {
+    if (!['food', 'recipe'].includes(kind)) return;
+    if (kind === 'food' && !foodsById.has(id) && !productMap.has(id)) return;
+    if (kind === 'recipe' && !recipesById.has(id)) return;
+    const key = kind + ':' + id;
+    const active = favorite(kind, id);
+    store.favorites = active ? store.favorites.filter(f => f !== key) : [...store.favorites, key];
+    persist();
+    document.querySelectorAll('[data-action="favorite"]').forEach(btn => {
+      if (btn.dataset.kind !== kind || btn.dataset.id !== id) return;
+      if (btn.classList.contains('favorite-button')) {
+        btn.classList.toggle('is-favorite', !active);
+        btn.setAttribute('aria-pressed', String(!active));
+        btn.setAttribute('aria-label', active ? 'Ajouter aux favoris' : 'Retirer des favoris');
+      } else btn.innerHTML = icon('heart', 16) + (active ? 'Garder dans mes favoris' : 'Retirer des favoris');
+    });
+    $('#sidebar').innerHTML = sidebar();
+    if (route.page === 'favoris' && !$('#detail-dialog').open) rerender();
+    toast(active ? 'Retiré de votre petit carnet.' : 'Un coup de cœur de plus dans votre carnet.', 'heart');
+  }
+  function pickRecipe(date, meal) {
+    const recipes = store.vegetarian ? D.recipes.filter(r => r.vegetarian) : D.recipes;
+    openDialog(`<div class="dialog-content"><span class="eyebrow">MON MENU</span><h2 id="dialog-title">Une envie pour ${meal === 'dinner' ? 'le dîner' : 'le déjeuner'} ?</h2><p class="muted small">${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · recettes pour deux personnes</p><div class="picker-list">${recipes.map(r => `<button class="picker-recipe" data-action="assign-recipe" data-id="${r.id}" data-date="${date}" data-meal="${meal}"><img src="assets/${r.image}.jpg" alt=""><div><b>${r.title}</b><span>${r.time} min · ${r.vegetarian ? 'Végétarien' : 'Poisson'}</span></div>${icon('plus', 17)}</button>`).join('')}</div></div>`, { type: 'picker' });
+  }
+  function planRecipe(id) {
+    const r = recipesById.get(id); if (!r) return;
+    openDialog(`<div class="dialog-content"><span class="eyebrow">UNE BONNE IDÉE AU MENU</span><h2 id="dialog-title">On le cuisine quand ?</h2><p class="muted small">${r.title} · menu pour deux personnes</p><form id="plan-recipe-form" data-id="${r.id}"><div class="picker-fields"><div class="field"><label for="meal-date">Le jour</label><input class="text-input" id="meal-date" type="date" name="date" value="${localDate()}" required></div><div class="field"><label for="meal-type">Le repas</label><select class="text-input" id="meal-type" name="meal"><option value="lunch">Déjeuner</option><option value="dinner">Dîner</option></select></div></div><p id="meal-replace-note" class="muted small">${store.menus[localDate()]?.lunch ? 'Un repas est déjà prévu à cette date. Il sera remplacé.' : 'Le repas sera ajouté à votre carnet de menus.'}</p><button class="btn btn-primary" type="submit" style="margin-top:18px">${icon('calendar', 16)}Ajouter à mon menu</button></form></div>`, { type: 'plan', id });
+  }
+  function assignRecipe(id, date, meal) {
+    if (!recipesById.has(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Object.hasOwn(mealLabels, meal)) return;
+    if (!store.menus[date]) store.menus[date] = {};
+    store.menus[date][meal] = id;
+    persist(); $('#detail-dialog').close();
+    if (route.page === 'menus') rerender();
+    toast('Une bonne idée ajoutée à votre menu.', 'calendar');
+  }
+  function addIngredients(recipes) {
+    let count = 0;
+    recipes.forEach(({ recipe, servings }) => recipe.ingredients.forEach(i => {
+      const amount = Number((i.quantity * servings / recipe.servings).toFixed(2));
+      const key = R.normalize(i.name) + '|' + i.unit;
+      const existing = store.shopping.find(item => !item.checked && R.normalize(item.name) + '|' + item.unit === key);
+      if (existing) existing.quantity = Number((existing.quantity + amount).toFixed(2));
+      else store.shopping.push({ id: uniqueId(), name: i.name, quantity: amount, unit: i.unit, checked: false });
+      count++;
+    }));
+    persist(); toast(`${count} ingrédients ajoutés à votre liste de courses.`, 'bag');
+  }
+  function uniqueId() { return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2); }
+  function downloadFile(filename, text, type) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function toast(message, symbol = 'check') {
+    const div = document.createElement('div'); div.className = 'toast'; div.innerHTML = icon(symbol, 17) + '<span>' + escape(message) + '</span>';
+    $('#toasts').append(div);
+    setTimeout(() => div.remove(), 4600);
+  }
+  function closeMenu() {
+    $('#sidebar')?.classList.remove('is-open'); $('.mobile-overlay')?.classList.remove('is-open');
+    $('[data-action="menu"]')?.setAttribute('aria-expanded', 'false');
+    if (!$('#detail-dialog')?.open) document.body.style.overflow = '';
+    syncSidebar();
+  }
+  function syncSidebar() {
+    const sidebar = $('#sidebar'); if (!sidebar) return;
+    const hidden = window.matchMedia('(max-width:760px)').matches && !sidebar.classList.contains('is-open');
+    sidebar.inert = hidden;
+    sidebar.setAttribute('aria-hidden', String(hidden));
+  }
+  function scannerDialog() {
+    const capable = 'BarcodeDetector' in window && Boolean(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
+    openDialog(`<div class="dialog-content"><span class="eyebrow">UN PRODUIT SOUS LA MAIN ?</span><h2 id="dialog-title">Regardons son code-barres.</h2><p class="muted small">Saisissez les chiffres de l’emballage pour retrouver sa fiche Open Food Facts.</p><form id="barcode-form" class="barcode-form"><label class="sr-only" for="barcode-input">Code-barres à 8, 12, 13 ou 14 chiffres</label><input class="text-input" id="barcode-input" name="code" inputmode="numeric" autocomplete="off" maxlength="24" placeholder="Ex. 3017620422003" required><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><p id="barcode-error" class="scanner-status" role="alert"></p>${capable ? `<div class="scanner-view" id="scanner-view" hidden></div><button class="btn btn-secondary" data-action="start-camera">${icon('camera', 16)}Utiliser la caméra</button><p class="scanner-status" id="camera-status">La caméra reste sur votre appareil. Aucune image n’est transmise.</p>` : `<div class="off-note" style="margin-top:23px">${icon('info', 17)}<p>La lecture caméra n’est pas disponible dans ce navigateur. La saisie du code-barres fonctionne toujours. La caméra nécessite HTTPS et un navigateur prenant en charge BarcodeDetector.</p></div>`}</div>`, { type: 'scanner' });
+  }
+  function stopCamera() {
+    cameraGeneration++;
+    if (cameraTimer) clearTimeout(cameraTimer);
+    cameraTimer = null;
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    const video = $('#scanner-video'); if (video) video.srcObject = null;
+  }
+  async function startCamera() {
+    const generation = ++cameraGeneration;
+    const button = $('[data-action="start-camera"]');
+    const status = $('#camera-status');
+    if (!button || !status) return;
+    button.disabled = true; status.textContent = 'Ouverture de la caméra…';
+    try {
+      const supported = await BarcodeDetector.getSupportedFormats();
+      const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'].filter(f => supported.includes(f));
+      if (!formats.length) throw new Error('formats');
+      const detector = new BarcodeDetector({ formats });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      if (generation !== cameraGeneration || !$('#detail-dialog').open || dialogContext?.type !== 'scanner') { stream.getTracks().forEach(t => t.stop()); return; }
+      cameraStream = stream;
+      const view = $('#scanner-view'); view.hidden = false;
+      view.innerHTML = '<video id="scanner-video" autoplay muted playsinline></video><div class="scanner-frame"></div>';
+      const video = $('#scanner-video'); video.srcObject = stream; await video.play();
+      status.textContent = 'Placez le code-barres dans le cadre, avec suffisamment de lumière.';
+      button.innerHTML = icon('camera', 16) + 'Caméra active';
+      const scan = async () => {
+        if (generation !== cameraGeneration) return;
+        try {
+          const codes = await detector.detect(video);
+          if (generation !== cameraGeneration) return;
+          const code = codes.find(c => R.isValidBarcode(c.rawValue));
+          if (code) { stopCamera(); $('#detail-dialog').close(); go('aliments', { source: 'off', q: code.rawValue }); return; }
+        } catch (_) { /* A frame can be unavailable while the camera is focusing. */ }
+        if (generation === cameraGeneration) cameraTimer = setTimeout(scan, 450);
+      };
+      scan();
+    } catch (err) {
+      if (generation !== cameraGeneration) return;
+      stopCamera();
+      if ($('#camera-status')) $('#camera-status').textContent = err.name === 'NotAllowedError' ? 'L’accès à la caméra a été refusé. Vous pouvez saisir le code-barres ci-dessus.' : 'La caméra ou la lecture des codes n’est pas disponible. Saisissez le code-barres ci-dessus.';
+      button.disabled = false; button.innerHTML = icon('camera', 16) + 'Réessayer la caméra';
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-action]');
+    if (!trigger || trigger.disabled) return;
+    const { action, id, kind } = trigger.dataset;
+    const params = Object.fromEntries(route.params);
+    switch (action) {
+      case 'food': foodDetail(id); break;
+      case 'recipe': recipeDetail(id); break;
+      case 'favorite': toggleFavorite(kind, id); break;
+      case 'close-dialog': $('#detail-dialog').close(); break;
+      case 'menu': $('#sidebar').classList.add('is-open'); $('.mobile-overlay').classList.add('is-open'); trigger.setAttribute('aria-expanded', 'true'); syncSidebar(); document.body.style.overflow = 'hidden'; $('.sidebar-close').focus(); break;
+      case 'close-menu': closeMenu(); $('[data-action="menu"]')?.focus(); break;
+      case 'category': go('aliments', { ...params, categorie: trigger.dataset.category }); break;
+      case 'status': go('aliments', { ...params, statut: trigger.dataset.filter }); break;
+      case 'recipe-type': go('recettes', { ...params, type: trigger.dataset.type }); break;
+      case 'vegetarian': { const active = route.params.get('vegetarien') === '1' || (store.vegetarian && !route.params.has('vegetarien')); go('recettes', { ...params, vegetarien: active ? '0' : '1' }); break; }
+      case 'find-product': $('#detail-dialog').close(); go('aliments', { source: 'off', q: trigger.dataset.query }); break;
+      case 'retry-api': searchAPI(Boolean(apiState.products.length)); break;
+      case 'more-products': searchAPI(true); break;
+      case 'scan': scannerDialog(); break;
+      case 'start-camera': startCamera(); break;
+      case 'servings': if (dialogContext?.type === 'recipe') { const scroll = $('#detail-dialog').scrollTop; const delta = Number(trigger.dataset.delta); recipeDetail(dialogContext.id, dialogContext.servings + delta); $('#detail-dialog').scrollTop = scroll; $(`[data-action="servings"][data-delta="${delta}"]`)?.focus({ preventScroll: true }); } break;
+      case 'recipe-shopping': { const recipe = recipesById.get(id); if (recipe) addIngredients([{ recipe, servings: Number(trigger.dataset.servings) || 2 }]); break; }
+      case 'plan-recipe': planRecipe(id); break;
+      case 'pick-recipe': pickRecipe(trigger.dataset.date, trigger.dataset.meal); break;
+      case 'assign-recipe': assignRecipe(id, trigger.dataset.date, trigger.dataset.meal); break;
+      case 'remove-meal': if (store.menus[trigger.dataset.date]) { delete store.menus[trigger.dataset.date][trigger.dataset.meal]; persist(); rerender(); toast('Le créneau est de nouveau libre.', 'calendar'); } break;
+      case 'week-shopping': { const recipes = weekDates().flatMap(d => Object.values(store.menus[localDate(d)] || {}).map(rid => recipesById.get(rid)).filter(Boolean)).map(recipe => ({ recipe, servings: recipe.servings })); if (recipes.length) { addIngredients(recipes); go('courses'); } break; }
+      case 'remove-item': store.shopping = store.shopping.filter(i => i.id !== id); persist(); rerender(); break;
+      case 'clear-checked': { const count = store.shopping.filter(i => i.checked).length; store.shopping = store.shopping.filter(i => !i.checked); persist(); rerender(); toast(count ? `${count} articles cochés retirés.` : 'Aucun article n’est encore coché.', 'bag'); break; }
+      case 'download-shopping': if (!store.shopping.length) { toast('Ajoutez quelques articles avant d’exporter.', 'info'); break; } downloadFile('miette-mes-courses.txt', 'MIETTE — MA LISTE DE COURSES\n\n' + store.shopping.map(i => `[${i.checked ? 'x' : ' '}] ${i.name}${i.quantity ? ` — ${number(i.quantity)} ${i.unit}` : ''}`).join('\n'), 'text/plain;charset=utf-8'); toast('Votre liste est prête à emporter.', 'download'); break;
+      case 'export-data': downloadFile('miette-mon-carnet.json', JSON.stringify({ application: 'Miette', version: 1, exportedAt: new Date().toISOString(), notebook: store }, null, 2), 'application/json'); toast('Votre carnet a été exporté.', 'download'); break;
+      case 'reset-data': openDialog('<div class="dialog-content"><h2 id="dialog-title">Effacer votre carnet ?</h2><p class="muted small">Votre prénom, vos favoris, vos menus, votre liste de courses et le cache des recherches seront supprimés de ce navigateur. Vous pouvez exporter votre carnet avant cette action.</p><div class="dialog-actions"><button class="btn btn-outline" data-action="close-dialog">Garder mon carnet</button><button class="btn btn-primary" data-action="confirm-reset">Effacer les données</button></div></div>', { type: 'reset' }); break;
+      case 'confirm-reset': store = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] }; productMap.clear(); persist(); API.clearCache(); apiState = { key: '', products: [], loading: false, count: 0 }; $('#detail-dialog').close(); rerender(); toast('Votre carnet a été effacé de ce navigateur.', 'check'); break;
+      case 'install': if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; if (route.page === 'profil') rerender(); }); } break;
+    }
+  });
+  document.addEventListener('submit', event => {
+    const form = event.target;
+    const data = new FormData(form);
+    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form'];
+    if (!known.includes(form.id)) return;
+    event.preventDefault();
+    if (form.id === 'home-search' || form.id === 'explore-search') {
+      const q = String(data.get('q') || '').trim();
+      const numeric = /^\d[\d\s-]+$/.test(q);
+      const source = numeric || (form.id === 'explore-search' && route.params.get('source') === 'off') ? 'off' : 'guide';
+      go('aliments', { ...(form.id === 'explore-search' ? Object.fromEntries(route.params) : {}), q, source });
+    } else if (form.id === 'recipe-search') go('recettes', { ...Object.fromEntries(route.params), q: String(data.get('q') || '').trim() });
+    else if (form.id === 'shopping-add') {
+      const name = String(data.get('item') || '').trim(); if (!name) return;
+      store.shopping.push({ id: uniqueId(), name: name.slice(0, 150), quantity: 0, unit: '', checked: false }); persist(); rerender(); $('#shopping-input')?.focus();
+    } else if (form.id === 'profile-form') {
+      store.name = String(data.get('name') || '').trim().slice(0, 30); store.vegetarian = data.get('vegetarian') === 'on';
+      persist(); rerender(); toast('Votre espace est à votre image.', 'leaf');
+    } else if (form.id === 'plan-recipe-form') assignRecipe(form.dataset.id, String(data.get('date')), String(data.get('meal')));
+    else if (form.id === 'barcode-form') {
+      const q = String(data.get('code') || '').replace(/[\s-]/g, '');
+      if (!R.isValidBarcode(q)) { $('#barcode-error').textContent = 'Vérifiez les chiffres : un code valide comporte 8, 12, 13 ou 14 chiffres et une clé de contrôle correcte.'; $('#barcode-input').focus(); return; }
+      $('#detail-dialog').close(); go('aliments', { source: 'off', q });
+    }
+  });
+  document.addEventListener('input', event => {
+    if (event.target.id === 'explore-search-input' && route.params.get('source') !== 'off') {
+      const value = event.target.value.trim();
+      if (value) route.params.set('q', value); else route.params.delete('q');
+      history.replaceState(null, '', href('aliments', Object.fromEntries(route.params)));
+      $('#food-results').innerHTML = guideResults();
+    }
+  });
+  document.addEventListener('change', event => {
+    if (event.target.matches('[data-shopping-id]')) {
+      const item = store.shopping.find(i => i.id === event.target.dataset.shoppingId);
+      if (item) { item.checked = event.target.checked; persist(); $('#shopping-count').textContent = `${store.shopping.filter(i => i.checked).length} sur ${store.shopping.length} articles dans votre panier`; }
+    }
+    if (event.target.id === 'meal-date' || event.target.id === 'meal-type') {
+      const date = $('#meal-date').value; const meal = $('#meal-type').value;
+      $('#meal-replace-note').textContent = store.menus[date]?.[meal] ? 'Un repas est déjà prévu à cette date. Il sera remplacé.' : 'Le repas sera ajouté à votre carnet de menus.';
+    }
+  });
+  document.addEventListener('error', event => {
+    if (event.target instanceof HTMLImageElement && event.target.classList.contains('product-image')) {
+      event.target.parentElement.innerHTML = art('bowl');
+    }
+  }, true);
+  window.addEventListener('hashchange', renderRoute);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && $('#sidebar')?.classList.contains('is-open')) { closeMenu(); $('[data-action="menu"]')?.focus(); }
+    if (event.key === 'Tab' && $('#sidebar')?.classList.contains('is-open')) {
+      const focusables = [...$('#sidebar').querySelectorAll('button,a[href]')].filter(el => el.getClientRects().length);
+      const first = focusables[0], last = focusables.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k' && !$('#detail-dialog').open) { event.preventDefault(); if (!$('#explore-search-input') && !$('#home-search-input')) go('aliments'); else ($('#explore-search-input') || $('#home-search-input')).focus(); }
+  });
+  function updateOnline() {
+    const el = $('#connection-status');
+    el.innerHTML = navigator.onLine ? '' : `<div class="offline-banner">${icon('offline', 14)}Vous êtes hors connexion. Le guide et votre carnet restent à vos côtés.</div>`;
+  }
+  window.addEventListener('online', updateOnline);
+  window.addEventListener('offline', updateOnline);
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; if (route.page === 'profil') rerender(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && dialogContext?.type === 'scanner') { stopCamera(); if ($('#camera-status')) $('#camera-status').textContent = 'Caméra mise en pause. Fermez et rouvrez le scanner pour reprendre.'; } });
+  window.addEventListener('pagehide', stopCamera);
+  window.matchMedia('(max-width:760px)').addEventListener('change', () => { closeMenu(); syncSidebar(); });
+  $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
+  const dialog = $('#detail-dialog');
+  dialog.addEventListener('close', () => {
+    stopCamera(); dialogContext = null; document.body.style.overflow = '';
+    if (lastDialogTrigger?.isConnected) lastDialogTrigger.focus({ preventScroll: true });
+    if (route.page === 'favoris') { const y = window.scrollY; $('#main').innerHTML = `<div class="page-content">${favoritesPage()}</div>${footer()}`; window.scrollTo({ top: y, behavior: 'instant' }); }
+  });
+  dialog.addEventListener('click', e => { if (e.target === dialog) { const box = dialog.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) dialog.close(); } });
+  renderRoute(); updateOnline();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* The application also works without installation. */ }));
+  }
+})();
