@@ -1,6 +1,7 @@
 /* Small, code-native illustrations. No remote icon dependency. */
 window.MietteIcons = (() => {
   const paths = {
+    cloud: '<path d="M6 18a4 4 0 0 1-.6-8A7 7 0 0 1 19 8.5 4.8 4.8 0 0 1-.8 9.5H6Z"/>',
     home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
     search: '<circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/>',
     leaf: '<path d="M20 3c1 11-3 17-10 16S3 5 20 3Z"/><path d="M4 21 15 10"/>',

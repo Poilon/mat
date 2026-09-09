@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
 const product = (overrides = {}) => ({ code: '3017620422003', product_name: 'Produit de démonstration', brands: 'Marque test', ingredients_text: 'Sucre, lait pasteurisé, cacao', categories_tags: ['en:spreads'], nutriments: { sugars_100g: 12 }, ...overrides });
-async function routeOFF(page, handler) { await page.route('https://world.openfoodfacts.org/**', handler); }
+async function routeOFF(page, handler) { await page.route('**/api/products?**', handler); }
 
 test('Home, local search, risk details and favorites persist across reloads', async ({ page }) => {
   const errors = []; page.on('pageerror', err => errors.push(err.message));
@@ -101,8 +101,8 @@ test('OFF search is submission-only; incomplete data, pagination and caching wor
   expect(requests.length).toBe(0);
   await page.locator('#explore-search button[type="submit"]').click();
   await expect(page.locator('.food-card')).toHaveCount(20);
-  expect(requests[0].pathname).toBe('/cgi/search.pl');
-  expect(requests[0].searchParams.get('search_terms')).toBe('yaourt');
+  expect(requests[0].pathname).toBe('/api/products');
+  expect(requests[0].searchParams.get('q')).toBe('yaourt');
   await page.locator('.food-card-open').first().click();
   await expect(page.locator('dialog')).toContainText('Ingrédients non renseignés');
   await expect(page.locator('dialog .status-badge')).toHaveText('À vérifier');
@@ -139,7 +139,7 @@ test('An unavailable API shows an actionable error and the local guide remains u
 test('Slow obsolete requests cannot overwrite a newer query', async ({ page }) => {
   let releaseFirst;
   await routeOFF(page, async route => {
-    const query = new URL(route.request().url()).searchParams.get('search_terms');
+    const query = new URL(route.request().url()).searchParams.get('q');
     if (query === 'premier') await new Promise(resolve => { releaseFirst = resolve; });
     await route.fulfill({ json: { count: 1, products: [product({ product_name: query })] } }).catch(() => {});
   });

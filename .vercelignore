@@ -1,0 +1,10 @@
+.git
+.github
+.env*
+node_modules
+test-results
+playwright-report
+tests
+README.md
+_site
+dist

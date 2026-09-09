@@ -1,43 +1,74 @@
 # Miette — Bien manger, à deux.
 
-Application en français consacrée à l’alimentation pendant la grossesse. **HTML, CSS et JavaScript natifs, sans backend, sans clé API et sans compilation.**
+Application en français sur l’alimentation pendant la grossesse : **100 recettes, 70 fiches alimentaires, recherche Open Food Facts, scanner et carnet synchronisé**.
 
-Application : **https://poilon.com/mat/** · Dépôt : **https://github.com/Poilon/mat**
+**Application : https://mat-sandy-six.vercel.app/** · [Code source](https://github.com/Poilon/mat)
 
-## Publication GitHub Pages
-
-Chaque push sur `main` lance `.github/workflows/pages.yml` : vérification des règles puis publication des seuls fichiers du site statique. `node_modules`, les tests et les fichiers de développement ne sont pas envoyés dans l’artefact du site.
-
-Le dépôt utilise GitHub Actions comme source Pages. Il hérite du domaine `poilon.com` du site de compte `Poilon/poilon.github.io`, d’où l’adresse `/mat/`. Aucun fichier `CNAME` ne doit être ajouté à ce dépôt pour ce sous-chemin. Les ressources, les liens internes, le manifeste et le service worker utilisent des chemins relatifs.
-
-## Ouvrir l’application
-
-Ouvrir `index.html` pour une consultation locale. Pour bénéficier de la mise en cache hors connexion et de la caméra lorsque le navigateur la prend en charge, servir les fichiers statiques :
-
-```sh
-python3 -m http.server 4173
-```
-
-Puis ouvrir **http://localhost:4173**. `npm start` exécute le même serveur de fichiers, si Node.js est disponible. Il ne s’agit pas d’un backend applicatif.
-
-Le site peut aussi être déposé sur tout hébergement statique HTTPS, y compris dans un sous-dossier. Copier `index.html`, `styles.css`, `manifest.webmanifest`, `sw.js`, les dossiers `js/` et `assets/`. Aucune installation npm n’est nécessaire pour utiliser ou publier l’app.
+L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les recettes et le carnet local restent utilisables sans compte.
 
 ## Fonctionnalités
 
-- Accueil, interface responsive et navigation au clavier.
-- **70 aliments ou familles alimentaires**, recherche locale instantanée, filtres par catégorie et précaution.
-- Recherche mondiale **Open Food Facts**, par nom, marque ou code-barres, avec pagination.
-- Lecture caméra native si `BarcodeDetector` et `getUserMedia` sont disponibles. Saisie manuelle toujours accessible, avec validation de la clé GTIN/EAN/UPC.
-- Fiches avec conditions de préparation, ingrédients disponibles, allergènes déclarés, valeurs nutritionnelles et liens vers les sources.
-- **100 recettes originales**, réparties dans 9 collections : brunch, bowls, Italie, cuisine d’ailleurs, bistro, four, soupes, douceurs et apéritif.
-- Recherche instantanée par plat ou ingrédient, filtres combinables par collection, repas, durée et végétarien ; tri par inspiration, temps ou nom.
-- Portions de 1 à 8 personnes avec quantités recalculées, favoris, menus et liste de courses pour toutes les recettes. Recherche intégrée au choix des menus.
-- Catalogue et photos accessibles hors connexion après la première visite et la mise en cache.
-- Favoris alimentaires et recettes, menus hebdomadaires, liste de courses avec cumul des quantités et cases à cocher.
-- Export texte de la liste et export JSON du carnet ; effacement des données depuis l’interface.
-- Prénom facultatif et préférence végétarienne, enregistrés uniquement dans ce navigateur.
-- Service worker et manifeste pour installation et consultation hors connexion après une première ouverture réussie sur HTTPS ou localhost.
-- Images, illustrations et polices du guide incluses dans les fichiers.
+- Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
+- Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
+- 100 recettes originales et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
+- Compte facultatif, connexion, récupération du mot de passe, déconnexion et suppression du compte avec confirmation du mot de passe.
+- Carnet sauvegardé automatiquement, copie locale hors connexion, synchronisation au retour du réseau. Les modifications indépendantes sont fusionnées ; un conflit sur le même élément demande un choix explicite.
+- Carnets séparés par compte et carnet invité distinct. L’ajout du carnet invité lors de la connexion est facultatif.
+- Export/import JSON avec confirmation, export texte des courses, effacement du carnet.
+- Application web installable depuis les navigateurs compatibles et instructions iPhone/Android/ordinateur. Les recettes, leurs photos et le guide sont mis en cache après la première visite.
+
+## Ancienne adresse et transfert
+
+**https://poilon.com/mat/** conserve une version statique avec un accès visible à la version connectée. « Transférer mon carnet » ouvre la nouvelle application et propose l’importation, sans supprimer la copie existante. Le transfert se fait entre les deux onglets par `postMessage`, avec vérification de l’origine, de la fenêtre source et d’un identifiant aléatoire ; le carnet n’est placé ni dans l’URL ni dans les journaux serveur. L’export/import JSON est également disponible si le navigateur bloque le nouvel onglet.
+
+Le workflow GitHub Pages compile le lecteur de codes-barres et configure ce miroir avec `STATIC_MIRROR=1`. Les fonctions de compte utilisent l’adresse Vercel. Aucun `CNAME` ne doit être ajouté pour le sous-chemin `/mat/`.
+
+## Développement
+
+Node.js 24 et npm :
+
+```sh
+npm ci
+# Récupérer les variables du projet Vercel auquel ce dépôt est lié :
+vercel env pull .env.development.local --environment development --scope poilons-projects
+npm run db:migrate
+npm run dev
+```
+
+Ouvrir **http://localhost:4175**. Le serveur local fournit les mêmes routes que Vercel. Sans variables Neon, le guide, les recettes et le carnet invité fonctionnent ; les comptes et le relais de recherche nécessitent leur configuration. Les variables `.env*` sont ignorées par Git, sauf le modèle `.env.example` qui ne contient aucun secret.
+
+```sh
+npm run build          # Interface et scanner dans dist/
+npm test               # Règles, catalogue, fusion du carnet et contrôles serveur
+npm run test:browser   # Parcours, comptes simulés, deux appareils, hors connexion, photo et accessibilité
+```
+
+Installer Chromium une fois avec `npx playwright install chromium`. Les tests navigateur démarrent un serveur isolé sur le port 4176 sans accès à la base de production. Les vérifications réelles du serveur sont effectuées séparément avec des comptes temporaires.
+
+## Publication et configuration
+
+Le dépôt GitHub est relié au projet Vercel **mat** dans **poilons-projects**. Un push sur `main` déclenche le déploiement Vercel et le miroir GitHub Pages. Une publication manuelle est également possible :
+
+```sh
+vercel deploy --prod --yes --scope poilons-projects
+```
+
+La base dédiée **miette-db**, créée sur l’offre gratuite, est en région Francfort. L’intégration injecte `DATABASE_URL` et `NEON_AUTH_BASE_URL` dans les environnements Vercel. Les secrets sont uniquement lus par `api/` et `server/` ; `dist/js/runtime.js` ne contient que des adresses publiques.
+
+Avant de changer le domaine de production, l’ajouter aux domaines autorisés de Neon Auth. Le domaine actuellement autorisé est `https://mat-sandy-six.vercel.app`, avec le nom d’application « Miette ». La configuration actuelle se trouve dans `neon_auth.project_config` ; le domaine a été ajouté explicitement à `trusted_origins`. Le développement local reste autorisé. Ne pas autoriser tous les domaines ni modifier le DNS racine de `poilon.com` pour cette application.
+
+`npm run db:migrate` initialise uniquement les tables applicatives. Neon crée et gère son schéma d’authentification. Le retrait d’un compte passe par une réauthentification auprès de Neon Auth, puis une transaction qui supprime son carnet, les vérifications associées et son utilisateur ; les clés étrangères Neon suppriment ses sessions et identifiants de connexion. Ce chemin dépend du schéma Better Auth et doit être revérifié après une évolution du service.
+
+## Données et réseau
+
+- Les routes privées vérifient la session auprès de Neon Auth et déterminent l’utilisateur à partir de celle-ci. Aucun identifiant fourni par le client ne choisit le propriétaire du carnet.
+- Cookies de session `HttpOnly` et `Secure` en production, origine vérifiée sur les mutations, validation JSON et taille limitée, requêtes SQL paramétrées. Les jetons de session ne sont pas renvoyés au JavaScript.
+- Les sauvegardes utilisent une révision et une mise à jour conditionnelle pour prévenir les écrasements entre appareils. Les copies locales des comptes restent sur leurs appareils pour le mode hors connexion ; les déconnecter ne les fusionne pas avec le carnet invité.
+- Le relais Open Food Facts autorise seulement la recherche et la lecture de produits. Cache serveur et CDN, délais maximaux, quotas partagés en base et identification `User-Agent` de Miette. Recherche uniquement à la validation, jamais à chaque frappe.
+- L’application ne télécharge pas toute la base OFF. Les limites partagées sont de 8 recherches textuelles et 75 lectures de codes par minute avant cache ; une réponse limitée demande de réessayer. Cache navigateur de 24 h pour les recherches récentes.
+- La recherche nécessite internet et la disponibilité d’Open Food Facts. Le guide et les recettes sont disponibles hors connexion une fois leur cache installé. Les images de produits distants ne sont pas promises hors connexion.
+- Les noms recherchés et les codes sont transmis à Vercel puis à OFF. Les images de caméra et les photos choisies restent sur l’appareil. Aucun outil publicitaire ou de mesure d’audience n’est intégré. Les hébergeurs traitent les données techniques nécessaires à leur service.
+- La limitation des appels utilise une empreinte de l’adresse IP renouvelée quotidiennement, sans enregistrer l’IP en clair dans les tables applicatives. Les anciens compteurs sont retirés lors des migrations.
 
 ## Sources et portée des conseils
 
@@ -53,56 +84,31 @@ Open Food Facts est une base collaborative de produits, **pas une base de décis
 
 Pour maintenir le guide, modifier `js/data.js` (guide) ou `js/recipes.js` (nouvelles recettes), vérifier les recommandations auprès des sources primaires puis actualiser la date. `js/rules.js` contient séparément les règles partielles de repérage des produits.
 
-## Accès API et réseau
-
-- Produit : `https://world.openfoodfacts.org/api/v3/product/{code}.json`.
-- Texte libre : `https://world.openfoodfacts.org/cgi/search.pl`, endpoint de recherche historique, l’API v2 ne proposant pas de vraie recherche en texte libre.
-- Requêtes GET publiques directement depuis le navigateur, sans cookies ni authentification. L’identification de l’app utilise `app_name` et `app_version` ; un navigateur ne permet pas de personnaliser fiablement `User-Agent`.
-- Recherche distante uniquement à la validation, jamais à chaque frappe. Limitation locale : 8 recherches/minute avec 7 secondes entre requêtes et 12 lectures/minute avec 4,5 secondes entre requêtes. Les limites par IP du service restent prioritaires ; plusieurs personnes derrière une IP peuvent les partager.
-- Cache local : 12 résultats de recherche maximum, pendant 24 h. Les favoris restent conservés jusqu’à leur suppression. Les recherches ont un délai maximal de 18 secondes et les anciennes requêtes sont annulées.
-- Le site gère les erreurs réseau, les produits absents, les données manquantes et les limitations de débit. Les nouvelles recherches nécessitent une connexion et la disponibilité du service OFF/CORS.
-- Open Food Facts reçoit les recherches, les codes-barres et les informations usuelles de connexion. Le carnet, le prénom et les images de caméra ne lui sont pas envoyés. Les images produits sont chargées depuis son domaine ; elles ne sont pas promises hors connexion.
-- Pour une diffusion à grande échelle, suivre la [documentation et les conditions Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/), déclarer l’usage auprès du service et revoir les besoins de trafic. Aucun secret d’authentification ne doit être ajouté au site.
-
 ## Organisation
 
 ```text
-index.html              Point d’entrée
-styles.css              Interface, responsive, accessibilité, impression
-js/data.js              Guide éditorial, recettes initiales, sources
-js/recipes.js           90 recettes originales et 9 collections
-js/rules.js             Repérage des précautions + validation des codes
-js/api.js               Client OFF, normalisation, cache, limites, annulation
-js/icons.js             Icônes et illustrations SVG natives
-js/app.js               Navigation, fiches, caméra et carnet local
-assets/                 Photos, polices et icônes incluses
-sw.js                   Cache de l’app statique
-manifest.webmanifest    Installation sur les appareils compatibles
-tests/                  Tests du moteur et des parcours navigateur
+index.html, styles.css  Interface native
+js/data.js             Guide, sources et recettes initiales
+js/recipes.js          90 recettes supplémentaires et collections
+js/rules.js            Repérage partiel des précautions et contrôle EAN/UPC
+js/api.js              Normalisation et cache de la recherche
+js/app.js              Pages, fiches, compte, menus, courses, transfert et installation
+js/cloud.js            Session, sauvegarde et synchronisation
+js/notebook.js         Fusion des modifications entre appareils
+src/scanner.js         Lecteur ZXing compilé en dist/js/scanner.js
+api/                   Fonctions Vercel : auth, compte, carnet, produits, configuration
+server/                Validation, connexion PostgreSQL, sessions et quotas
+scripts/               Compilation, développement et migration applicative
+assets/                Photos, polices, icônes et licences
+sw.js                  Cache du guide, des recettes et de l’interface ; aucune API privée
 ```
 
-Au déploiement d’une nouvelle version, changer le nom `CACHE` dans `sw.js` pour renouveler les fichiers précachés. Le service worker ne met pas en cache les requêtes externes. Aucun script publicitaire ni outil de suivi n’est inclus.
-
-## Vérifications
-
-Tests du guide et des règles, sans dépendance externe :
-
-```sh
-npm test
-```
-
-Tests de parcours Chromium, réponses OFF simulées, accessibilité avec axe, et rechargement hors connexion :
-
-```sh
-npm install
-npx playwright install chromium
-npm run test:browser
-```
-
-Ces dépendances servent uniquement aux tests. Les parcours simulés couvrent notamment la recherche, la pagination, le cache, l’annulation, les données manquantes, les erreurs, l’échappement HTML, les favoris, les portions, les menus, les courses et le mobile. Les tests logiciels ne constituent pas une validation médicale. Le fonctionnement réel de la caméra dépend de l’appareil, de ses autorisations et du navigateur ; la saisie manuelle est le repli prévu.
+Changer le nom du cache dans `sw.js` lorsque les fichiers précachés évoluent. Les tests logiciels ne constituent pas une validation médicale. La caméra physique dépend du téléphone, du navigateur et des autorisations ; la photo et la saisie du code restent disponibles.
 
 ## Crédits
 
 Les données OFF sont sous [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/), les contenus individuels sous Database Contents License et les images produits sous CC BY-SA. Chaque fiche produit renvoie à sa source. Cette base est distincte du guide éditorial Miette.
 
 Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miette. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
+
+Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.

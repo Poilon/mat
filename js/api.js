@@ -68,7 +68,8 @@
     const hit = cached(key);
     if (hit) return hit;
     if (typeof navigator !== 'undefined' && !navigator.onLine) throw new Error('Vous êtes hors connexion. Les aliments du guide, vos recettes et votre carnet restent accessibles.');
-    checkRate(isBarcode ? 'barcode' : 'search');
+    const proxyBase = root.MietteRuntime?.apiBase;
+    if (!proxyBase) checkRate(isBarcode ? 'barcode' : 'search');
     const url = new URL(isBarcode ? '/api/v3/product/' + digits + '.json' : '/cgi/search.pl', API_ROOT);
     url.searchParams.set('fields', FIELDS);
     // Browser fetch cannot reliably set User-Agent. Identify the static client in the URL.
@@ -85,13 +86,20 @@
     let timedOut = false;
     const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 18000);
     try {
-      const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+      const proxy = proxyBase ? new URL('products', new URL(proxyBase, location.href)) : null;
+      if (proxy) { proxy.searchParams.set('q', term); proxy.searchParams.set('page', String(page)); }
+      let response = await fetch(proxy || url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+      // A standalone static copy keeps working; Vercel responds with JSON for all product lookups.
+      if (proxy && response.status === 404) {
+        checkRate(isBarcode ? 'barcode' : 'search');
+        response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+      }
       if (response.status === 404 && isBarcode) return { products: [], count: 0, page: 1, hasMore: false };
       if (response.status === 429) throw new Error('Open Food Facts reçoit trop de demandes. Réessayez dans une minute.');
       if (!response.ok) throw new Error('Open Food Facts est temporairement indisponible. Vous pouvez utiliser le guide et réessayer plus tard.');
       const json = await response.json();
       if (!json || typeof json !== 'object' || (!isBarcode && !Array.isArray(json.products))) throw new Error('La réponse Open Food Facts est incomplète. Réessayez plus tard.');
-      const raw = isBarcode ? (json.product ? [{ ...json.product, code: json.product.code || digits }] : []) : json.products;
+      const raw = isBarcode ? (Array.isArray(json.products) ? json.products : json.product ? [{ ...json.product, code: json.product.code || digits }] : []) : json.products;
       const products = raw.map(toProduct).filter(Boolean);
       const count = isBarcode ? products.length : Number.isFinite(Number(json.count)) ? Math.max(0, Number(json.count)) : products.length;
       const data = { products, count, page, hasMore: !isBarcode && raw.length === 20 && page * 20 < count };

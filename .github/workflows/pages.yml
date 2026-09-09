@@ -24,22 +24,29 @@ jobs:
       - name: Check out the source
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
       - name: Verify the guide and precaution rules
         run: node --test tests/*.test.cjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Collect the static website
-        run: |
-          mkdir -p _site
-          cp index.html styles.css manifest.webmanifest sw.js .nojekyll _site/
-          cp -R assets js _site/
+      - name: Build the static mirror and migration link
+        run: npm run build
+        env:
+          STATIC_MIRROR: '1'
+          PUBLIC_APP_URL: https://mat-sandy-six.vercel.app/
 
       - name: Upload the static website
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
       - name: Publish to GitHub Pages
         id: deployment

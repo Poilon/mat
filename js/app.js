@@ -3,6 +3,7 @@
   const D = window.MietteData;
   const R = window.MietteRules;
   const API = window.MietteAPI;
+  const Cloud = window.MietteCloud;
   const { icon, food: art } = window.MietteIcons;
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,13 +29,17 @@
   let cameraTimer = null;
   let lastDialogTrigger = null;
   let installPrompt = null;
+  let scannerControls = null;
+  let scannerLoading = null;
+  let authMode = 'login';
+  let authBusy = false;
 
-  function readStore() {
+  function readStore(provided) {
     const defaults = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] };
     try {
-      const testKey = 'miette-storage-check';
-      localStorage.setItem(testKey, '1'); localStorage.removeItem(testKey);
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      try { const testKey = 'miette-storage-check'; localStorage.setItem(testKey, '1'); localStorage.removeItem(testKey); }
+      catch { storageAvailable = false; }
+      const raw = provided || JSON.parse(localStorage.getItem(Cloud?.storageKey || STORAGE_KEY) || 'null');
       if (!raw || typeof raw !== 'object') return defaults;
       defaults.name = typeof raw.name === 'string' ? raw.name.slice(0, 30) : '';
       defaults.vegetarian = raw.vegetarian === true;
@@ -42,22 +47,24 @@
       defaults.products.forEach(p => productMap.set(p.id, p));
       if (Array.isArray(raw.favorites)) defaults.favorites = [...new Set(raw.favorites.filter(v => typeof v === 'string' && /^(food|recipe):[\w-]+$/.test(v)))].slice(0, 300);
       if (raw.menus && typeof raw.menus === 'object') Object.entries(raw.menus).slice(0, 1000).forEach(([date, slots]) => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !slots || typeof slots !== 'object') return;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(new Date(date + 'T12:00:00Z').getTime()) || new Date(date + 'T12:00:00Z').toISOString().slice(0, 10) !== date || !slots || typeof slots !== 'object') return;
         defaults.menus[date] = {};
         ['lunch', 'dinner'].forEach(meal => { if (recipesById.has(slots[meal])) defaults.menus[date][meal] = slots[meal]; });
       });
-      if (Array.isArray(raw.shopping)) defaults.shopping = raw.shopping.filter(v => v && typeof v.id === 'string' && typeof v.name === 'string').slice(0, 500).map(v => ({ id: v.id.slice(0, 100), name: v.name.slice(0, 150), quantity: typeof v.quantity === 'number' && Number.isFinite(v.quantity) ? Math.max(0, v.quantity) : 0, unit: typeof v.unit === 'string' ? v.unit.slice(0, 20) : '', checked: v.checked === true }));
+      if (Array.isArray(raw.shopping)) defaults.shopping = [...new Map(raw.shopping.filter(v => v && typeof v.id === 'string' && /^[\w-]{1,100}$/.test(v.id) && typeof v.name === 'string' && v.name.trim()).slice(0, 500).map(v => [v.id, { id: v.id, name: v.name.slice(0, 150), quantity: typeof v.quantity === 'number' && Number.isFinite(v.quantity) ? Math.min(1000000, Math.max(0, v.quantity)) : 0, unit: typeof v.unit === 'string' ? v.unit.slice(0, 20) : '', checked: v.checked === true }])).values()];
       return defaults;
     } catch (_) { storageAvailable = false; return defaults; }
   }
   function persist() {
     try {
       store.products = [...productMap.values()].filter(p => store.favorites.includes('food:' + p.id)).slice(0, 100);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      localStorage.setItem(Cloud?.storageKey || STORAGE_KEY, JSON.stringify(store));
+      Cloud?.changed();
       return true;
     } catch (_) {
       if (storageAvailable) toast('Votre navigateur ne peut plus enregistrer le carnet. Les changements restent disponibles dans cet onglet.', 'info');
       storageAvailable = false;
+      Cloud?.changed();
       return false;
     }
   }
@@ -121,10 +128,46 @@
       <div class="sidebar-bottom"><div class="sidebar-note">${icon('leaf', 53)}<h3>Un jour à la fois.</h3><p>Pas besoin d’être parfaite.<br>Juste de prendre soin de vous.</p></div><a class="sidebar-help" href="#sources">${icon('shield', 14)}Des repères, en toute transparence</a></div>`;
   }
   function topbar() {
-    return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb">${icon('leaf', 16)}<span>Miette</span>${icon('chevron', 11)}<b>${labels[route.page]}</b></div><div class="topbar-right"><span class="topbar-note">${icon('heart', 13)}Pensé pour vous & bébé</span><a href="#profil" class="profile-trigger" aria-label="Personnaliser mon espace"><span class="avatar">${escape(store.name ? store.name.charAt(0).toUpperCase() : 'M')}</span><span>${escape(store.name || 'Mon espace')}</span>${icon('down', 13)}</a></div>`;
+    return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb">${icon('leaf', 16)}<span>Miette</span>${icon('chevron', 11)}<b>${labels[route.page]}</b></div><div class="topbar-right"><span class="topbar-note">${icon('heart', 13)}Pensé pour vous & bébé</span><a href="#profil" class="profile-trigger" aria-label="Mon compte et mes préférences"><span class="avatar">${escape(store.name ? store.name.charAt(0).toUpperCase() : 'M')}</span><span>${escape(store.name || (Cloud.state.user ? 'Mon compte' : 'Se connecter'))}</span>${icon('down', 13)}</a></div>`;
   }
   function footer() {
     return `<footer class="footer"><span><span class="footer-brand">miette</span> &nbsp; Fait avec attention, pour vous deux <span class="footer-heart">♡</span></span><div class="footer-links"><a href="#sources">Sources & méthode</a><a href="#confidentialite">Vos données</a><span>© 2026 Miette</span></div></footer>`;
+  }
+  function migrationNote() {
+    const runtime = window.MietteRuntime;
+    if (runtime?.cloud !== false || !runtime.appURL) return '';
+    return `<aside class="migration-note"><div><b>Miette a une nouvelle maison.</b><p>Compte, carnet synchronisé et scan photo : retrouvez la version connectée.</p></div><div class="dialog-actions"><a class="btn btn-primary" href="${escape(runtime.appURL)}">Ouvrir l’application ${icon('arrow', 15)}</a><button class="btn btn-outline" data-action="transfer-notebook">Transférer mon carnet</button></div></aside>`;
+  }
+  function transferNotebook() {
+    const runtime = window.MietteRuntime;
+    if (runtime?.cloud !== false || !runtime.appURL) return;
+    const target = new URL(runtime.appURL);
+    const nonce = crypto.randomUUID();
+    target.hash = 'profil?transfer=' + nonce;
+    const child = window.open(target.href, '_blank');
+    if (!child) { toast('Autorisez l’ouverture du nouvel onglet, ou exportez votre carnet depuis « Vos données ».', 'info'); return; }
+    const receive = event => {
+      if (event.source !== child || event.origin !== target.origin || event.data?.type !== 'miette:ready' || event.data.nonce !== nonce) return;
+      child.postMessage({ type: 'miette:transfer', nonce, application: 'Miette', version: 1, notebook: store }, target.origin);
+      window.removeEventListener('message', receive); clearTimeout(timeout);
+    };
+    const timeout = setTimeout(() => window.removeEventListener('message', receive), 120000);
+    window.addEventListener('message', receive);
+  }
+  function receiveTransfer() {
+    const nonce = route.params.get('transfer');
+    if (!nonce || !/^[\w-]{20,60}$/.test(nonce) || !window.opener || window.MietteRuntime?.cloud === false) return;
+    const sender = window.opener;
+    const receive = event => {
+      if (event.source !== sender || event.origin !== 'https://poilon.com' || event.data?.type !== 'miette:transfer' || event.data.nonce !== nonce) return;
+      window.removeEventListener('message', receive); clearTimeout(timeout);
+      history.replaceState(null, '', location.pathname + '#profil'); route = getRoute();
+      window.opener = null;
+      importNotebook(new Blob([JSON.stringify(event.data)], { type: 'application/json' }));
+    };
+    const timeout = setTimeout(() => { window.removeEventListener('message', receive); toast('Le transfert a expiré. Vous pouvez aussi importer un export JSON depuis « Vos données ».', 'info'); }, 60000);
+    window.addEventListener('message', receive);
+    sender.postMessage({ type: 'miette:ready', nonce }, 'https://poilon.com');
   }
   function searchForm(id, value = '', source = 'guide') {
     return `<form id="${id}" class="search-box" role="search">${icon('search', 21)}<label class="sr-only" for="${id}-input">${source === 'off' ? 'Nom, marque ou code-barres du produit' : 'Rechercher un aliment'}</label><input id="${id}-input" name="q" type="search" placeholder="${source === 'off' ? 'Un produit, une marque ou un code-barres…' : 'Un aliment, une envie, une petite question…'}" value="${escape(value)}" maxlength="150" autocomplete="off"><button type="button" class="search-scan" data-action="scan" aria-label="Rechercher par code-barres" title="Rechercher par code-barres">${icon('scan', 20)}</button><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form>`;
@@ -133,7 +176,7 @@
     const featuredRecipes = recipeHighlights.map(id => recipesById.get(id)).filter(r => !store.vegetarian || r.vegetarian).slice(0, 3);
     return `<div class="page-heading"><div><h1>${store.name ? `Bonjour ${escape(store.name)},` : 'Bonjour, vous.'} ${icon('sun', 23)}</h1><p>Une nouvelle journée pour prendre soin de vous, et de bébé.</p></div><span class="heading-pill">${icon('leaf', 13)} Chaque petit choix compte</span></div>
       <section class="hero" aria-labelledby="hero-title"><div class="hero-copy"><span class="eyebrow">${icon('sparkle', 13)} VOTRE COMPAGNON DE GROSSESSE</span><h2 id="hero-title">Bien manger,<br><em>l’esprit léger.</em></h2><p>Des réponses à vos envies et des recettes à aimer. Tout pour une assiette sereine, pendant la grossesse.</p><div class="hero-actions"><a class="btn btn-primary" href="#aliments">Explorer les aliments ${icon('arrow', 16)}</a><a class="btn-text" href="#recettes">En cuisine ${icon('chevron', 13)}</a></div></div><div class="hero-visual"><div class="hero-photo-frame"><img src="assets/hero.jpg" alt="Une salade colorée avec de l’avocat, des légumes et de la grenade" fetchpriority="high" width="1200" height="800"></div>${icon('sparkle', 32).replace('<svg', '<svg class="hero-decoration"')}<div class="hero-badge"><div class="badge-icon">${icon('check', 19)}</div><div><b>Un peu de douceur dans l’assiette</b><span>Et beaucoup d’attention pour vous.</span></div></div></div></section>
-      <div class="trust-row"><span>${icon('shield', 13)}Recommandations publiques citées</span><span>${icon('globe', 13)}Recherche Open Food Facts</span><span>${icon('lock', 13)}Votre carnet reste chez vous</span></div>
+      <div class="trust-row"><span>${icon('shield', 13)}Recommandations publiques citées</span><span>${icon('globe', 13)}Recherche Open Food Facts</span><span>${icon('lock', 13)}Votre carnet, avec ou sans compte</span></div>
       <section aria-labelledby="search-title"><div class="section-heading"><div><h2 id="search-title">Et ça, je peux en manger ?</h2><p>Les bons repères, à portée de fourchette.</p></div><a href="#aliments" class="btn-text">Tout explorer ${icon('arrow', 15)}</a></div>${searchForm('home-search')}<div class="suggestions"><span>Une petite envie de…</span>${['Mozzarella', 'Saumon', 'Café', 'Œufs'].map(q => `<a class="suggestion" href="${href('aliments', { q })}">${q}</a>`).join('')}</div>
       <div class="home-content-grid"><div><div class="popular-heading"><h3>Souvent dans vos assiettes</h3><span>Le guide Miette</span></div><div class="food-grid">${D.foods.slice(0, 4).map(foodCard).join('')}</div></div><div class="tip-card"><div class="tip-icon">${icon('leaf', 20)}</div><div class="tip-text"><p class="eyebrow">LE PETIT REPÈRE DU JOUR</p><h3>Le cru, ça se prépare.</h3><p>Fruits, légumes, herbes fraîches : un lavage soigneux à l’eau potable, même avant de les éplucher.</p></div><a href="#guide" class="btn-text">Les bons gestes ${icon('arrow', 13)}</a></div></div></section>
       <section class="recipes-section" aria-labelledby="recipes-title"><div class="section-heading"><div><h2 id="recipes-title">Un peu d’inspiration au menu</h2><p>${D.recipes.length} recettes, des petits matins aux grandes envies.</p></div><a class="btn-text" href="#recettes">Toutes les recettes ${icon('arrow', 15)}</a></div><div class="recipe-grid">${featuredRecipes.map(recipeCard).join('')}</div></section>
@@ -283,11 +326,103 @@
   function sourcesPage() {
     return `${heading('La confiance commence par la clarté.', 'Voici d’où viennent nos repères, et ce que Miette peut vous apporter.')}<div class="advice-box"><p><strong>Miette est un outil d’information générale.</strong> Les fiches éditoriales sont préparées à partir des recommandations publiques ci-dessous. Elles n’ont pas fait l’objet d’une validation clinique indépendante et ne remplacent pas un avis médical.</p><p>Références consultées le ${D.reviewed}. Pays de référence : France. Les recommandations peuvent évoluer.</p></div><div class="sources-list">${Object.values(D.sources).map(s => `<a class="source-row" href="${s.url}" target="_blank" rel="noopener noreferrer"><div><b>${s.name}</b><span>${s.title}</span></div>${icon('external', 18)}</a>`).join('')}</div><div class="legal-copy"><h3>Deux sources, deux niveaux d’information</h3><p>Le guide local comporte ${D.foods.length} aliments et familles alimentaires avec leurs conditions de préparation. Il n’est pas exhaustif. La recherche de produits interroge la base mondiale Open Food Facts à la demande ; elle ne télécharge pas tous les produits.</p><p>Pour un produit Open Food Facts, des règles repèrent certains termes de la dénomination, des catégories et des ingrédients en français ou en anglais. Les règles sont partielles, peuvent manquer une information ou interpréter un terme à tort. La cuisson réelle, la chaîne du froid, les rappels de lots et la qualité du lavage ne peuvent pas être vérifiés. Aucun produit n’est automatiquement déclaré « Compatible ».</p><h3>Comprendre les indications</h3>${Object.values(D.statuses).map(s => `<p><strong>${s.label}.</strong> ${s.description}</p>`).join('')}<h3>Recettes et photographie</h3><p>Les ${D.recipes.length} recettes sont des propositions culinaires originales. Les temps de cuisson sont indicatifs ; vérifiez toujours la cuisson complète et les indications du fabricant. Elles ne constituent pas un programme nutritionnel individualisé. Les photos sont des images d’inspiration et peuvent différer du plat décrit.</p><p>Photographies : <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash</a>. Illustrations vectorielles créées pour Miette. Polices DM Sans et Lora sous licence SIL Open Font License.</p><h3>Open Food Facts et réutilisation</h3><p>Les données de produits appartiennent à la base collaborative <a href="https://world.openfoodfacts.org/" target="_blank" rel="noopener noreferrer">Open Food Facts</a>, sous <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">licence ODbL</a>. Les contenus individuels sont sous Database Contents License et les images de produits sous CC BY-SA. Chaque fiche contient un lien vers sa source. Ces données sont distinctes du guide Miette.</p></div>`;
   }
+  function accountPanel() {
+    const state = Cloud.state;
+    const statusLabels = { checking: 'Vérification de la connexion…', loading: 'Ouverture de votre carnet…', saving: 'Enregistrement en ligne…', synced: 'Carnet synchronisé', pending: 'Modifications à synchroniser', offline: 'Hors connexion · enregistré sur cet appareil', error: 'Synchronisation à reprendre', conflict: 'Deux versions à rapprocher', local: 'Carnet sur cet appareil', unavailable: 'Connexion au serveur indisponible' };
+    const intro = `<div class="account-heading"><span class="account-symbol">${icon('cloud', 25)}</span><div><span class="eyebrow">VOTRE CARNET, PARTOUT</span><h2>${state.user ? 'Heureuse de vous retrouver.' : 'Gardez le fil, d’un appareil à l’autre.'}</h2></div></div>`;
+    if (state.user) return `<section class="account-panel">${intro}<p class="account-email">${escape(state.user.email || state.user.name)}</p><p class="cloud-status" role="status">${icon(state.status === 'synced' ? 'check' : 'refresh', 15)}${statusLabels[state.status] || statusLabels.local}</p>${state.error ? `<p class="account-error" role="alert">${escape(state.error)} Votre copie locale est conservée.</p>` : ''}${state.savedAt ? `<p class="small muted">Dernière sauvegarde : ${new Date(state.savedAt).toLocaleString('fr-FR')}</p>` : ''}${state.conflict ? `<div class="sync-conflict"><h3>Le carnet a aussi changé ailleurs.</h3><p>Des modifications concernent les mêmes éléments. Choisissez la version à conserver pour éviter un remplacement automatique.</p><div class="dialog-actions"><button class="btn btn-primary" data-action="resolve-sync" data-choice="local">Garder celle de cet appareil</button><button class="btn btn-outline" data-action="resolve-sync" data-choice="remote">Garder celle en ligne</button></div></div>` : ''}<div class="dialog-actions"><button class="btn btn-primary" data-action="sync-now">${icon('refresh', 15)}Synchroniser</button><button class="btn btn-outline" data-action="sign-out">Se déconnecter</button></div><p class="small muted">Les favoris, les menus, les courses et vos préférences sont liés à ce compte. Les recettes restent accessibles sans compte.</p><p id="auth-feedback" class="scanner-status" role="status"></p></section>`;
+    if (state.configured === false && window.MietteRuntime?.appURL) return `<section class="account-panel">${intro}<p>La version connectée de Miette vous permet de retrouver votre carnet sur vos autres appareils.</p><a class="btn btn-primary" href="${escape(window.MietteRuntime.appURL)}#profil">Ouvrir la version connectée ${icon('arrow', 15)}</a><p class="small muted">Vous pouvez exporter votre carnet ici, puis l’importer dans la nouvelle version.</p></section>`;
+    if (state.configured === false) return '';
+    if (state.status === 'checking' || state.status === 'unavailable' || state.status === 'offline') return `<section class="account-panel">${intro}<p class="cloud-status" role="status">${statusLabels[state.status]}</p><p class="small muted">Votre carnet local et vos recettes restent accessibles. Une connexion internet est nécessaire pour ouvrir un compte ou synchroniser.</p>${state.status !== 'checking' ? '<button class="btn btn-outline" data-action="cloud-retry">Réessayer la connexion</button>' : ''}</section>`;
+    const mode = route.params.get('token') ? 'reset' : authMode;
+    const labels = { login: 'Se connecter', signup: 'Créer mon compte', forgot: 'Recevoir le lien de récupération', reset: 'Enregistrer le nouveau mot de passe' };
+    return `<section class="account-panel">${intro}<p>Retrouvez vos favoris, vos menus et votre liste de courses sur votre téléphone et votre ordinateur.</p><div class="account-tabs" role="group" aria-label="Connexion ou inscription"><button class="btn ${mode === 'login' ? 'btn-primary' : 'btn-outline'}" data-action="auth-mode" data-mode="login">Se connecter</button><button class="btn ${mode === 'signup' ? 'btn-primary' : 'btn-outline'}" data-action="auth-mode" data-mode="signup">Créer un compte</button></div><form id="auth-form" data-mode="${mode}">
+      ${mode === 'signup' ? '<div class="field"><label for="auth-name">Votre prénom ou surnom</label><input class="text-input" id="auth-name" name="name" maxlength="30" autocomplete="given-name" required></div>' : ''}
+      ${mode !== 'reset' ? '<div class="field"><label for="auth-email">Adresse e-mail</label><input class="text-input" id="auth-email" name="email" type="email" autocomplete="email" maxlength="254" required></div>' : ''}
+      ${mode !== 'forgot' ? `<div class="field"><label for="auth-password">${mode === 'reset' ? 'Nouveau mot de passe' : 'Mot de passe'}</label><input class="text-input" id="auth-password" name="password" type="password" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" minlength="${mode === 'login' ? 1 : 10}" maxlength="128" required>${mode !== 'login' ? '<p class="field-hint">Au moins 10 caractères.</p>' : ''}</div>` : '<p class="small muted">Nous vous enverrons un lien pour choisir un nouveau mot de passe.</p>'}
+      ${['signup', 'reset'].includes(mode) ? '<div class="field"><label for="auth-confirm">Confirmer le mot de passe</label><input class="text-input" id="auth-confirm" name="confirm" type="password" autocomplete="new-password" maxlength="128" required></div>' : ''}
+      ${mode === 'login' || mode === 'signup' ? '<label class="check-label account-import"><input name="import" type="checkbox" checked> Ajouter le carnet de cet appareil à mon compte</label>' : ''}
+      <p id="auth-feedback" class="scanner-status" role="status"></p><button class="btn btn-primary" type="submit">${labels[mode]} ${icon('arrow', 15)}</button>${mode === 'login' ? '<button class="btn-text forgot-link" type="button" data-action="auth-mode" data-mode="forgot">Mot de passe oublié ?</button>' : ''}</form><p class="small muted account-note">Le compte est facultatif. <a href="#confidentialite">Comment sont utilisées mes données ?</a></p></section>`;
+  }
+  function renderAccount(force = false) {
+    const panel = $('#account-panel');
+    if (!panel || (!force && !authBusy && $('#auth-form')?.contains(document.activeElement))) return;
+    panel.innerHTML = accountPanel();
+  }
+  async function submitAuth(form, data) {
+    if (authBusy) return;
+    const mode = form.dataset.mode;
+    const email = String(data.get('email') || '').trim();
+    const password = String(data.get('password') || '');
+    const feedback = $('#auth-feedback');
+    if (['signup', 'reset'].includes(mode) && password !== data.get('confirm')) { feedback.textContent = 'Les deux mots de passe ne correspondent pas.'; return; }
+    authBusy = true;
+    const button = form.querySelector('[type="submit"]'); button.disabled = true;
+    feedback.textContent = 'Un petit instant…';
+    const callbacks = location.origin + location.pathname + '#profil';
+    try {
+      if (mode === 'forgot') {
+        await Cloud.request('auth/request-password-reset', { method: 'POST', body: JSON.stringify({ email, redirectTo: location.origin + location.pathname + '?password-reset=1#profil' }) });
+        if ($('#auth-feedback')) $('#auth-feedback').textContent = 'Si cette adresse possède un compte, un e-mail de récupération va arriver. Pensez aux courriers indésirables.';
+      } else if (mode === 'reset') {
+        await Cloud.request('auth/reset-password', { method: 'POST', body: JSON.stringify({ token: route.params.get('token'), newPassword: password }) });
+        authMode = 'login'; go('profil'); toast('Mot de passe mis à jour. Vous pouvez vous connecter.');
+      } else {
+        await Cloud.request('auth/' + (mode === 'signup' ? 'sign-up/email' : 'sign-in/email'), { method: 'POST', body: JSON.stringify({ email, password, ...(mode === 'signup' ? { name: String(data.get('name')).trim().slice(0, 30) } : {}), ...(mode === 'signup' && location.protocol === 'https:' ? { callbackURL: callbacks } : {}) }) });
+        await Cloud.refreshSession(data.get('import') === 'on');
+        if (Cloud.state.user) { renderAccount(); toast('Votre compte est ouvert. Votre carnet vous suit.', 'heart'); }
+        else { renderAccount(); if ($('#auth-feedback')) $('#auth-feedback').textContent = 'Vérifiez votre boîte e-mail pour confirmer le compte, puis connectez-vous.'; }
+      }
+    } catch (error) {
+      const messages = { INVALID_EMAIL_OR_PASSWORD: 'L’adresse e-mail ou le mot de passe est incorrect.', USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'Cette adresse possède déjà un compte. Connectez-vous ou utilisez le lien de récupération.', EMAIL_NOT_VERIFIED: 'Confirmez votre adresse avec le lien reçu par e-mail avant de vous connecter.', INVALID_TOKEN: 'Ce lien a expiré. Demandez un nouveau lien de récupération.', PASSWORD_TOO_SHORT: 'Choisissez un mot de passe d’au moins 10 caractères.', TOO_MANY_REQUESTS: 'Plusieurs tentatives ont été effectuées. Réessayez dans une minute.' };
+      if ($('#auth-feedback')) $('#auth-feedback').textContent = messages[error.data?.code] || error.message;
+    } finally { authBusy = false; if (button.isConnected) button.disabled = false; }
+  }
+  function installationPanel() {
+    const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    return `<section class="install-panel"><div class="account-heading"><span class="account-symbol">${icon('download', 23)}</span><div><span class="eyebrow">TOUJOURS À PORTÉE DE MAIN</span><h2>${installed ? 'Miette est installée.' : 'Miette sur votre écran d’accueil.'}</h2></div></div><p>${installed ? 'Retrouvez l’application depuis son icône, comme vos autres applications.' : 'Ouvrez Miette comme une application, avec les aliments du guide et les recettes disponibles hors connexion après leur premier chargement.'}</p>${installPrompt ? `<button class="btn btn-primary" data-action="install">${icon('download', 16)}Installer Miette</button>` : !installed ? '<ol class="install-steps"><li><b>Sur iPhone ou iPad :</b> ouvrez ce site dans Safari, touchez Partager, puis « Sur l’écran d’accueil ».</li><li><b>Sur Android :</b> ouvrez le menu de Chrome, puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».</li><li><b>Sur ordinateur :</b> utilisez l’icône d’installation dans la barre d’adresse de Chrome ou Edge, si elle apparaît.</li></ol>' : ''}</section>`;
+  }
+  function loadScanner() {
+    if (window.MietteScanner) return Promise.resolve();
+    if (!scannerLoading) scannerLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script'); script.src = 'js/scanner.js';
+      script.onload = resolve;
+      script.onerror = () => { scannerLoading = null; script.remove(); reject(new Error('Le lecteur de code-barres ne peut pas être chargé.')); };
+      document.head.append(script);
+    });
+    return scannerLoading;
+  }
+  async function readBarcodePhoto(file) {
+    ++cameraGeneration;
+    const status = $('#barcode-error');
+    if (!status) return;
+    if (file.size > 20000000 || !file.type.startsWith('image/')) { status.textContent = 'Choisissez une photo de moins de 20 Mo.'; return; }
+    status.textContent = 'Lecture du code-barres sur votre appareil…';
+    try {
+      stopCamera(); const currentGeneration = cameraGeneration;
+      await loadScanner();
+      const code = await window.MietteScanner.image(file);
+      if (currentGeneration !== cameraGeneration || dialogContext?.type !== 'scanner') return;
+      if (!R.isValidBarcode(code)) throw new Error('invalid');
+      $('#detail-dialog').close(); go('aliments', { source: 'off', q: code });
+    } catch {
+      if (dialogContext?.type === 'scanner') status.textContent = 'Aucun code lisible. Essayez une photo nette, de face, où le code-barres entier est visible, ou saisissez les chiffres.';
+    }
+  }
   function profilePage() {
-    return `${heading('Un espace qui vous ressemble.', 'Quelques préférences, pour retrouver vos envies plus facilement.')}<form id="profile-form" class="profile-panel"><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Uniquement enregistré dans votre navigateur.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce filtre ne gère pas les allergies ni les besoins médicaux.</p></div><div class="form-actions"><button class="btn btn-primary" type="submit">${icon('check', 15)}Enregistrer</button><a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div></form>${installPrompt ? '<button class="btn btn-secondary" data-action="install" style="margin-top:20px">' + icon('download', 16) + 'Installer Miette sur cet appareil</button>' : ''}`;
+    return `<div id="account-panel">${accountPanel()}</div>${heading('Un espace qui vous ressemble.', 'Quelques préférences, pour retrouver vos envies plus facilement.')}<form id="profile-form" class="profile-panel"><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Enregistré sur cet appareil et synchronisé si vous êtes connectée.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce filtre ne gère pas les allergies ni les besoins médicaux.</p></div><div class="form-actions"><button class="btn btn-primary" type="submit">${icon('check', 15)}Enregistrer</button><a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div></form>${installationPanel()}`;
+  }
+  async function importNotebook(file) {
+    try {
+      if (file.size > 2500000) throw new Error('Le fichier est trop volumineux. Choisissez un export Miette.');
+      const data = JSON.parse(await file.text());
+      const n = data.notebook;
+      if (data.application !== 'Miette' || data.version !== 1 || !n || typeof n.name !== 'string' || !Array.isArray(n.favorites) || !Array.isArray(n.shopping) || !n.menus || typeof n.menus !== 'object') throw new Error('Ce fichier n’est pas un export Miette valide.');
+      openDialog(`<div class="dialog-content"><h2 id="dialog-title">Importer ce carnet ?</h2><p>${n.favorites.length} favoris, ${n.shopping.length} articles et ${Object.keys(n.menus).length} jours de menus.</p><p class="muted small">Le carnet actuel sera remplacé. Exportez-le d’abord si vous souhaitez en garder une copie.</p><div class="dialog-actions"><button class="btn btn-primary" data-action="confirm-import">Importer le carnet</button><button class="btn btn-outline" data-action="close-dialog">Annuler</button></div></div>`, { type: 'import', notebook: n });
+    } catch (error) { toast(error instanceof SyntaxError ? 'Le fichier JSON est illisible.' : error.message, 'info'); }
   }
   function privacyPage() {
-    return `${heading('Votre carnet reste chez vous.', 'Pas de compte à créer. Vous gardez la main sur vos données.')}<div class="profile-panel legal-copy"><h3>Ce qui est enregistré</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses sont enregistrés dans le stockage local de ce navigateur. Il n’y a pas de synchronisation entre appareils. Effacer les données du navigateur efface ce carnet.</p><h3>Les connexions extérieures</h3><p>Les recherches et codes-barres sont transmis à Open Food Facts uniquement quand vous lancez une recherche. Ce service reçoit alors les informations habituelles de connexion, dont l’adresse IP. Les images des produits sont chargées depuis Open Food Facts. Aucun carnet ni prénom ne lui est transmis.</p><p>Les photographies et polices du guide sont incluses dans l’app. Miette ne contient ni mesure d’audience ni publicité. La caméra, si utilisée, est analysée localement par le navigateur ; aucune image n’est envoyée. Elle est arrêtée à la fermeture du scanner.</p><h3>Enregistrer une copie</h3><p>L’export contient les données de votre carnet dans un fichier JSON lisible. Il n’inclut pas le cache des recherches.</p><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><h3>Effacer sur cet appareil</h3><p>Les favoris, les menus, les courses, votre prénom et le cache des produits seront supprimés. Le guide restera disponible.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button></div>`;
+    return `${heading('Votre carnet, vos choix.', 'Utilisez Miette sans compte, ou retrouvez votre carnet sur plusieurs appareils.')}<div class="profile-panel legal-copy"><h3>Sans compte</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses restent dans le stockage local de ce navigateur. Une copie exportée vous permet de les conserver ou de changer d’appareil.</p><h3>Avec un compte</h3><p>La connexion est gérée par Neon Auth. Les mots de passe sont traités par ce service d’authentification ; ils ne sont pas enregistrés dans le carnet. Votre carnet est sauvegardé dans la base PostgreSQL dédiée à Miette et associé à votre compte. Le serveur vérifie la connexion avant chaque accès au carnet. Vous pouvez vous déconnecter depuis Mon espace.</p><p>Une copie reste sur l’appareil pour continuer hors connexion. Les modifications sont synchronisées au retour du réseau. Si les mêmes éléments ont changé sur deux appareils, Miette vous demande quelle version conserver.</p><h3>Recherche de produits et caméra</h3><p>Les noms recherchés et les codes-barres sont transmis au serveur Miette sur Vercel, puis à Open Food Facts. Les fiches publiques peuvent être mises en cache. Les images des produits viennent d’Open Food Facts. Votre carnet et votre adresse e-mail ne lui sont pas transmis.</p><p>Les images de caméra et les photos de codes-barres sont analysées sur votre appareil. Elles ne sont ni envoyées au serveur ni enregistrées dans le carnet. La caméra est arrêtée à la fermeture du scanner. Miette ne contient ni publicité ni mesure d’audience.</p><h3>Exporter ou importer</h3><p>Le fichier JSON contient les préférences, favoris, menus et courses. Il ne contient ni mot de passe ni session de connexion.</p><div class="dialog-actions"><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><button class="btn btn-outline" data-action="import-data">${icon('upload', 16)}Importer un carnet</button></div><input type="file" id="notebook-file" accept="application/json,.json" hidden><p id="import-status" role="status"></p><h3>Effacer le carnet</h3><p>${Cloud.state.user ? 'Le carnet sera vidé sur cet appareil et dans votre compte lors de la synchronisation. Le compte de connexion restera disponible.' : 'Le carnet et le cache des recherches seront effacés de ce navigateur.'} Vous pouvez exporter une copie avant cette action.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button>${Cloud.state.user ? '<h3>Supprimer le compte</h3><p>La suppression efface le compte de connexion et son carnet en ligne. Le carnet sans compte de cet appareil reste séparé.</p><button class="btn btn-outline" data-action="delete-account">Supprimer mon compte</button>' : ''}</div>`;
   }
   function renderRoute() {
     const oldPage = route.page;
@@ -308,7 +443,7 @@
     if (isOFF) {
       const q = route.params.get('q') || '';
       if (!q) { apiAbort?.abort(); requestGeneration++; apiState = { key: '', products: [], loading: false, error: '', count: 0 }; }
-      else if (q !== apiState.key) searchAPI();
+      else if (q !== apiState.key || (apiState.error && !apiState.products.length)) searchAPI();
     }
   }
   function rerender() { const y = window.scrollY; renderRoute(); window.scrollTo({ top: y, behavior: 'instant' }); }
@@ -415,11 +550,12 @@
     sidebar.setAttribute('aria-hidden', String(hidden));
   }
   function scannerDialog() {
-    const capable = 'BarcodeDetector' in window && Boolean(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
-    openDialog(`<div class="dialog-content"><span class="eyebrow">UN PRODUIT SOUS LA MAIN ?</span><h2 id="dialog-title">Regardons son code-barres.</h2><p class="muted small">Saisissez les chiffres de l’emballage pour retrouver sa fiche Open Food Facts.</p><form id="barcode-form" class="barcode-form"><label class="sr-only" for="barcode-input">Code-barres à 8, 12, 13 ou 14 chiffres</label><input class="text-input" id="barcode-input" name="code" inputmode="numeric" autocomplete="off" maxlength="24" placeholder="Ex. 3017620422003" required><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><p id="barcode-error" class="scanner-status" role="alert"></p>${capable ? `<div class="scanner-view" id="scanner-view" hidden></div><button class="btn btn-secondary" data-action="start-camera">${icon('camera', 16)}Utiliser la caméra</button><p class="scanner-status" id="camera-status">La caméra reste sur votre appareil. Aucune image n’est transmise.</p>` : `<div class="off-note" style="margin-top:23px">${icon('info', 17)}<p>La lecture caméra n’est pas disponible dans ce navigateur. La saisie du code-barres fonctionne toujours. La caméra nécessite HTTPS et un navigateur prenant en charge BarcodeDetector.</p></div>`}</div>`, { type: 'scanner' });
+    const capable = Boolean(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
+    openDialog(`<div class="dialog-content"><span class="eyebrow">UN PRODUIT SOUS LA MAIN ?</span><h2 id="dialog-title">Regardons son code-barres.</h2><p class="muted small">Saisissez les chiffres de l’emballage pour retrouver sa fiche Open Food Facts.</p><form id="barcode-form" class="barcode-form"><label class="sr-only" for="barcode-input">Code-barres à 8, 12, 13 ou 14 chiffres</label><input class="text-input" id="barcode-input" name="code" inputmode="numeric" autocomplete="off" maxlength="24" placeholder="Ex. 3017620422003" required><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><p id="barcode-error" class="scanner-status" role="alert"></p><input type="file" id="barcode-photo" accept="image/*" hidden><button class="btn btn-outline" data-action="barcode-photo">${icon('camera', 16)}Lire une photo du code-barres</button>${capable ? `<div class="scanner-view" id="scanner-view" hidden></div><button class="btn btn-secondary" data-action="start-camera">${icon('camera', 16)}Utiliser la caméra</button><p class="scanner-status" id="camera-status">La caméra reste sur votre appareil. Aucune image n’est transmise.</p>` : `<div class="off-note" style="margin-top:23px">${icon('info', 17)}<p>La lecture caméra n’est pas disponible dans ce navigateur. La saisie du code-barres fonctionne toujours. Vous pouvez lire une photo du code-barres ou ouvrir Miette dans le navigateur de votre téléphone.</p></div>`}</div>`, { type: 'scanner' });
   }
   function stopCamera() {
     cameraGeneration++;
+    scannerControls?.stop(); scannerControls = null;
     if (cameraTimer) clearTimeout(cameraTimer);
     cameraTimer = null;
     if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
@@ -432,7 +568,23 @@
     if (!button || !status) return;
     button.disabled = true; status.textContent = 'Ouverture de la caméra…';
     try {
-      const supported = await BarcodeDetector.getSupportedFormats();
+      const supported = typeof window.BarcodeDetector?.getSupportedFormats === 'function' ? await BarcodeDetector.getSupportedFormats().catch(() => []) : [];
+      if (!supported.includes('ean_13')) {
+        await loadScanner();
+        if (generation !== cameraGeneration || dialogContext?.type !== 'scanner') return;
+        const view = $('#scanner-view'); view.hidden = false;
+        view.innerHTML = '<video id="scanner-video" autoplay muted playsinline></video><div class="scanner-frame"></div>';
+        const video = $('#scanner-video');
+        const controls = await window.MietteScanner.camera(video, (code, control) => {
+          if (generation !== cameraGeneration || !R.isValidBarcode(code)) return;
+          control.stop(); stopCamera(); $('#detail-dialog').close(); go('aliments', { source: 'off', q: code });
+        });
+        if (generation !== cameraGeneration) { controls.stop(); return; }
+        scannerControls = controls; cameraStream = video.srcObject;
+        status.textContent = 'Placez le code-barres dans le cadre, avec suffisamment de lumière.';
+        button.innerHTML = icon('camera', 16) + 'Caméra active';
+        return;
+      }
       const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'itf'].filter(f => supported.includes(f));
       if (!formats.length) throw new Error('formats');
       const detector = new BarcodeDetector({ formats });
@@ -494,6 +646,7 @@
       case 'more-products': searchAPI(true); break;
       case 'scan': scannerDialog(); break;
       case 'start-camera': startCamera(); break;
+      case 'barcode-photo': $('#barcode-photo')?.click(); break;
       case 'servings': if (dialogContext?.type === 'recipe') { const scroll = $('#detail-dialog').scrollTop; const delta = Number(trigger.dataset.delta); recipeDetail(dialogContext.id, dialogContext.servings + delta); $('#detail-dialog').scrollTop = scroll; $(`[data-action="servings"][data-delta="${delta}"]`)?.focus({ preventScroll: true }); } break;
       case 'recipe-shopping': { const recipe = recipesById.get(id); if (recipe) addIngredients([{ recipe, servings: Number(trigger.dataset.servings) || 2 }]); break; }
       case 'plan-recipe': planRecipe(id); break;
@@ -504,22 +657,39 @@
       case 'remove-item': store.shopping = store.shopping.filter(i => i.id !== id); persist(); rerender(); break;
       case 'clear-checked': { const count = store.shopping.filter(i => i.checked).length; store.shopping = store.shopping.filter(i => !i.checked); persist(); rerender(); toast(count ? `${count} articles cochés retirés.` : 'Aucun article n’est encore coché.', 'bag'); break; }
       case 'download-shopping': if (!store.shopping.length) { toast('Ajoutez quelques articles avant d’exporter.', 'info'); break; } downloadFile('miette-mes-courses.txt', 'MIETTE — MA LISTE DE COURSES\n\n' + store.shopping.map(i => `[${i.checked ? 'x' : ' '}] ${i.name}${i.quantity ? ` — ${number(i.quantity)} ${i.unit}` : ''}`).join('\n'), 'text/plain;charset=utf-8'); toast('Votre liste est prête à emporter.', 'download'); break;
+      case 'import-data': $('#notebook-file')?.click(); break;
+      case 'transfer-notebook': transferNotebook(); break;
+      case 'confirm-import': { const imported = dialogContext?.notebook; if (imported) { store = readStore(imported); persist(); $('#detail-dialog').close(); rerender(); toast('Le carnet a été importé.', 'check'); } break; }
       case 'export-data': downloadFile('miette-mon-carnet.json', JSON.stringify({ application: 'Miette', version: 1, exportedAt: new Date().toISOString(), notebook: store }, null, 2), 'application/json'); toast('Votre carnet a été exporté.', 'download'); break;
-      case 'reset-data': openDialog('<div class="dialog-content"><h2 id="dialog-title">Effacer votre carnet ?</h2><p class="muted small">Votre prénom, vos favoris, vos menus, votre liste de courses et le cache des recherches seront supprimés de ce navigateur. Vous pouvez exporter votre carnet avant cette action.</p><div class="dialog-actions"><button class="btn btn-outline" data-action="close-dialog">Garder mon carnet</button><button class="btn btn-primary" data-action="confirm-reset">Effacer les données</button></div></div>', { type: 'reset' }); break;
+      case 'reset-data': openDialog('<div class="dialog-content"><h2 id="dialog-title">Effacer votre carnet ?</h2><p class="muted small">Votre prénom, vos favoris, vos menus et vos courses seront effacés. Si vous êtes connectée, le carnet vide sera aussi synchronisé avec votre compte. Vous pouvez exporter votre carnet avant cette action.</p><div class="dialog-actions"><button class="btn btn-outline" data-action="close-dialog">Garder mon carnet</button><button class="btn btn-primary" data-action="confirm-reset">Effacer les données</button></div></div>', { type: 'reset' }); break;
       case 'confirm-reset': store = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] }; productMap.clear(); persist(); API.clearCache(); apiState = { key: '', products: [], loading: false, count: 0 }; $('#detail-dialog').close(); rerender(); toast('Votre carnet a été effacé de ce navigateur.', 'check'); break;
+      case 'auth-mode': authMode = trigger.dataset.mode; renderAccount(true); break;
+      case 'delete-account': openDialog('<div class="dialog-content"><h2 id="dialog-title">Supprimer votre compte ?</h2><p>Votre compte, ses sessions et son carnet en ligne seront supprimés définitivement. Vous pouvez exporter le carnet avant de continuer.</p><form id="delete-account-form"><div class="field"><label for="delete-password">Confirmer avec votre mot de passe</label><input class="text-input" id="delete-password" name="password" type="password" autocomplete="current-password" required maxlength="128"></div><p id="delete-feedback" role="alert"></p><div class="dialog-actions"><button type="button" class="btn btn-outline" data-action="close-dialog">Annuler</button><button type="submit" class="btn btn-primary">Supprimer définitivement mon compte</button></div></form></div>', { type: 'delete-account' }); break;
+      case 'cloud-retry': Cloud.retry(); break;
+      case 'sync-now': Cloud.sync(); break;
+      case 'resolve-sync': Cloud.resolve(trigger.dataset.choice); break;
+      case 'sign-out': Cloud.signOut().catch(error => toast(error.message, 'info')); break;
       case 'install': if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; if (route.page === 'profil') rerender(); }); } break;
     }
   });
   document.addEventListener('submit', event => {
     const form = event.target;
     const data = new FormData(form);
-    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form'];
+    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form'];
     if (!known.includes(form.id)) return;
     event.preventDefault();
+    if (form.id === 'delete-account-form') {
+      const button = form.querySelector('[type="submit"]'); button.disabled = true;
+      Cloud.deleteAccount(String(data.get('password'))).then(() => { $('#detail-dialog').close(); toast('Votre compte et son carnet en ligne ont été supprimés.', 'check'); }).catch(error => { if ($('#delete-feedback')) $('#delete-feedback').textContent = error.message; }).finally(() => { button.disabled = false; });
+      return;
+    }
+    if (form.id === 'auth-form') { submitAuth(form, data); return; }
     if (form.id === 'home-search' || form.id === 'explore-search') {
       const q = String(data.get('q') || '').trim();
       const numeric = /^\d[\d\s-]+$/.test(q);
-      const source = numeric || (form.id === 'explore-search' && route.params.get('source') === 'off') ? 'off' : 'guide';
+      const terms = R.normalize(q).split(' ').filter(Boolean);
+      const knownFood = D.foods.some(f => terms.every(term => R.normalize(f.name + ' ' + f.aliases).split(/[^a-z0-9]+/).some(word => word.startsWith(term))));
+      const source = numeric || (form.id === 'home-search' && !knownFood && q.length > 1) || (form.id === 'explore-search' && route.params.get('source') === 'off') ? 'off' : 'guide';
       go('aliments', { ...(form.id === 'explore-search' ? Object.fromEntries(route.params) : {}), q, source });
     } else if (form.id === 'recipe-search') updateRecipeFilters({ q: String(data.get('q') || '').trim() });
     else if (form.id === 'shopping-add') {
@@ -555,6 +725,8 @@
     }
   });
   document.addEventListener('change', event => {
+    if (event.target.id === 'notebook-file' && event.target.files[0]) importNotebook(event.target.files[0]);
+    if (event.target.id === 'barcode-photo' && event.target.files[0]) readBarcodePhoto(event.target.files[0]);
     if (event.target.id === 'recipe-duration') updateRecipeFilters({ duree: Number(event.target.value) || null });
     if (event.target.id === 'recipe-sort') updateRecipeFilters({ tri: event.target.value });
     if (event.target.matches('[data-shopping-id]')) {
@@ -592,7 +764,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden && dialogContext?.type === 'scanner') { stopCamera(); if ($('#camera-status')) $('#camera-status').textContent = 'Caméra mise en pause. Fermez et rouvrez le scanner pour reprendre.'; } });
   window.addEventListener('pagehide', stopCamera);
   window.matchMedia('(max-width:760px)').addEventListener('change', () => { closeMenu(); syncSidebar(); });
-  $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
+  $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${migrationNote()}${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
   const dialog = $('#detail-dialog');
   dialog.addEventListener('close', () => {
     stopCamera(); dialogContext = null; document.body.style.overflow = '';
@@ -600,7 +772,13 @@
     if (route.page === 'favoris') { const y = window.scrollY; $('#main').innerHTML = `<div class="page-content">${favoritesPage()}</div>${footer()}`; window.scrollTo({ top: y, behavior: 'instant' }); }
   });
   dialog.addEventListener('click', e => { if (e.target === dialog) { const box = dialog.getBoundingClientRect(); if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) dialog.close(); } });
+  const resetToken = new URLSearchParams(location.search).get('token');
+  if (resetToken && new URLSearchParams(location.search).has('password-reset')) {
+    history.replaceState(null, '', location.pathname + href('profil', { token: resetToken })); route = getRoute();
+  }
   renderRoute(); updateOnline();
+  window.addEventListener('miette:cloud', () => { renderAccount(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
+  Cloud?.init({ read: () => store, replace: notebook => { productMap.clear(); store = readStore(notebook); rerender(); } }).then(receiveTransfer);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* The application also works without installation. */ }));
   }
