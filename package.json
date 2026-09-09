@@ -1,8 +1,8 @@
 {
-  "name": "miette",
-  "version": "2.2.0",
+  "name": "nidelle",
+  "version": "2.2.1",
   "private": true,
-  "description": "Miette : alimentation pendant la grossesse, recettes et carnet synchronisé.",
+  "description": "Nidelle : alimentation pendant la grossesse, recettes et carnet synchronisé.",
   "scripts": {
     "start": "node --env-file-if-exists=.env.development.local scripts/dev.cjs",
     "test": "node --test tests/*.test.cjs",

@@ -1,9 +1,9 @@
 /* Offline app shell. External services are deliberately excluded from this cache. */
 'use strict';
-const CACHE = 'miette-shell-v2.2.0';
+const CACHE = 'miette-shell-v2.2.1';
 const ASSETS = [
-  './', 'index.html', 'styles.css?v=6', 'manifest.webmanifest',
-  'js/runtime.js?v=4', 'js/notebook.js?v=4', 'js/cloud.js?v=5', 'js/scanner.js', 'js/icons.js?v=5', 'js/recipes.js?v=2', 'js/evidence.js?v=1', 'js/catalogue.js?v=1', 'js/seasonings.js?v=1', 'js/data.js?v=3', 'js/rules.js?v=3', 'js/api.js?v=4', 'js/plus.js?v=1', 'js/app.js?v=7',
+  './', 'index.html', 'styles.css?v=7', 'manifest.webmanifest',
+  'js/runtime.js?v=4', 'js/notebook.js?v=4', 'js/cloud.js?v=5', 'js/scanner.js', 'js/icons.js?v=5', 'js/recipes.js?v=2', 'js/evidence.js?v=2', 'js/catalogue.js?v=2', 'js/seasonings.js?v=2', 'js/data.js?v=3', 'js/rules.js?v=3', 'js/api.js?v=5', 'js/plus.js?v=2', 'js/app.js?v=8',
   'assets/brand/mark.svg', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
   'assets/brand/pregnancy-hero.webp', 'assets/brand/pregnancy-foods.webp', 'assets/brand/pregnancy-notebook.webp',
   'assets/icon.svg', 'assets/icon-192.png', 'assets/icon-512.png',

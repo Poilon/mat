@@ -54,7 +54,7 @@ test('Portions update ingredient quantities and add to shopping without losing t
   await expect(page.locator('.shopping-item')).toHaveCount(7);
   const download = page.waitForEvent('download');
   await page.locator('[data-action="download-shopping"]').click();
-  expect((await download).suggestedFilename()).toBe('miette-mes-courses.txt');
+  expect((await download).suggestedFilename()).toBe('nidelle-mes-courses.txt');
 });
 
 test('Meal planner saves a recipe, generates shopping and removes a meal', async ({ page }) => {
@@ -202,7 +202,7 @@ test('Main pages have no serious or critical accessibility violations', async ({
   for (const path of ['accueil', 'aliments', 'recettes', 'menus', 'guide']) {
     await page.goto('/#' + path);
     // A hash navigation resolves before the app's hashchange handler. Sample the settled page.
-    await expect(page).toHaveTitle(titles[path] + ' — Miette');
+    await expect(page).toHaveTitle(titles[path] + ' — Nidelle');
     await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all(document.querySelector('.page-content').getAnimations().map(a => a.finished));

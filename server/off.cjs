@@ -10,7 +10,7 @@ async function fetchProducts({ term, code, barcode, page }, { fetchImpl = fetch,
     Object.entries({ fields: FIELDS, lc: 'fr', cc: 'world' }).forEach(([k,v]) => url.searchParams.set(k,v));
     if (!barcode) Object.entries({ search_terms: term, search_simple: '1', action: 'process', json: '1', page_size: '20', page: String(page) }).forEach(([k,v]) => url.searchParams.set(k,v));
     try {
-      const response = await fetchImpl(url, { headers: { 'User-Agent': 'Miette/2.0 (https://github.com/Poilon/mat)', Accept: 'application/json' }, signal: AbortSignal.timeout(6500) });
+      const response = await fetchImpl(url, { headers: { 'User-Agent': 'Nidelle/2.2.1 (https://github.com/Poilon/mat)', Accept: 'application/json' }, signal: AbortSignal.timeout(6500) });
       if (response.status === 404 && barcode) return { products: [], count: 0, page: 1 };
       if (response.status === 429) throw new HttpError(429, 'Open Food Facts reçoit trop de demandes. Réessayez dans une minute.');
       if (!response.ok) throw new HttpError(502, 'Open Food Facts ne répond pas pour le moment. Le guide et les recettes restent accessibles.');

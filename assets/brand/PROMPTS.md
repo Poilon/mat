@@ -1,4 +1,6 @@
-# Illustrations Miette
+# Illustrations Nidelle
+
+Prompts d’origine, créés sous le nom Miette avant le passage à Nidelle. Les images ne contiennent aucun nom de marque.
 
 Créées le 9 septembre 2026 avec l’outil intégré **imagegen**. Les WebP sont des versions redimensionnées et compressées des créations originales. Ces scènes sont décoratives, sans valeur de consigne alimentaire.
 

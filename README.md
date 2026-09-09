@@ -1,4 +1,4 @@
-# Miette — Votre assiette & votre grossesse
+# Nidelle — Votre assiette & votre grossesse
 
 Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 100 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 
@@ -15,7 +15,7 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 - Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
 - Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
 - 100 recettes originales et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
-- **Miette Plus en pré-lancement** : page `#plus`, offre à 4,90 €/mois ou pass 9 mois à 29,90 €, paywall dans les menus et aperçu gratuit de deux jours avec préférences. Les quatre repas peuvent être consultés puis ajoutés aux créneaux libres du carnet. Aucun paiement ni abonnement n’est actif ; toutes les fonctionnalités existantes restent gratuites. [Modèle économique, hypothèses et lancement](BUSINESS_MODEL.md).
+- **Nidelle Plus en pré-lancement** : page `#plus`, offre à 4,90 €/mois ou pass 9 mois à 29,90 €, paywall dans les menus et aperçu gratuit de deux jours avec préférences. Les quatre repas peuvent être consultés puis ajoutés aux créneaux libres du carnet. Aucun paiement ni abonnement n’est actif ; toutes les fonctionnalités existantes restent gratuites. [Modèle économique, hypothèses et lancement](BUSINESS_MODEL.md).
 - Compte facultatif, connexion, récupération du mot de passe, déconnexion et suppression du compte avec confirmation du mot de passe.
 - Carnet sauvegardé automatiquement, copie locale hors connexion, synchronisation au retour du réseau. Les modifications indépendantes sont fusionnées ; un conflit sur le même élément demande un choix explicite.
 - Carnets séparés par compte et carnet invité distinct. L’ajout du carnet invité lors de la connexion est facultatif.
@@ -60,16 +60,18 @@ vercel deploy --prod --yes --scope poilons-projects
 
 La base dédiée **miette-db**, créée sur l’offre gratuite, est en région Francfort. L’intégration injecte `DATABASE_URL` et `NEON_AUTH_BASE_URL` dans les environnements Vercel. Les secrets sont uniquement lus par `api/` et `server/` ; `dist/js/runtime.js` ne contient que des adresses publiques.
 
-Avant de changer le domaine de production, l’ajouter aux domaines autorisés de Neon Auth. Le domaine actuellement autorisé est `https://mat-sandy-six.vercel.app`, avec le nom d’application « Miette ». La configuration actuelle se trouve dans `neon_auth.project_config` ; le domaine a été ajouté explicitement à `trusted_origins`. Le développement local reste autorisé. Ne pas autoriser tous les domaines ni modifier le DNS racine de `poilon.com` pour cette application.
+Avant de changer le domaine de production, l’ajouter aux domaines autorisés de Neon Auth. Le domaine actuellement autorisé est `https://mat-sandy-six.vercel.app`, avec le nom d’application « Nidelle ». La configuration actuelle se trouve dans `neon_auth.project_config` ; le domaine a été ajouté explicitement à `trusted_origins`. Le développement local reste autorisé. Ne pas autoriser tous les domaines ni modifier le DNS racine de `poilon.com` pour cette application.
 
 `npm run db:migrate` initialise uniquement les tables applicatives. Neon crée et gère son schéma d’authentification. Le retrait d’un compte passe par une réauthentification auprès de Neon Auth, puis une transaction qui supprime son carnet, les vérifications associées et son utilisateur ; les clés étrangères Neon suppriment ses sessions et identifiants de connexion. Ce chemin dépend du schéma Better Auth et doit être revérifié après une évolution du service.
 
 ## Données et réseau
 
+La marque est devenue **Nidelle**. Les anciens identifiants internes `Miette*`, les clés locales `miette-*`, le protocole de transfert et les tables existantes sont conservés pour retrouver les carnets sans migration. Les exports portent désormais le nom Nidelle ; l’import accepte aussi les anciens fichiers Miette. Le dépôt et les adresses de déploiement restent ceux du projet `mat`.
+
 - Les routes privées vérifient la session auprès de Neon Auth et déterminent l’utilisateur à partir de celle-ci. Aucun identifiant fourni par le client ne choisit le propriétaire du carnet.
 - Cookies de session `HttpOnly` et `Secure` en production, origine vérifiée sur les mutations, validation JSON et taille limitée, requêtes SQL paramétrées. Les jetons de session ne sont pas renvoyés au JavaScript.
 - Les sauvegardes utilisent une révision et une mise à jour conditionnelle pour prévenir les écrasements entre appareils. Les copies locales des comptes restent sur leurs appareils pour le mode hors connexion ; les déconnecter ne les fusionne pas avec le carnet invité.
-- Le relais Open Food Facts autorise seulement la recherche et la lecture de produits. Cache serveur et CDN, délais maximaux, quotas partagés en base et identification `User-Agent` de Miette. Recherche uniquement à la validation, jamais à chaque frappe.
+- Le relais Open Food Facts autorise seulement la recherche et la lecture de produits. Cache serveur et CDN, délais maximaux, quotas partagés en base et identification `User-Agent` de Nidelle. Recherche uniquement à la validation, jamais à chaque frappe.
 - L’application ne télécharge pas toute la base OFF. Les limites partagées sont de 8 recherches textuelles et 75 lectures de codes par minute avant cache ; une réponse limitée demande de réessayer. Cache navigateur de 24 h pour les recherches récentes.
 - En cas de panne ou de délai dépassé, le relais essaie un second point d’accès officiel (`fr.openfoodfacts.org`) avec `cc=world` pour conserver la recherche internationale. Chaque tentative consomme le quota partagé ; les réponses 429 ne déclenchent pas de contournement.
 - La recherche nécessite internet et la disponibilité d’Open Food Facts. Le guide et les recettes sont disponibles hors connexion une fois leur cache installé. Les images de produits distants ne sont pas promises hors connexion.
@@ -80,7 +82,7 @@ Avant de changer le domaine de production, l’ajouter aux domaines autorisés d
 
 Les fiches éditoriales s’appuient sur les recommandations publiques françaises de l’Assurance Maladie, de Santé publique France / Manger Bouger, des ministères de la Santé et de l’Agriculture, ainsi que sur les repères EFSA concernant la caféine. Des références complémentaires identifiées (FDA, CDC, FoodSafety.gov, NHS, Food Standards Agency National Kidney Foundation, NIH/NCCIH et MotherToBaby/OTIS) précisent certains cas : lavage, conserves, cuisson, riz, farine, rétinol et carambole. Les recommandations françaises restent la base ; les différences de périmètre sont expliquées. Liens et date de consultation dans chaque fiche et dans **Sources & méthode**. Références consultées le **9 septembre 2026**.
 
-Chaque fiche distingue une recommandation citant l’aliment ou sa préparation d’une application par Miette des conseils généraux à sa famille. Les sources ne sont pas présentées comme une validation individuelle de chacun des 360 aliments.
+Chaque fiche distingue une recommandation citant l’aliment ou sa préparation d’une application par Nidelle des conseils généraux à sa famille. Les sources ne sont pas présentées comme une validation individuelle de chacun des 360 aliments.
 
 Le contenu est un guide général, **sans validation clinique indépendante**. Il ne remplace pas un médecin ou une sage-femme. Allergies, diabète gestationnel, traitements et situations individuelles ne sont pas pris en charge. « Compatible » concerne un aliment du guide dans les conditions écrites de préparation et de conservation ; ce n’est pas une garantie d’absence de risque.
 
@@ -120,8 +122,8 @@ Changer le nom du cache dans `sw.js` lorsque les fichiers précachés évoluent.
 
 ## Crédits
 
-Les données OFF sont sous [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/), les contenus individuels sous Database Contents License et les images produits sous CC BY-SA. Chaque fiche produit renvoie à sa source. Cette base est distincte du guide éditorial Miette.
+Les données OFF sont sous [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/), les contenus individuels sous Database Contents License et les images produits sous CC BY-SA. Chaque fiche produit renvoie à sa source. Cette base est distincte du guide éditorial Nidelle.
 
-Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miette. Les trois scènes de grossesse ont été générées avec l’outil intégré imagegen ; leurs prompts et usages sont documentés dans `assets/brand/`. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
+Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Nidelle. Les trois scènes de grossesse ont été générées avec l’outil intégré imagegen ; leurs prompts et usages sont documentés dans `assets/brand/`. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
 
 Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.

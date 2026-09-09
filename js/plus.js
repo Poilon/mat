@@ -1,4 +1,4 @@
-/* Miette Plus is a pre-launch offer. No payment or paid entitlement is simulated. */
+/* Nidelle Plus is a pre-launch offer. No payment or paid entitlement is simulated. */
 (root => {
   'use strict';
   const offer = Object.freeze({

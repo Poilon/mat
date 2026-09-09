@@ -1,8 +1,10 @@
-# Miette — Votre assiette & votre grossesse
+# Nidelle — Votre assiette & votre grossesse
 
-Miette accompagne les petits choix alimentaires pendant la grossesse : comprendre un repère, préparer un repas et garder ses idées. La marque associe la maternité à une cuisine quotidienne gourmande, sans promesse de sécurité absolue.
+Nidelle accompagne les petits choix alimentaires pendant la grossesse : comprendre un repère, préparer un repas et garder ses idées. La marque associe la maternité à une cuisine quotidienne gourmande, sans promesse de sécurité absolue.
 
 ## Signature et ton
+
+**Nidelle** associe le « nid » à « elle » : un nom doux qui place la personne enceinte au centre de l’accompagnement. La marque se décline en **Nidelle Plus** pour l’offre de menus. Le logotype s’écrit `nidelle` en minuscules ; la signature descriptive reste « Votre assiette & votre grossesse ».
 
 **« Bien dans l’assiette. Bien dans votre grossesse. »**
 

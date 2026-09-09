@@ -1,16 +1,16 @@
-# Miette Plus — modèle économique proposé
+# Nidelle Plus — modèle économique proposé
 
 Version du 9 septembre 2026. **Pré-lancement : aucun paiement ouvert, aucun abonnement actif.** La page `#plus` et le paywall des menus présentent l’offre. L’aperçu de deux jours fonctionne dès maintenant, sans compte ni carte bancaire.
 
 ## Ce que l’on vend
 
-La grossesse apporte déjà beaucoup de décisions quotidiennes. Miette aide à comprendre les aliments gratuitement ; **Miette Plus vend le temps gagné pour imaginer et organiser ses repas**. La proposition est concrète : « Une semaine d’idées, en quelques gestes. »
+La grossesse apporte déjà beaucoup de décisions quotidiennes. Nidelle aide à comprendre les aliments gratuitement ; **Nidelle Plus vend le temps gagné pour imaginer et organiser ses repas**. La proposition est concrète : « Une semaine d’idées, en quelques gestes. »
 
 Le produit reste sans publicité, sans vente de données et sans promesse de suivi médical personnalisé. Le choix végétarien et le temps de cuisine servent à sélectionner des recettes ; ils ne constituent pas un bilan nutritionnel. Aucun trimestre, résultat médical ou terme de grossesse n’est nécessaire pour tester l’aperçu.
 
 ## Offre et prix
 
-| Fonction | Miette gratuit | Miette Plus, au lancement |
+| Fonction | Nidelle gratuit | Nidelle Plus, au lancement |
 | --- | --- | --- |
 | 360 fiches, raisons, précautions, sources | Oui | Inclus |
 | Recherche et scan Open Food Facts | Oui, selon la disponibilité du service | Même accès |
@@ -33,7 +33,7 @@ Le pass coûte 14,20 € de moins que neuf mensualités à 4,90 €. C’est une
 
 ## Placement du paywall
 
-1. Une entrée « Découvrir Miette Plus » et une page d’offre accessible directement à `#plus`.
+1. Une entrée « Découvrir Nidelle Plus » et une page d’offre accessible directement à `#plus`.
 2. Dans **Mes menus**, un bloc propose **Essayer 2 jours** et **Composer 7 jours · Plus**.
 3. L’aperçu permet de choisir une date, une durée et l’option végétarienne, puis de consulter quatre vraies recettes. Il remplit seulement les créneaux encore libres, en vérifiant à nouveau le carnet au moment d’ajouter.
 4. Après l’aperçu, « Découvrir l’offre » ouvre le paywall. « Composer 7 jours · Plus » l’ouvre également depuis le calendrier.

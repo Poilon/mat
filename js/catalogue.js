@@ -217,9 +217,9 @@
   add('dairy', 'cheese', 'cheese', 'softCheese', [
     ['munster', 'Munster', 'Le munster est un fromage à pâte molle et croûte lavée cité parmi les fromages à éviter froids. Une pasteurisation éventuelle du lait ne suffit pas à changer cette consigne.', 'Choisir une autre variété ou une cuisson complète.', '', named],
     ['gorgonzola', 'Gorgonzola', 'Le gorgonzola est un fromage bleu à pâte molle. Le NHS distingue sa consommation froide d’une préparation chauffée jusqu’à être fumante à cœur.', 'Chauffer complètement la sauce, pas simplement faire fondre.', '', named],
-    ['pont-leveque', 'Pont-l’évêque', 'Le pont-l’évêque relève de la famille des fromages à pâte molle et croûte lavée. Miette lui applique la précaution française sur cette famille, même si le lait est pasteurisé.', 'Éviter froid ; choisir une pâte pressée cuite sans croûte.', 'pont l eveque'],
+    ['pont-leveque', 'Pont-l’évêque', 'Le pont-l’évêque relève de la famille des fromages à pâte molle et croûte lavée. Nidelle lui applique la précaution française sur cette famille, même si le lait est pasteurisé.', 'Éviter froid ; choisir une pâte pressée cuite sans croûte.', 'pont l eveque'],
     ['epoisses', 'Époisses', 'L’époisses est un fromage à pâte molle et croûte lavée. Le guide applique la précaution contre Listeria liée à cette famille de fromages affinés.', 'Privilégier un autre fromage pour une consommation froide.', 'epoisses'],
-    ['taleggio', 'Taleggio', 'Le taleggio est un fromage mou affiné à croûte lavée : Miette applique la recommandation générale sur cette famille de fromages consommés froids.', 'Choisir une préparation entièrement chauffée ou un autre fromage.']
+    ['taleggio', 'Taleggio', 'Le taleggio est un fromage mou affiné à croûte lavée : Nidelle applique la recommandation générale sur cette famille de fromages consommés froids.', 'Choisir une préparation entièrement chauffée ou un autre fromage.']
   ]);
   add('protein', 'meat', 'meat', 'meat', [
     ['lamb', 'Agneau', 'L’agneau peut être mangé entièrement cuit. Une côte rosée ou un gigot saignant ne répondent pas au repère contre la toxoplasmose pendant la grossesse.', 'Cuire jusqu’au centre, y compris près de l’os.', 'agneaux gigot'],
@@ -241,7 +241,7 @@
   ]);
   add('protein', 'meat', 'offal', 'liver', [
     ['liver', 'Foie & produits de foie', 'Le foie se distingue des autres viandes par sa teneur élevée en rétinol. Même bien cuit, il reste concerné par la recommandation du NHS de l’éviter pendant la grossesse.', 'Choisir une autre viande bien cuite.', 'foie veau foie volaille abats foie', named],
-    ['foie-gras', 'Foie gras', 'Le foie gras est un produit de foie : Miette retient la précaution du NHS liée au rétinol. Une forme mi-cuite réfrigérée ajoute la question de Listeria ; une conserve stérilisée ne règle pas la teneur en vitamine A.', 'Remplacer par une tartinade sans foie, bien préparée.', 'foie gras mi cuit', { sources: ['spf'], basis: 'family' }]
+    ['foie-gras', 'Foie gras', 'Le foie gras est un produit de foie : Nidelle retient la précaution du NHS liée au rétinol. Une forme mi-cuite réfrigérée ajoute la question de Listeria ; une conserve stérilisée ne règle pas la teneur en vitamine A.', 'Remplacer par une tartinade sans foie, bien préparée.', 'foie gras mi cuit', { sources: ['spf'], basis: 'family' }]
   ]);
   add('fish', 'fish', 'fish', 'fish', [
     ['hake', 'Merlu', 'Le merlu figure parmi les espèces proposées pour varier les poissons. Il peut se manger bien cuit ; la mention colin ne renseigne pas toujours à elle seule sur l’espèce exacte.', 'Vérifier l’espèce puis cuire le filet à cœur.', 'merlus', named],
@@ -324,7 +324,7 @@
     ['chickpea-pasta', 'Pâtes de pois chiches', 'Les pâtes de pois chiches se consomment après la préparation indiquée. Leur base végétale ne dispense pas d’une bonne conservation du plat cuisiné.', 'Cuire selon le paquet puis servir ou réfrigérer rapidement.', 'pates pois chiche']
   ]);
   add('pantry', 'sweet', 'sweet', 'sweet', [
-    ['honey', 'Miel', 'Le miel est un produit sucré : Miette lui applique le repère de modération des sucres pendant la grossesse. Cette fiche sur l’alimentation de la personne enceinte ne constitue pas un conseil pour nourrir un bébé.', 'Utiliser une petite quantité selon la recette.', 'miels'],
+    ['honey', 'Miel', 'Le miel est un produit sucré : Nidelle lui applique le repère de modération des sucres pendant la grossesse. Cette fiche sur l’alimentation de la personne enceinte ne constitue pas un conseil pour nourrir un bébé.', 'Utiliser une petite quantité selon la recette.', 'miels'],
     ['jam', 'Confiture', 'La confiture est limitée pour sa richesse en sucre, pas parce qu’elle serait interdite pendant la grossesse. Une cuillère déjà utilisée peut contaminer le pot.', 'Utiliser un ustensile propre et respecter la conservation.', 'confitures gelée'],
     ['maple-syrup', 'Sirop d’érable', 'Le sirop d’érable reste un produit sucré même s’il est d’origine végétale. Il peut servir occasionnellement pour parfumer une portion.', 'Modérer la quantité et suivre les consignes après ouverture.', 'sirop erable'],
     ['agave-syrup', 'Sirop d’agave', 'Le sirop d’agave apporte du sucre ; le mot « naturel » ne supprime pas ce point nutritionnel. Le repère relève de la modération des produits sucrés.', 'Utiliser selon l’appétit et les éventuelles consignes personnalisées.', 'sirop agave'],
@@ -359,7 +359,7 @@
     ['tap-water', 'Eau du robinet potable', 'L’eau du robinet peut être bue lorsqu’elle est déclarée potable localement. Une restriction ponctuelle de consommation prime sur ce repère général.', 'Suivre les éventuelles consignes de votre réseau d’eau.', 'eau robinet']
   ]);
   add('drinks', 'drink', 'drinks', 'herbs', [
-    ['rooibos', 'Rooibos en infusion', 'Une boisson au rooibos peut contenir d’autres plantes dans le mélange. Miette ne dispose pas ici d’un repère de dose propre à cette infusion pendant la grossesse et conserve donc « À vérifier ».', 'Faire vérifier la composition et la quantité consommée.'],
+    ['rooibos', 'Rooibos en infusion', 'Une boisson au rooibos peut contenir d’autres plantes dans le mélange. Nidelle ne dispose pas ici d’un repère de dose propre à cette infusion pendant la grossesse et conserve donc « À vérifier ».', 'Faire vérifier la composition et la quantité consommée.'],
     ['chamomile', 'Camomille en infusion', 'Le nom camomille ne décrit pas à lui seul l’espèce, la dose ni les autres plantes du sachet. Le guide ne transforme pas l’absence de données précises en interdiction, ni en feu vert.', 'Montrer la composition du mélange au pharmacien.', 'camomille tisane'],
     ['verbena', 'Verveine en infusion', 'Une infusion de verveine demande de connaître la plante exacte et l’usage envisagé. Un mélange ou un extrait concentré ne se juge pas sur son seul nom commercial.', 'Faire vérifier la plante, le mélange et la fréquence.', 'verveine tisane'],
     ['mint-tea', 'Infusion de menthe', 'L’infusion de menthe est distincte de quelques feuilles dans une recette et d’une huile essentielle. Le guide garde un repère à vérifier faute de dose individualisée.', 'Vérifier le mélange et l’usage auprès d’un pharmacien.', 'tisane menthe'],
