@@ -65,4 +65,96 @@ body{background:var(--canvas)}.sidebar{background:#f5f2e9;border-right-color:var
 @media(prefers-reduced-motion:reduce){.food-card:hover,.recipe-card:hover{transform:none}}
 @media print{.hero,.illustrated-intro,.sidebar-note,.empty-illustration{display:none}}
 
+/* Miette Plus: a calm offer, with a useful, free preview before launch. */
+.sidebar{overflow-y:auto;overscroll-behavior:contain}
+.sidebar>*{flex-shrink:0}
+.plus-stamp{display:inline-flex;align-items:center;gap:7px;color:var(--green-dark);font-family:'Lora',Georgia,serif;font-size:22px;letter-spacing:-.7px}
+.plus-stamp b{font:600 10px 'DM Sans',Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;background:#e8d5b8;color:#5c4834;padding:4px 7px;border-radius:5px}
+.plus-hero{display:grid;grid-template-columns:1.05fr 1fr;gap:28px;align-items:start;padding:8px 0 32px}
+.plus-hero-copy{padding:21px 20px 0 0}
+.plus-hero h1{font-family:'Lora',Georgia,serif;font-size:clamp(29px,3vw,43px);line-height:1.25;font-weight:500;letter-spacing:-1.2px;margin:24px 0 18px}
+.plus-hero-copy>p{font-size:14px;line-height:1.9;max-width:440px;color:#655f53}
+.plus-hero-copy>img{width:320px;max-width:80%;height:280px;object-fit:contain;mix-blend-mode:multiply;margin:10px auto 0}
+.plus-handnote{display:block;text-align:center;font-family:'Lora',Georgia,serif;font-style:italic;font-size:14px;color:#88604c}
+.plus-offer-panel{padding:29px;background:#fffdf8;border:1px solid #ded9c8;border-radius:22px;box-shadow:0 14px 35px #705c3d08}
+.plus-offer-panel h2,.plus-comparison h2,.plus-faq h2{font:500 26px/1.35 'Lora',Georgia,serif;letter-spacing:-.5px;margin:12px 0}
+.plus-lead{font-size:13px;line-height:1.85;color:#645f53;margin:12px 0 20px}
+.plus-plans{padding:0;border:0;margin:22px 0 10px;min-width:0;display:grid;gap:10px}
+.plus-plans legend{padding:0 0 12px;font-size:12px;font-weight:600;color:#5c594e}
+.plus-plan{display:flex;align-items:flex-start;gap:13px;padding:16px;border:1px solid #dcdacf;background:#fffefa;border-radius:13px;cursor:pointer}
+.plus-plan:has(input:checked){background:#eef2e6;border:1.5px solid #718164;padding:15.5px}
+.plus-plan:has(input:focus-visible){outline:3px solid #90ad8b;outline-offset:3px}
+.plus-plan input{accent-color:var(--green);width:17px;height:17px;flex-shrink:0;margin:3px 0 0}
+.plus-plan-copy{display:grid;gap:6px;flex:1;min-width:0}
+.plus-plan-name{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px;font-size:13px;font-weight:600}
+.plus-plan-name>small{font-size:9px;padding:2px 6px;border-radius:4px;background:#dfe6d4;color:#485638}
+.plus-price{font-family:'Lora',Georgia,serif;font-size:26px;line-height:1.3;color:var(--green-dark)}
+.plus-price small{font-family:'DM Sans',Arial,sans-serif;font-size:11px;color:#5f6253;white-space:nowrap}
+.plus-plan-caption{font-size:11px;color:#646152}
+.plus-terms{font-size:11px;color:#625f52;min-height:54px;line-height:1.8;margin:13px 0}
+.plus-launch-note{font-size:11px;line-height:1.8;padding:12px 14px;background:#f5ede0;color:#70573d;border-radius:9px;margin:14px 0 18px}
+.plus-cta{width:100%;justify-content:center;font-size:12px;min-height:47px;white-space:normal}
+.plus-reassurance{font-size:10px;line-height:1.7;text-align:center;color:#666351;margin-top:10px}
+.plus-comparison{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:15px 0 40px}
+.plus-comparison>section{padding:29px;border:1px solid #e2dece;border-radius:18px;background:#fffef8}
+.plus-comparison .plus-future{background:#f2efdf;border-color:#dfdac3}
+.plus-comparison h2{font-size:24px}
+.plus-comparison p{font-size:12px;color:#655f50;line-height:1.85}
+.plus-benefits{list-style:none;padding:0;margin:20px 0;display:grid;gap:12px}
+.plus-benefits li{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.8}
+.plus-benefits svg{color:var(--green);margin-top:3px}
+.plus-free-note{font-size:11px;line-height:1.85;color:#696052;margin:20px 0 0}
+.plus-faq{max-width:790px;margin:0 auto 25px}
+.plus-faq h2{font-size:25px;margin-bottom:20px}
+.plus-faq details{border-bottom:1px solid #e1ddcf;padding:16px 0}
+.plus-faq summary{font-size:13px;font-weight:600;cursor:pointer}
+.plus-faq details p{font-size:12px;line-height:1.9;color:#676154;padding:12px 0 0}
+.plus-dialog .plus-dialog-intro{display:flex;gap:16px;align-items:center;justify-content:space-between}
+.plus-dialog-intro img{width:130px;height:140px;object-fit:contain;mix-blend-mode:multiply}
+.plus-dialog-intro h2{font-size:31px;margin:16px 0 0}
+.plus-dialog .plus-benefits{gap:8px;margin:16px 0}
+.plus-dialog .plus-plans{grid-template-columns:1fr 1fr;margin-top:24px}
+.plus-dialog .plus-terms{min-height:0}
+.plus-dismiss{display:flex;justify-content:center;margin:17px auto 0;font-size:12px}
+.plus-dialog .plus-free-note{text-align:center;padding-top:16px;border-top:1px solid #e3dfd0;margin-top:18px}
+.plus-planner-banner{display:grid;grid-template-columns:1fr 170px;align-items:center;gap:20px;background:#f1eddd;border:1px solid #e2d8c4;border-radius:20px;padding:25px 29px;margin:0 0 26px}
+.plus-planner-banner .plus-stamp{font-size:19px}
+.plus-planner-banner h2{font:500 25px/1.4 'Lora',Georgia,serif;letter-spacing:-.5px;margin:9px 0}
+.plus-planner-banner p{font-size:12px;color:#655f50;line-height:1.85;max-width:580px}
+.plus-planner-banner img{width:170px;height:185px;object-fit:contain;mix-blend-mode:multiply}
+.plus-banner-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.plus-banner-actions .btn{font-size:11px}
+.plus-preview h2{margin-top:17px;max-width:500px}
+.plus-preview-fields{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.plus-preview-fields .field{margin-bottom:15px}
+.plus-preview-fields .text-input{width:100%}
+.plus-vegetarian{margin:0 0 21px;display:flex;align-items:center;gap:10px;font-size:12px}
+.plus-vegetarian input{accent-color:var(--green);width:17px;height:17px}
+.plus-preview-feedback{font-size:12px;margin:17px 0;color:var(--green-dark)}
+.plus-preview-days{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:9px;border-top:1px solid #e5dfd0}
+.plus-preview-days h3{font-size:12px!important;line-height:1.5;margin:14px 0!important;text-transform:capitalize}
+.plus-preview-recipe{display:block;text-align:left;background:#f6f1e6;padding:0;border:1px solid #e6decd;border-radius:12px;overflow:hidden;width:100%;margin-bottom:12px}
+.plus-preview-recipe>img{width:100%;height:115px;object-fit:cover}
+.plus-preview-recipe>span{display:grid;gap:5px;padding:11px 13px}
+.plus-preview-recipe b{font:500 15px/1.4 'Lora',Georgia,serif}
+.plus-preview-recipe small{font-size:10px;line-height:1.7;color:#635f4e}
+.plus-preview-recipe .plus-occupied{color:#864f39}
+.plus-save-note{font-size:12px;line-height:1.8;margin:12px 0;color:#655f50}
+.plus-preview-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.plus-preview-actions .btn{font-size:11px}
+.plus-preview-actions button:disabled{cursor:default}
+.plus-preview-upsell{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;border-radius:12px;background:#eaf0e2;margin-top:25px}
+.plus-preview-upsell strong{font-size:12px}
+.plus-preview-upsell p{font-size:11px;color:#5e624f;margin-top:4px}
+.plus-preview-upsell .btn-text{font-size:11px;flex-shrink:0}
+.plus-back{font-size:12px;margin-bottom:20px}
+@media(max-width:1050px){.plus-hero{gap:20px}.plus-offer-panel{padding:23px}.plus-hero-copy{padding-right:0}.plus-comparison{gap:18px}.plus-comparison>section{padding:23px}.plus-planner-banner{grid-template-columns:1fr 130px;padding:22px}.plus-planner-banner img{width:130px;height:170px}}
+@media(max-width:850px){.plus-hero{grid-template-columns:1fr}.plus-hero-copy{padding:5px 0 20px}.plus-handnote{display:none}.plus-hero h1{font-size:34px}.plus-offer-panel{max-width:560px;width:100%;margin:auto}.plus-comparison{grid-template-columns:1fr}}
+@media(max-width:520px){.plus-stamp{font-size:21px}.plus-hero{padding-top:0}.plus-hero h1{font-size:30px;letter-spacing:-1px}.plus-hero-copy>p{font-size:12px}.plus-offer-panel{padding:23px 19px}.plus-offer-panel h2{font-size:26px}.plus-plan{padding:14px}.plus-plan:has(input:checked){padding:13.5px}.plus-comparison>section{padding:23px 20px}.plus-faq{margin-top:30px}.plus-dialog-intro img{width:90px;height:100px}.plus-dialog-intro h2{font-size:26px}.plus-dialog .plus-plans{grid-template-columns:1fr}.plus-dialog .plus-price{font-size:25px}.plus-dialog .plus-plan-caption{font-size:10px}.plus-planner-banner{grid-template-columns:1fr;padding:22px;position:relative;overflow:hidden}.plus-planner-banner>div{position:relative;z-index:1}.plus-planner-banner img{position:absolute;right:5px;top:3px;width:80px;height:78px}.plus-planner-banner h2{font-size:23px;margin:15px 0 12px}.plus-planner-banner .plus-stamp{min-height:34px}.plus-banner-actions .btn{font-size:10px;padding:11px 12px}.plus-preview-fields{grid-template-columns:1fr;gap:0}.plus-preview-days{gap:10px}.plus-preview-recipe>img{height:90px}.plus-preview-recipe>span{padding:10px}.plus-preview-recipe b{font-size:13px}.plus-preview-upsell{align-items:flex-start;flex-direction:column;gap:9px}.plus-cta{font-size:11px}}
+@media(max-width:350px){.plus-hero-copy>p{max-width:100%}.plus-hero-copy>img{display:none}.plus-preview-days{grid-template-columns:1fr}.plus-preview-recipe>img{height:145px}}
+@media(max-width:850px){.plus-hero-copy{display:grid;grid-template-columns:minmax(0,1fr) 145px;gap:0 12px;align-items:center}.plus-hero-copy>.plus-stamp,.plus-hero-copy>h1{grid-column:1/-1}.plus-hero-copy>p{max-width:none}.plus-hero-copy>img{position:static;grid-column:2;grid-row:3;width:145px;max-width:100%;height:155px;z-index:auto;margin:0}}
+@media(max-width:520px){.plus-hero-copy{grid-template-columns:minmax(0,1fr) 100px}.plus-hero-copy>img{width:100px;height:125px}}
+@media(max-width:350px){.plus-hero-copy{grid-template-columns:1fr}.plus-hero-copy>img{display:none}}
+@media print{.plus-planner-banner,.plus-preview-upsell{display:none}}
+
 .seasoning-note{font-size:12px;line-height:1.8;color:#665e50;background:#f4ece0;border-radius:12px;padding:14px 18px;margin:14px 0}.food-card[data-category=seasoning] .food-art-wrap{background:#f2e8da}

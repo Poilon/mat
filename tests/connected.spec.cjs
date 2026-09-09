@@ -28,6 +28,24 @@ async function mockAccount(page, remote, initialUser=null) {
   });
 }
 const user={id:'account-a',name:'Camille',email:'a@example.com'};
+test('A notebook sync during a Plus preview never replaces a meal saved on another device',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-09-09T12:00:00+02:00'));
+  const remote={};await mockAccount(page,remote,user);
+  await page.goto('/#menus');
+  await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+  await page.locator('[data-action="plus-preview"]').click();
+  await page.locator('#plus-start').fill('2026-09-14');
+  await page.locator('#plus-preview-form [type="submit"]').click();
+  await expect(page.locator('.plus-preview-recipe')).toHaveCount(4);
+  remote['account-a']={notebook:{...empty(),menus:{'2026-09-14':{lunch:'sunny-bowl'}}},revision:1};
+  await page.evaluate(()=>MietteCloud.sync());
+  await expect(page.locator('.plus-preview-recipe')).toHaveCount(4);
+  await page.locator('[data-action="plus-save-preview"]').click();
+  await page.evaluate(()=>MietteCloud.sync());
+  await expect.poll(()=>Object.values(remote['account-a'].notebook.menus).flatMap(d=>Object.values(d)).length).toBe(4);
+  expect(remote['account-a'].notebook.menus['2026-09-14'].lunch).toBe('sunny-bowl');
+  await expect(page.locator('#toasts')).toContainText('Les repas déjà prévus ont été conservés');
+});
 async function login(page,email='a@example.com',includeGuest=true) {
   await page.goto('/#profil');await expect(page.locator('#auth-form')).toBeVisible();
   await page.locator('#auth-email').fill(email);await page.locator('#auth-password').fill('password-test-123');

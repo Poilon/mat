@@ -4,6 +4,7 @@
   const R = window.MietteRules;
   const API = window.MietteAPI;
   const Cloud = window.MietteCloud;
+  const Plus = window.MiettePlus;
   const { icon, food: art } = window.MietteIcons;
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16,7 +17,7 @@
   const recipePageSize = 12;
   const recipeHighlights = ['tacos-cabillaud', 'gnocchis-pesto', 'pancakes-citron-ricotta', 'burger-poulet-croustillant', 'brownie-chocolat-noisette', 'dhal-coco', 'bowl-patate-tahini', 'lasagnes-epinards-ricotta', 'soupe-minestrone', 'muffins-myrtille', 'houmous-betterave', 'sunny-bowl'];
   const recipeOrder = new Map([...recipeHighlights, ...D.recipes.filter(r => !recipeHighlights.includes(r.id)).map(r => r.id)].map((id, i) => [id, i]));
-  const labels = { accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données' };
+  const labels = { accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données', plus: 'Miette Plus' };
   let storageAvailable = true;
   let store = readStore();
   let route = getRoute();
@@ -33,6 +34,8 @@
   let scannerLoading = null;
   let authMode = 'login';
   let authBusy = false;
+  let plusPlan = Plus.offer.defaultPlan;
+  let plusDraft = null;
 
   function readStore(provided) {
     const defaults = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] };
@@ -144,14 +147,14 @@
     const nav = ([page, symbol, label]) => `<a href="#${page}" class="nav-link ${route.page === page ? 'active' : ''}" ${route.page === page ? 'aria-current="page"' : ''}>${icon(symbol, 18)}<span>${label}</span>${page === 'favoris' && store.favorites.length ? `<span class="nav-count">${store.favorites.length}</span>` : ''}</a>`;
     return `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Fermer le menu">${icon('close')}</button>
       <a class="brand" href="#accueil" aria-label="Miette, accueil"><img src="assets/brand/mark.svg" alt="" width="37" height="37"><span class="wordmark">miette</span></a><p class="brand-tagline">Votre assiette & votre grossesse.</p>
-      <nav aria-label="Navigation principale"><p class="nav-label">AU QUOTIDIEN</p>${links.map(nav).join('')}<p class="nav-label secondary">MON PETIT CARNET</p>${notebook.map(nav).join('')}<p class="nav-label secondary">POUR M’ACCOMPAGNER</p>${nav(['guide', 'book', 'Les bons repères'])}</nav>
+      <nav aria-label="Navigation principale"><p class="nav-label">AU QUOTIDIEN</p>${links.map(nav).join('')}<p class="nav-label secondary">MON PETIT CARNET</p>${notebook.map(nav).join('')}<p class="nav-label secondary">POUR M’ACCOMPAGNER</p>${nav(['guide', 'book', 'Les bons repères'])}${nav(['plus', 'sparkle', 'Découvrir Miette Plus'])}</nav>
       <div class="sidebar-bottom"><div class="sidebar-note"><img src="assets/brand/pregnancy-notebook.webp" alt="" width="700" height="700"><h3>Un jour à la fois.</h3><p>Des petits repères,<br>pour ces grands mois.</p></div><a class="sidebar-help" href="#sources">${icon('shield', 14)}Des repères, en toute transparence</a></div>`;
   }
   function topbar() {
     return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb">${icon('leaf', 16)}<span>Miette</span>${icon('chevron', 11)}<b>${labels[route.page]}</b></div><div class="topbar-right"><span class="topbar-note">${icon('heart', 13)}À vos côtés pendant la grossesse</span><a href="#profil" class="profile-trigger" aria-label="Mon compte et mes préférences"><span class="avatar">${escape(store.name ? store.name.charAt(0).toUpperCase() : 'M')}</span><span>${escape(store.name || (Cloud.state.user ? 'Mon compte' : 'Se connecter'))}</span>${icon('down', 13)}</a></div>`;
   }
   function footer() {
-    return `<footer class="footer"><span><span class="footer-brand">miette</span> &nbsp; Votre assiette & votre grossesse <span class="footer-heart">♡</span></span><div class="footer-links"><a href="#sources">Sources & méthode</a><a href="#confidentialite">Vos données</a><span>© 2026 Miette</span></div></footer>`;
+    return `<footer class="footer"><span><span class="footer-brand">miette</span> &nbsp; Votre assiette & votre grossesse <span class="footer-heart">♡</span></span><div class="footer-links"><a href="#plus">Miette Plus</a><a href="#sources">Sources & méthode</a><a href="#confidentialite">Vos données</a><span>© 2026 Miette</span></div></footer>`;
   }
   function migrationNote() {
     const runtime = window.MietteRuntime;
@@ -316,13 +319,78 @@
     const recipes = store.favorites.filter(f => f.startsWith('recipe:')).map(f => recipesById.get(f.slice(7))).filter(Boolean);
     return `${heading('Vos petits coups de cœur.', 'Les aliments et les recettes que vous voulez retrouver, tout simplement.')}${!foods.length && !recipes.length ? empty('Votre carnet n’attend que vous.', 'Touchez le petit cœur sur une fiche aliment ou une recette pour la retrouver ici.', '<a class="btn btn-primary" href="#aliments">Explorer les aliments ' + icon('arrow', 16) + '</a>', 'heart') : `${foods.length ? `<div class="section-heading"><h2>Mes aliments <span class="muted small">(${foods.length})</span></h2></div><div class="food-grid explore-grid">${foods.map(foodCard).join('')}</div>` : ''}${recipes.length ? `<section class="recipes-section"><div class="section-heading"><h2>Mes recettes <span class="muted small">(${recipes.length})</span></h2></div><div class="recipe-grid">${recipes.map(recipeCard).join('')}</div></section>` : ''}`}`;
   }
+  function plusStamp() { return `<span class="plus-stamp">${icon('sparkle', 14)}miette <b>plus</b></span>`; }
+  function plusPrice(plan) { return (plan.cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }); }
+  function plusTerms() {
+    const plan = Plus.offer.plans.find(p => p.id === plusPlan);
+    return `<strong>${plusPrice(plan)} ${plan.cadence}.</strong> ${escape(plan.terms)}`;
+  }
+  function plusPlans(prefix) {
+    return `<fieldset class="plus-plans"><legend>Les formules prévues au lancement</legend>${Plus.offer.plans.map(plan => `<label class="plus-plan" for="${prefix}-${plan.id}"><input id="${prefix}-${plan.id}" type="radio" name="plus-plan-${prefix}" value="${plan.id}" data-plus-plan ${plusPlan === plan.id ? 'checked' : ''}><span class="plus-plan-copy"><span class="plus-plan-name">${plan.name}${plan.id === 'pass' ? '<small>Un seul paiement</small>' : ''}</span><span class="plus-price">${plusPrice(plan)} <small>${plan.cadence}</small></span><span class="plus-plan-caption">${plan.id === 'pass' ? '9 mois pour prendre le temps' : 'Pour la durée qui vous convient'}</span></span></label>`).join('')}</fieldset><p class="plus-terms" data-plus-terms aria-live="polite">${plusTerms()}</p>`;
+  }
+  function plusLaunchNote() {
+    return '<p class="plus-launch-note"><strong>Offre en préparation.</strong> Ces tarifs sont proposés pour le lancement. Les abonnements et les paiements ne sont pas encore ouverts.</p>';
+  }
+  function plusOffer() {
+    openDialog(`<div class="dialog-content plus-dialog"><div class="plus-dialog-intro"><div>${plusStamp()}<h2 id="dialog-title">Votre semaine,<br>déjà imaginée.</h2></div><img src="assets/brand/pregnancy-notebook.webp" alt="" width="700" height="700"></div><p class="plus-lead">Avec Miette Plus, nous préparons la composition de 7 jours de menus : des idées pour vos déjeuners et dîners, selon vos envies et votre temps.</p><ul class="plus-benefits"><li>${icon('calendar', 17)}14 repas proposés en une fois</li><li>${icon('leaf', 17)}Option végétarienne et durée au choix</li><li>${icon('refresh', 17)}D’autres idées quand vos envies changent</li></ul>${plusPlans('dialog')}${plusLaunchNote()}<button class="btn btn-primary plus-cta" data-action="plus-preview">Tester 2 jours gratuitement ${icon('arrow', 16)}</button><p class="plus-reassurance">Sans carte bancaire · Sans compte · Aucun engagement</p><button class="btn-text plus-dismiss" data-action="close-dialog">Continuer avec mon carnet gratuit</button><p class="plus-free-note">Les ${D.foods.length} fiches sourcées, les ${D.recipes.length} recettes et les menus composés à la main restent gratuits.</p></div>`, { type: 'plus-offer' });
+  }
+  function plusPage() {
+    return `<section class="plus-page"><div class="plus-hero"><div class="plus-hero-copy">${plusStamp()}<h1>Un peu moins à prévoir.<br>Un peu plus à savourer.</h1><p>Pendant la grossesse, il y a déjà beaucoup à penser. Miette Plus se prépare à vous aider avec la question de tous les jours : « Qu’est-ce qu’on mange ? »</p><img src="assets/brand/pregnancy-notebook.webp" alt="Une femme enceinte prend un moment pour écrire dans son carnet." width="700" height="700"><span class="plus-handnote">De la place pour vous, aussi.</span></div><section class="plus-offer-panel" aria-labelledby="plus-offer-title"><span class="eyebrow">BIENTÔT DANS VOTRE CARNET</span><h2 id="plus-offer-title">Une semaine d’idées,<br>en quelques gestes.</h2><p class="plus-lead">7 jours, 14 repas et vos préférences : végétarien ou non, cuisine rapide ou plus tranquille.</p>${plusPlans('page')}${plusLaunchNote()}<button class="btn btn-primary plus-cta" data-action="plus-preview">Tester 2 jours gratuitement ${icon('arrow', 16)}</button><p class="plus-reassurance">Sans carte bancaire · Sans compte · Aucun engagement</p></section></div><div class="plus-comparison"><section><span class="eyebrow">MIETTE · GRATUIT</span><h2>Les repères, pour toutes.</h2><p>Tout ce qui vous aide à comprendre votre assiette reste accessible.</p><ul class="plus-benefits"><li>${icon('check', 16)}${D.foods.length} aliments, leurs précautions et leurs sources</li><li>${icon('check', 16)}Recherche de produits et scan Open Food Facts</li><li>${icon('check', 16)}Les ${D.recipes.length} recettes, avec leurs étapes et précautions</li><li>${icon('check', 16)}Favoris, menus manuels, courses et synchronisation</li><li>${icon('check', 16)}Aperçu automatique de 2 jours, disponible maintenant</li></ul><a href="#menus" class="btn-text">Ouvrir mon carnet gratuit ${icon('arrow', 15)}</a></section><section class="plus-future"><span class="eyebrow">MIETTE PLUS · EN PRÉPARATION</span><h2>Moins de menus à imaginer.</h2><p>L’offre payante portera sur le temps gagné pour organiser vos repas.</p><ul class="plus-benefits"><li>${icon('sparkle', 16)}Composer automatiquement 7 jours de déjeuners et dîners</li><li>${icon('sparkle', 16)}Tenir compte de votre temps et de l’option végétarienne</li><li>${icon('sparkle', 16)}Remplacer une idée et renouveler toute la proposition</li><li>${icon('sparkle', 16)}Ajouter les repas au carnet puis préparer les courses</li></ul><p class="plus-free-note">Vos menus enregistrés resteront accessibles après la fin de l’offre.</p></section></div><section class="plus-faq" aria-labelledby="plus-faq-title"><h2 id="plus-faq-title">Quelques petits repères.</h2><details><summary>Est-ce que l’aperçu gratuit m’engage à payer ?</summary><p>Non. Vous pouvez générer quatre idées de repas et les ajouter à votre carnet. Aucune carte bancaire n’est demandée et aucun abonnement ne commence. L’offre payante n’est pas encore ouverte.</p></details><details><summary>Pourquoi deux formules ?</summary><p>Le pass propose neuf mois en un seul paiement, sans renouvellement automatique. La formule mensuelle est prévue pour une durée plus courte, avec un renouvellement chaque mois et une résiliation avant la prochaine échéance. Les conditions définitives seront présentées avant toute ouverture des paiements.</p></details><details><summary>Est-ce un programme nutritionnel personnalisé ?</summary><p>Ce sont des idées parmi les recettes Miette, pour deux personnes. Elles ne couvrent pas les allergies, le diabète gestationnel ou vos besoins nutritionnels individuels. Les ingrédients, allergènes et précautions de chaque recette restent consultables gratuitement.</p></details></section></section>`;
+  }
+  function plusPlannerBanner() {
+    return `<section class="plus-planner-banner"><div>${plusStamp()}<h2>Et si les menus se préparaient tout seuls ?</h2><p>Découvrez deux jours d’idées gratuites. La semaine automatique de Miette Plus est en préparation.</p><div class="plus-banner-actions"><button class="btn btn-primary" data-action="plus-preview">Essayer 2 jours ${icon('arrow', 15)}</button><button class="btn btn-outline" data-action="plus-offer">${icon('sparkle', 15)}Composer 7 jours · Plus</button></div></div><img src="assets/brand/pregnancy-notebook.webp" alt="" width="700" height="700"></section>`;
+  }
+  function plusPreviewDialog(restore = false) {
+    if (!restore || plusDraft?.owner !== (Cloud?.storageKey || STORAGE_KEY)) plusDraft = null;
+    const start = plusDraft?.entries[0].date || (route.page === 'menus' && weekOffset() !== 0 ? localDate(weekDates()[0]) : localDate());
+    openDialog(`<div class="dialog-content plus-preview">${plusStamp()}<h2 id="dialog-title">Deux jours, pour goûter l’idée.</h2><p class="plus-lead">Quatre plats pour vos déjeuners et dîners, à choisir parmi les recettes Miette. Un aperçu gratuit, pour deux personnes.</p><form id="plus-preview-form"><div class="plus-preview-fields"><div class="field"><label for="plus-start">À partir du</label><input class="text-input" type="date" id="plus-start" name="start" value="${start}" min="1900-01-01" max="9999-12-30" required></div><div class="field"><label for="plus-duration">Temps par recette</label><select class="text-input" id="plus-duration" name="duration"><option value="30">30 minutes maximum</option><option value="45" selected>45 minutes maximum</option><option value="120">Tout mon temps</option></select></div></div><label class="check-label plus-vegetarian"><input type="checkbox" name="vegetarian" ${store.vegetarian ? 'checked' : ''}>Uniquement des recettes végétariennes</label><button class="btn btn-primary" type="submit">${icon('sparkle', 16)}Proposer mes 4 repas</button></form><p id="plus-preview-feedback" class="plus-preview-feedback" role="status"></p><div id="plus-preview-results"></div><p class="plus-free-note">Ouvrez chaque recette pour vérifier les ingrédients, les allergènes et les précautions de préparation. Ces idées ne sont pas un programme nutritionnel personnalisé.</p></div>`, { type: 'plus-preview', owner: Cloud?.storageKey || STORAGE_KEY });
+    const lastStart = monday(53); lastStart.setDate(lastStart.getDate() - 2);
+    $('#plus-start').min = localDate(monday(-52)); $('#plus-start').max = localDate(lastStart);
+    if (plusDraft) {
+      $('#plus-duration').value = String(plusDraft.maxTime);
+      $('#plus-preview-form [name="vegetarian"]').checked = plusDraft.vegetarian;
+      renderPlusPreview();
+    }
+  }
+  function renderPlusPreview() {
+    if (!plusDraft || !$('#plus-preview-results')) return;
+    const result = Plus.fillEmpty(store.menus, plusDraft.entries, D.recipes);
+    const dates = [...new Set(plusDraft.entries.map(e => e.date))];
+    $('#plus-preview-results').innerHTML = `<div class="plus-preview-days">${dates.map(date => `<section><h3>${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h3>${plusDraft.entries.filter(e => e.date === date).map(entry => { const r = recipesById.get(entry.recipeId); const occupied = !!store.menus[date]?.[entry.meal]; return `<button class="plus-preview-recipe" data-action="plus-preview-recipe" data-id="${r.id}"><img src="assets/${r.image}.jpg" alt="" width="150" height="110"><span><small>${mealLabels[entry.meal]} · ${r.time} min</small><b>${escape(r.title)}</b>${occupied ? '<small class="plus-occupied">Créneau déjà occupé · repas conservé</small>' : '<small>Voir la recette et ses précautions →</small>'}</span></button>`; }).join('')}</section>`).join('')}</div><p class="plus-save-note">${result.added ? `${result.added} repas peuvent être ajoutés. ${result.occupied ? `${result.occupied} créneau(x) déjà occupé(s) seront conservés.` : 'Vos autres repas restent en place.'}` : 'Ces créneaux sont déjà occupés. Choisissez une autre date pour ajouter de nouvelles idées.'}</p><div class="plus-preview-actions"><button class="btn btn-primary" data-action="plus-save-preview" ${!result.added ? 'disabled' : ''}>${icon('calendar', 16)}Ajouter ${result.added} repas à mes menus</button><button class="btn btn-outline" data-action="plus-regenerate">${icon('refresh', 15)}D’autres idées</button></div><div class="plus-preview-upsell"><div><strong>Envie de prévoir la semaine entière ?</strong><p>Miette Plus prépare la composition de 7 jours.</p></div><button class="btn-text" data-action="plus-offer">Découvrir l’offre ${icon('arrow', 15)}</button></div>`;
+  }
+  function generatePlusPreview(form) {
+    if (dialogContext?.type !== 'plus-preview') return;
+    const owner = Cloud?.storageKey || STORAGE_KEY;
+    if (dialogContext.owner !== owner) { plusPreviewDialog(); toast('Votre carnet a changé. Choisissez à nouveau vos préférences.', 'info'); return; }
+    const data = new FormData(form);
+    try {
+      const entries = Plus.preview(D.recipes, { start: String(data.get('start')), maxTime: Number(data.get('duration')), vegetarian: data.get('vegetarian') === 'on' });
+      plusDraft = { entries, owner, vegetarian: data.get('vegetarian') === 'on', maxTime: Number(data.get('duration')) };
+      renderPlusPreview();
+      $('#plus-preview-feedback').textContent = 'Vos quatre idées sont prêtes. Vous pouvez les consulter avant de les ajouter.';
+    } catch (error) { plusDraft = null; $('#plus-preview-results').innerHTML = ''; $('#plus-preview-feedback').textContent = error.message; }
+  }
+  function savePlusPreview() {
+    if (!plusDraft || dialogContext?.type !== 'plus-preview') return;
+    if (plusDraft.owner !== (Cloud?.storageKey || STORAGE_KEY)) { plusPreviewDialog(); toast('Votre carnet a changé. Recréez un aperçu pour ce carnet.', 'info'); return; }
+    // Recheck the current notebook: a cloud sync may have filled slots since the preview.
+    const result = Plus.fillEmpty(store.menus, plusDraft.entries, D.recipes);
+    if (!result.added) { renderPlusPreview(); $('#plus-preview-feedback').textContent = 'Ces repas sont déjà prévus. Aucun repas existant n’a été remplacé.'; return; }
+    const start = new Date(plusDraft.entries[0].date + 'T12:00:00');
+    const offset = Math.floor((Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()) - Date.UTC(monday().getFullYear(), monday().getMonth(), monday().getDate())) / 604800000);
+    store.menus = result.menus;
+    const saved = persist();
+    plusDraft = null; $('#detail-dialog').close();
+    go('menus', { semaine: offset || null });
+    toast(`${result.added} repas ajoutés${saved ? ' à votre carnet' : ' dans cet onglet'}.${result.occupied ? ' Les repas déjà prévus ont été conservés.' : ''}`, 'calendar');
+  }
   function plannerPage() {
     const dates = weekDates();
     const start = dates[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     const end = dates[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
     let count = 0;
     dates.forEach(d => { count += Object.values(store.menus[localDate(d)] || {}).filter(id => recipesById.has(id)).length; });
-    return `${heading('Une semaine à votre goût.', 'Des repas qui vous font envie, de la place pour souffler.')}${illustratedIntro('Un petit carnet pour ces grands mois.', 'Gardez vos envies, préparez vos menus et retrouvez les courses dont vous avez besoin.', 'pregnancy-notebook')}<div class="planner-top"><div class="week-controls"><a href="${href('menus', { semaine: weekOffset() - 1 })}" class="icon-button" aria-label="Semaine précédente">${icon('chevron', 16).replace('<svg', '<svg class="rotate"')}</a><span>${start} — ${end}</span><a href="${href('menus', { semaine: weekOffset() + 1 })}" class="icon-button" aria-label="Semaine suivante">${icon('chevron', 16)}</a></div><a href="#menus" class="btn btn-outline">Cette semaine</a></div><div class="planner-grid">${dates.map(d => {
+    return `${heading('Une semaine à votre goût.', 'Des repas qui vous font envie, de la place pour souffler.')}${plusPlannerBanner()}<div class="planner-top"><div class="week-controls"><a href="${href('menus', { semaine: weekOffset() - 1 })}" class="icon-button" aria-label="Semaine précédente">${icon('chevron', 16).replace('<svg', '<svg class="rotate"')}</a><span>${start} — ${end}</span><a href="${href('menus', { semaine: weekOffset() + 1 })}" class="icon-button" aria-label="Semaine suivante">${icon('chevron', 16)}</a></div><a href="#menus" class="btn btn-outline">Cette semaine</a></div><div class="planner-grid">${dates.map(d => {
       const date = localDate(d);
       return `<section class="planner-day" aria-label="${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}"><div class="day-heading ${date === localDate() ? 'today' : ''}"><span>${d.toLocaleDateString('fr-FR', { weekday: 'short' })}</span><b>${d.getDate()}</b></div>${Object.entries(mealLabels).map(([meal, label]) => {
         const r = recipesById.get(store.menus[date]?.[meal]);
@@ -464,7 +532,7 @@
     }
     $('#sidebar').innerHTML = sidebar();
     $('#topbar').innerHTML = topbar();
-    const pages = { accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage };
+    const pages = { accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage, plus: plusPage };
     $('#main').innerHTML = `<div class="page-content">${pages[route.page]()}</div>${footer()}`;
     syncSidebar();
     document.title = `${labels[route.page]} — Miette`;
@@ -516,6 +584,7 @@
     const r = recipesById.get(id); if (!r) return;
     const portions = Math.max(1, Math.min(8, servings));
     openDialog(`<img class="dialog-recipe-photo" src="assets/${r.image}.jpg" alt="Photo d’inspiration culinaire"><div class="dialog-content"><span class="eyebrow">UNE RECETTE À AIMER</span><h2 id="dialog-title">${r.title}</h2><div class="dialog-recipe-meta"><span>${icon('clock', 15)}${r.time} minutes</span><span>${icon('users', 15)}${portions} personne${portions > 1 ? 's' : ''}</span><span>${icon(r.vegetarian ? 'leaf' : 'recipe', 15)}${r.tags[0]}</span></div><p class="muted small">${r.subtitle}</p><div class="servings-control"><h3>Les bonnes choses à prévoir</h3><div class="stepper"><button data-action="servings" data-delta="-1" aria-label="Réduire le nombre de portions" ${portions === 1 ? 'disabled' : ''}>${icon('minus', 13)}</button><span aria-live="polite">${portions} pers.</span><button data-action="servings" data-delta="1" aria-label="Augmenter le nombre de portions" ${portions === 8 ? 'disabled' : ''}>${icon('plus', 13)}</button></div></div><ul class="ingredients-list">${r.ingredients.map(i => `<li>${i.name}<b>${number(i.quantity * portions / r.servings)} ${i.unit}</b></li>`).join('')}</ul><p class="allergens"><strong>Allergènes :</strong> ${r.allergens}</p>${portions !== r.servings ? `<p class="portion-note">Quantités ajustées pour ${portions} personne${portions > 1 ? 's' : ''}. Adaptez aussi le nombre de moules et de fournées : les étapes décrivent la recette de base pour ${r.servings} personnes.</p>` : ''}<h3>On passe en cuisine ?</h3><ol class="steps-list">${r.steps.map(t => `<li>${t}</li>`).join('')}</ol><div class="advice-box">${icon('shield', 16)} <strong>Le petit repère grossesse</strong><p>${r.safety}</p></div><div class="dialog-actions"><button class="btn btn-primary" data-action="recipe-shopping" data-id="${r.id}" data-servings="${portions}">${icon('bag', 16)}Ajouter à mes courses</button><button class="btn btn-outline" data-action="plan-recipe" data-id="${r.id}">${icon('calendar', 16)}Au menu</button><button class="btn btn-outline" data-action="favorite" data-kind="recipe" data-id="${r.id}">${icon('heart', 16)}${favorite('recipe', r.id) ? 'Retirer' : 'Garder'}</button></div><p class="dialog-disclaimer">Temps de cuisson indicatifs. Suivez les ingrédients écrits, les précautions et vos consignes médicales. Les photos illustrent une idée de plat.</p>${sourceFooter(r.sources || ['spf', 'toxo'])}</div>`, { type: 'recipe', id, servings: portions });
+    if (plusDraft) $('.dialog-content').insertAdjacentHTML('afterbegin', '<button class="btn-text plus-back" data-action="plus-back-preview">← Revenir à mes 4 idées</button>');
   }
   function toggleFavorite(kind, id) {
     if (!['food', 'recipe'].includes(kind)) return;
@@ -700,6 +769,12 @@
       case 'servings': if (dialogContext?.type === 'recipe') { const scroll = $('#detail-dialog').scrollTop; const delta = Number(trigger.dataset.delta); recipeDetail(dialogContext.id, dialogContext.servings + delta); $('#detail-dialog').scrollTop = scroll; $(`[data-action="servings"][data-delta="${delta}"]`)?.focus({ preventScroll: true }); } break;
       case 'recipe-shopping': { const recipe = recipesById.get(id); if (recipe) addIngredients([{ recipe, servings: Number(trigger.dataset.servings) || 2 }]); break; }
       case 'plan-recipe': planRecipe(id); break;
+      case 'plus-offer': plusOffer(); break;
+      case 'plus-preview': plusPreviewDialog(); break;
+      case 'plus-regenerate': if ($('#plus-preview-form')?.reportValidity()) generatePlusPreview($('#plus-preview-form')); break;
+      case 'plus-save-preview': savePlusPreview(); break;
+      case 'plus-preview-recipe': if (plusDraft && recipesById.has(id)) recipeDetail(id); break;
+      case 'plus-back-preview': plusPreviewDialog(true); break;
       case 'pick-recipe': pickRecipe(trigger.dataset.date, trigger.dataset.meal); break;
       case 'assign-recipe': assignRecipe(id, trigger.dataset.date, trigger.dataset.meal); break;
       case 'remove-meal': if (store.menus[trigger.dataset.date]) { delete store.menus[trigger.dataset.date][trigger.dataset.meal]; persist(); rerender(); toast('Le créneau est de nouveau libre.', 'calendar'); } break;
@@ -725,9 +800,10 @@
   document.addEventListener('submit', event => {
     const form = event.target;
     const data = new FormData(form);
-    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form'];
+    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form', 'plus-preview-form'];
     if (!known.includes(form.id)) return;
     event.preventDefault();
+    if (form.id === 'plus-preview-form') { generatePlusPreview(form); return; }
     if (form.id === 'delete-account-form') {
       const button = form.querySelector('[type="submit"]'); button.disabled = true;
       Cloud.deleteAccount(String(data.get('password'))).then(() => { $('#detail-dialog').close(); toast('Votre compte et son carnet en ligne ont été supprimés.', 'check'); }).catch(error => { if ($('#delete-feedback')) $('#delete-feedback').textContent = error.message; }).finally(() => { button.disabled = false; });
@@ -776,6 +852,15 @@
     }
   });
   document.addEventListener('change', event => {
+    if (event.target.matches('[data-plus-plan]') && Plus.offer.plans.some(p => p.id === event.target.value)) {
+      plusPlan = event.target.value;
+      document.querySelectorAll('[data-plus-plan]').forEach(input => { input.checked = input.value === plusPlan; });
+      document.querySelectorAll('[data-plus-terms]').forEach(el => { el.innerHTML = plusTerms(); });
+    }
+    if (event.target.closest('#plus-preview-form')) {
+      plusDraft = null; $('#plus-preview-results').innerHTML = '';
+      $('#plus-preview-feedback').textContent = 'Préférences modifiées. Proposez vos 4 repas pour actualiser l’aperçu.';
+    }
     if (event.target.id === 'notebook-file' && event.target.files[0]) importNotebook(event.target.files[0]);
     if (event.target.id === 'barcode-photo' && event.target.files[0]) readBarcodePhoto(event.target.files[0]);
     if (event.target.id === 'recipe-duration') updateRecipeFilters({ duree: Number(event.target.value) || null });
@@ -818,7 +903,7 @@
   $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${migrationNote()}${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
   const dialog = $('#detail-dialog');
   dialog.addEventListener('close', () => {
-    stopCamera(); dialogContext = null; document.body.style.overflow = '';
+    stopCamera(); dialogContext = null; plusDraft = null; document.body.style.overflow = '';
     if (lastDialogTrigger?.isConnected) lastDialogTrigger.focus({ preventScroll: true });
     if (route.page === 'favoris') { const y = window.scrollY; $('#main').innerHTML = `<div class="page-content">${favoritesPage()}</div>${footer()}`; window.scrollTo({ top: y, behavior: 'instant' }); }
   });
