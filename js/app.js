@@ -424,10 +424,10 @@
   function privacyPage() {
     return `${heading('Votre carnet, vos choix.', 'Utilisez Miette sans compte, ou retrouvez votre carnet sur plusieurs appareils.')}<div class="profile-panel legal-copy"><h3>Sans compte</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses restent dans le stockage local de ce navigateur. Une copie exportée vous permet de les conserver ou de changer d’appareil.</p><h3>Avec un compte</h3><p>La connexion est gérée par Neon Auth. Les mots de passe sont traités par ce service d’authentification ; ils ne sont pas enregistrés dans le carnet. Votre carnet est sauvegardé dans la base PostgreSQL dédiée à Miette et associé à votre compte. Le serveur vérifie la connexion avant chaque accès au carnet. Vous pouvez vous déconnecter depuis Mon espace.</p><p>Une copie reste sur l’appareil pour continuer hors connexion. Les modifications sont synchronisées au retour du réseau. Si les mêmes éléments ont changé sur deux appareils, Miette vous demande quelle version conserver.</p><h3>Recherche de produits et caméra</h3><p>Les noms recherchés et les codes-barres sont transmis au serveur Miette sur Vercel, puis à Open Food Facts. Les fiches publiques peuvent être mises en cache. Les images des produits viennent d’Open Food Facts. Votre carnet et votre adresse e-mail ne lui sont pas transmis.</p><p>Les images de caméra et les photos de codes-barres sont analysées sur votre appareil. Elles ne sont ni envoyées au serveur ni enregistrées dans le carnet. La caméra est arrêtée à la fermeture du scanner. Miette ne contient ni publicité ni mesure d’audience.</p><h3>Exporter ou importer</h3><p>Le fichier JSON contient les préférences, favoris, menus et courses. Il ne contient ni mot de passe ni session de connexion.</p><div class="dialog-actions"><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><button class="btn btn-outline" data-action="import-data">${icon('upload', 16)}Importer un carnet</button></div><input type="file" id="notebook-file" accept="application/json,.json" hidden><p id="import-status" role="status"></p><h3>Effacer le carnet</h3><p>${Cloud.state.user ? 'Le carnet sera vidé sur cet appareil et dans votre compte lors de la synchronisation. Le compte de connexion restera disponible.' : 'Le carnet et le cache des recherches seront effacés de ce navigateur.'} Vous pouvez exporter une copie avant cette action.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button>${Cloud.state.user ? '<h3>Supprimer le compte</h3><p>La suppression efface le compte de connexion et son carnet en ligne. Le carnet sans compte de cet appareil reste séparé.</p><button class="btn btn-outline" data-action="delete-account">Supprimer mon compte</button>' : ''}</div>`;
   }
-  function renderRoute() {
+  function renderRoute(keepDialog = false) {
     const oldPage = route.page;
     route = getRoute();
-    if ($('#detail-dialog').open) $('#detail-dialog').close();
+    if (keepDialog !== true && $('#detail-dialog').open) $('#detail-dialog').close();
     closeMenu();
     const isOFF = route.page === 'aliments' && route.params.get('source') === 'off';
     if (!isOFF && apiState.loading) {
@@ -446,7 +446,17 @@
       else if (q !== apiState.key || (apiState.error && !apiState.products.length)) searchAPI();
     }
   }
-  function rerender() { const y = window.scrollY; renderRoute(); window.scrollTo({ top: y, behavior: 'instant' }); }
+  function rerender(keepDialog = false) { const y = window.scrollY; renderRoute(keepDialog); window.scrollTo({ top: y, behavior: 'instant' }); }
+  function replaceNotebook(notebook, { preserveEdits = false } = {}) {
+    const active = document.activeElement;
+    const form = preserveEdits && active?.matches('input,textarea,select') && active.closest('#profile-form,#shopping-add,#home-search,#explore-search,#recipe-search');
+    const draft = form ? [...form.querySelectorAll('input[id]:not([type="file"]),select[id],textarea[id]')].map(input => ({ id: input.id, value: input.value, checked: input.checked })) : [];
+    const focus = form ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
+    productMap.clear(); store = readStore(notebook); rerender(preserveEdits);
+    for (const saved of draft) { const input = document.getElementById(saved.id); if (input) { input.value = saved.value; input.checked = saved.checked; } }
+    if (focus) { const input = document.getElementById(focus.id); input?.focus({ preventScroll: true }); if (input && typeof focus.start === 'number') input.setSelectionRange(focus.start, focus.end); }
+    if ($('#detail-dialog').open) document.body.style.overflow = 'hidden';
+  }
   function openDialog(content, context) {
     stopCamera();
     const dialog = $('#detail-dialog');
@@ -663,7 +673,7 @@
       case 'export-data': downloadFile('miette-mon-carnet.json', JSON.stringify({ application: 'Miette', version: 1, exportedAt: new Date().toISOString(), notebook: store }, null, 2), 'application/json'); toast('Votre carnet a été exporté.', 'download'); break;
       case 'reset-data': openDialog('<div class="dialog-content"><h2 id="dialog-title">Effacer votre carnet ?</h2><p class="muted small">Votre prénom, vos favoris, vos menus et vos courses seront effacés. Si vous êtes connectée, le carnet vide sera aussi synchronisé avec votre compte. Vous pouvez exporter votre carnet avant cette action.</p><div class="dialog-actions"><button class="btn btn-outline" data-action="close-dialog">Garder mon carnet</button><button class="btn btn-primary" data-action="confirm-reset">Effacer les données</button></div></div>', { type: 'reset' }); break;
       case 'confirm-reset': store = { name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] }; productMap.clear(); persist(); API.clearCache(); apiState = { key: '', products: [], loading: false, count: 0 }; $('#detail-dialog').close(); rerender(); toast('Votre carnet a été effacé de ce navigateur.', 'check'); break;
-      case 'auth-mode': authMode = trigger.dataset.mode; renderAccount(true); break;
+      case 'auth-mode': authMode = trigger.dataset.mode; if (route.params.has('token')) go('profil'); else renderAccount(true); break;
       case 'delete-account': openDialog('<div class="dialog-content"><h2 id="dialog-title">Supprimer votre compte ?</h2><p>Votre compte, ses sessions et son carnet en ligne seront supprimés définitivement. Vous pouvez exporter le carnet avant de continuer.</p><form id="delete-account-form"><div class="field"><label for="delete-password">Confirmer avec votre mot de passe</label><input class="text-input" id="delete-password" name="password" type="password" autocomplete="current-password" required maxlength="128"></div><p id="delete-feedback" role="alert"></p><div class="dialog-actions"><button type="button" class="btn btn-outline" data-action="close-dialog">Annuler</button><button type="submit" class="btn btn-primary">Supprimer définitivement mon compte</button></div></form></div>', { type: 'delete-account' }); break;
       case 'cloud-retry': Cloud.retry(); break;
       case 'sync-now': Cloud.sync(); break;
@@ -778,7 +788,7 @@
   }
   renderRoute(); updateOnline();
   window.addEventListener('miette:cloud', () => { renderAccount(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
-  Cloud?.init({ read: () => store, replace: notebook => { productMap.clear(); store = readStore(notebook); rerender(); } }).then(receiveTransfer);
+  Cloud?.init({ read: () => store, replace: replaceNotebook }).then(receiveTransfer);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* The application also works without installation. */ }));
   }

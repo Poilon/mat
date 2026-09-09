@@ -56,6 +56,7 @@ test('Registration validates passwords, recovery and reset remain usable',async(
   await page.locator('[data-action="sign-out"]').click();await expect(page.locator('#auth-form')).toBeVisible();await page.locator('[data-mode="login"]').click();await page.locator('[data-mode="forgot"]').click();await page.locator('#auth-email').fill('a@example.com');await page.locator('#auth-form [type="submit"]').click();await expect(page.locator('#auth-feedback')).toContainText('e-mail de récupération');
   await page.goto('/?password-reset=1&token=test-reset-token#profil');await expect(page.locator('#auth-form')).toHaveAttribute('data-mode','reset');expect(new URL(page.url()).search).toBe('');
   await page.locator('#auth-password').fill('new-password-123');await page.locator('#auth-confirm').fill('new-password-123');await page.locator('#auth-form [type="submit"]').click();await expect(page.locator('#auth-form')).toHaveAttribute('data-mode','login');
+  await page.goto('/?password-reset=1&token=expired-link#profil');await expect(page.locator('#auth-form')).toHaveAttribute('data-mode','reset');await page.locator('[data-mode="login"]').click();await expect(page.locator('#auth-form')).toHaveAttribute('data-mode','login');await page.locator('[data-mode="forgot"]').click();await expect(page.locator('#auth-form')).toHaveAttribute('data-mode','forgot');
 });
 test('Two devices synchronize independently added items and preserve offline changes',async({browser})=>{
   const remote={};const a=await browser.newContext(),b=await browser.newContext();const p=await a.newPage(),q=await b.newPage();
@@ -121,4 +122,14 @@ test('Deleting an account needs confirmation and retains the separate guest note
   await page.locator('#delete-password').fill('correct-password');await page.locator('#delete-account-form [type="submit"]').click();await expect(page.locator('dialog')).not.toBeVisible();
   expect(await page.evaluate(()=>MietteCloud.state.user)).toBe(null);expect(await page.evaluate(()=>localStorage.getItem('miette-account-account-a'))).toBe(null);
   await page.goto('/#profil');await expect(page.locator('#profile-name')).toHaveValue('Invitée');
+});
+
+test('Background synchronization preserves open dialogs and unfinished form input',async({page})=>{
+  const remote={'account-a':{notebook:{...empty(),name:'Initial'},revision:1}};await mockAccount(page,remote,user);await page.goto('/#profil');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+  await page.locator('#profile-name').fill('Prénom en cours');
+  remote['account-a']={notebook:{...empty(),name:'Initial',favorites:['recipe:sunny-bowl']},revision:2};await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('#profile-name')).toHaveValue('Prénom en cours');await expect(page.locator('#profile-name')).toBeFocused();
+  await page.goto('/#recettes');await page.locator('.recipe-card-open').first().click();const title=await page.locator('#dialog-title').textContent();
+  remote['account-a']={notebook:{...empty(),name:'Ailleurs'},revision:3};await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('dialog')).toBeVisible();await expect(page.locator('#dialog-title')).toHaveText(title);await page.keyboard.press('Escape');
+  await page.goto('/#confidentialite');await page.locator('[data-action="delete-account"]').click();await page.locator('#delete-password').fill('not-submitted');
+  remote['account-a']={notebook:{...empty(),name:'Autre mise à jour'},revision:4};await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('#delete-password')).toHaveValue('not-submitted');await expect(page.locator('dialog')).toBeVisible();
 });

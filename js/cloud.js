@@ -26,7 +26,7 @@
       throw error;
     } finally { clearTimeout(timeout); }
   }
-  function apply(notebook) { hooks.replace(notebook); write(storageKey(), hooks.read()); }
+  function apply(notebook, preserveEdits = false) { hooks.replace(notebook, { preserveEdits }); write(storageKey(), hooks.read()); }
   async function refreshSession(importGuest = false) {
     const session = await request('auth/get-session');
     const previous = state.user?.id;
@@ -86,8 +86,8 @@
           if (merged.conflicts.length) {
             state.conflict = { remote, fields: merged.conflicts }; state.status = 'conflict'; emit(); return;
           }
-          apply(merged.notebook);
-        } else apply(remote.notebook || N.empty());
+          apply(merged.notebook, true);
+        } else apply(remote.notebook || N.empty(), true);
         meta.revision = remote.revision; meta.base = remote.notebook || N.empty(); saveMeta();
       }
       if (meta.dirty || (!remote.notebook && N.hasContent(hooks.read()))) {
