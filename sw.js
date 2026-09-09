@@ -1,9 +1,11 @@
 /* Offline app shell. External services are deliberately excluded from this cache. */
 'use strict';
-const CACHE = 'miette-shell-v2.0.2';
+const CACHE = 'miette-shell-v2.1.0';
 const ASSETS = [
-  './', 'index.html', 'styles.css?v=4', 'manifest.webmanifest',
-  'js/runtime.js?v=4', 'js/notebook.js?v=4', 'js/cloud.js?v=5', 'js/scanner.js', 'js/icons.js?v=4', 'js/recipes.js?v=2', 'js/data.js?v=2', 'js/rules.js', 'js/api.js?v=4', 'js/app.js?v=5',
+  './', 'index.html', 'styles.css?v=5', 'manifest.webmanifest',
+  'js/runtime.js?v=4', 'js/notebook.js?v=4', 'js/cloud.js?v=5', 'js/scanner.js', 'js/icons.js?v=5', 'js/recipes.js?v=2', 'js/evidence.js?v=1', 'js/catalogue.js?v=1', 'js/seasonings.js?v=1', 'js/data.js?v=3', 'js/rules.js?v=3', 'js/api.js?v=4', 'js/app.js?v=6',
+  'assets/brand/mark.svg', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
+  'assets/brand/pregnancy-hero.webp', 'assets/brand/pregnancy-foods.webp', 'assets/brand/pregnancy-notebook.webp',
   'assets/icon.svg', 'assets/icon-192.png', 'assets/icon-512.png',
   'assets/hero.jpg', 'assets/bowl.jpg', 'assets/salmon.jpg', 'assets/pasta.jpg',
   'assets/porridge.jpg', 'assets/vegetables.jpg', 'assets/soup.jpg',

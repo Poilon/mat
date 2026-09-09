@@ -7,7 +7,7 @@ async function routeOFF(page, handler) { await page.route('**/api/products?**', 
 test('Home, local search, risk details and favorites persist across reloads', async ({ page }) => {
   const errors = []; page.on('pageerror', err => errors.push(err.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Bien manger, l’esprit léger.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bien dans l’assiette. Bien dans votre grossesse.' })).toBeVisible();
   await page.locator('#home-search-input').fill('mozza');
   await page.locator('#home-search').getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(page.locator('.food-card')).toHaveCount(1);
@@ -26,11 +26,12 @@ test('Home, local search, risk details and favorites persist across reloads', as
 test('Category and status filters combine, French ligatures work', async ({ page }) => {
   await page.goto('/#aliments');
   await page.locator('#explore-search-input').fill('oeuf');
-  await expect(page.locator('.food-card')).toHaveCount(2);
+  await expect(page.locator('.food-card')).toHaveCount(3);
+  await expect(page.getByRole('heading', { name: 'Œufs de caille', exact: true })).toBeVisible();
   await page.locator('#explore-search-input').fill('');
   await page.locator('[data-action="category"][data-category="dairy"]').click();
   await page.locator('[data-action="status"][data-filter="avoid"]').click();
-  await expect(page.locator('.food-card')).toHaveCount(5);
+  await expect(page.locator('.food-card')).toHaveCount(require('../js/data.js').foods.filter(f => f.category === 'dairy' && f.status === 'avoid').length);
   await expect(page.locator('.food-card[data-category="produce"]')).toHaveCount(0);
 });
 
@@ -221,6 +222,13 @@ test('Offline app shell survives a reload with local recipes', async ({ browser 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero')).toBeVisible();
+  expect(await page.locator('.pregnancy-hero').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await page.goto('/#aliments?q=ananas');
+  await page.locator('.food-card-open').click();
+  await expect(page.locator('.food-explanation')).toContainText('ananas');
+  await expect(page.locator('.sources-inline .source-link').first()).toHaveAttribute('href', /^https:\/\//);
+  await page.keyboard.press('Escape');
+  expect(await page.locator('.illustrated-intro img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   await page.locator('a[href="#recettes"]').first().click();
   await expect(page.locator('.recipe-card')).toHaveCount(12);
   await expect(page.locator('#recipe-count')).toContainText('100 recettes');

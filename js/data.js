@@ -1,5 +1,8 @@
 (function (root) {
   'use strict';
+  const evidence = typeof module !== 'undefined' && module.exports ? require('./evidence.js') : root.MietteEvidence;
+  const catalogue = typeof module !== 'undefined' && module.exports ? require('./catalogue.js') : root.MietteCatalogue;
+  const seasonings = typeof module !== 'undefined' && module.exports ? require('./seasonings.js') : root.MietteSeasonings;
   const sources = {
     ameli: { name: 'Assurance Maladie', title: 'Aliments à éviter et hygiène pendant la grossesse', url: 'https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse-alimentation/les-aliments-eviter-et-les-precautions-d-hygiene-pendant-la-grossesse' },
     toxo: { name: 'Assurance Maladie', title: 'Prévenir la toxoplasmose', url: 'https://www.ameli.fr/assure/sante/themes/toxoplasmose/prevention' },
@@ -21,6 +24,7 @@
   const categories = [
     { id: 'all', label: 'Tout explorer', icon: 'grid' },
     { id: 'produce', label: 'Fruits & légumes', icon: 'apple' },
+    { id: 'seasoning', label: 'Épices & aromates', icon: 'spice' },
     { id: 'dairy', label: 'Produits laitiers', icon: 'milk' },
     { id: 'protein', label: 'Viandes & œufs', icon: 'meat' },
     { id: 'fish', label: 'Poissons', icon: 'fish' },
@@ -131,6 +135,19 @@
   }));
   Object.assign(foods.find(f => f.id === 'water'), { status: 'compatible', reason: 'L’eau potable est la boisson de référence pendant la grossesse.', preparation: ['Boire régulièrement selon votre soif.', 'Utiliser une eau destinée à la consommation humaine.'], sources: ['nutrition'] });
   Object.assign(foods.find(f => f.id === 'energy-drink'), { status: 'avoid', reason: 'Les boissons énergisantes sont déconseillées pendant la grossesse.', preparation: ['Préférer de l’eau.', 'Ne pas les confondre avec les boissons de réhydratation prescrites.'], sources: ['nutrition'] });
+  Object.assign(sources, evidence.sources);
+  const originalFruits = new Set(['avocado', 'strawberries', 'apple', 'banana', 'raspberry', 'melon']);
+  for (const food of foods) {
+    if (!catalogue.annotations[food.id]) throw new Error('Explication manquante : ' + food.id);
+    Object.assign(food, catalogue.annotations[food.id]);
+    if (food.category === 'produce') food.family = originalFruits.has(food.id) ? 'fruit' : 'vegetable';
+  }
+  foods.push(...catalogue.foods, ...seasonings);
+  for (const food of foods) {
+    if (food.category === 'seasoning' || food.family === 'herb') food.seasoningFamily = food.family;
+    if (['mustard', 'wine-vinegar', 'soy-sauce'].includes(food.id)) food.seasoningFamily = 'condiment';
+    if (food.id === 'liquorice') food.seasoningFamily = 'spice';
+  }
   const ingredient = (name, quantity, unit = '') => ({ name, quantity, unit });
   const recipes = [
     {
@@ -198,7 +215,29 @@
   const originalCollections = ['bowls', 'four', 'italie', 'brunch', 'soupes', 'bowls', 'four', 'douceurs', 'four', 'italie'];
   recipes.forEach((recipe, index) => { recipe.collection = originalCollections[index]; });
   recipes.push(...book.recipes);
-  const data = { sources, statuses, categories, groups, foods, recipes, recipeCollections: book.collections, reviewed: '9 septembre 2026', reviewedISO: '2026-09-09' };
+  // Connect newly documented ingredients to recipes that already use them.
+  const ingredientLinks = {
+    'sweet-potato': /patates? douces?/i, pineapple: /ananas/i, pear: /poires?/i,
+    mango: /mangue/i, peach: /pêches?/i, apricot: /abricot/i, kiwi: /kiwi/i,
+    blueberry: /myrtille/i, lemon: /citron(?! vert)/i, lime: /citron vert/i,
+    leek: /poireau/i, onion: /oignon/i, garlic: /\bail\b/i, shallot: /échalote/i,
+    'bell-pepper': /poivron/i, eggplant: /aubergine/i, peas: /petits pois/i,
+    cucumber: /concombre/i, butternut: /butternut/i, 'red-kuri': /potimarron/i,
+    pumpkin: /potiron/i, asparagus: /asperge/i, cauliflower: /chou-fleur/i,
+    beetroot: /betterave/i, halloumi: /halloumi/i, cheddar: /cheddar/i,
+    mascarpone: /mascarpone/i, skyr: /skyr/i, tahini: /tahini|purée de sésame/i,
+    'coconut-milk': /lait de coco/i, basil: /basilic/i, parsley: /persil/i,
+    coriander: /coriandre/i, mint: /menthe/i, chives: /ciboulette/i,
+    cumin: /cumin/i, paprika: /paprika/i, turmeric: /curcuma/i,
+    'curry-powder': /curry/i, 'garam-masala': /garam masala/i, oregano: /origan/i,
+    vanilla: /vanille/i, nutmeg: /muscade/i, 'stock-cube': /bouillon/i
+  };
+  for (const recipe of recipes) {
+    for (const [id, pattern] of Object.entries(ingredientLinks)) {
+      if (foods.some(f => f.id === id) && !recipe.foods.includes(id) && recipe.ingredients.some(i => pattern.test(i.name))) recipe.foods.push(id);
+    }
+  }
+  const data = { sources, statuses, categories, groups, foods, recipes, profiles: evidence.profiles, recipeCollections: book.collections, reviewed: evidence.reviewed, reviewedISO: evidence.reviewedISO };
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
   root.MietteData = data;
 })(typeof window !== 'undefined' ? window : globalThis);

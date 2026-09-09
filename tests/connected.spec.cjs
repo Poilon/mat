@@ -88,7 +88,7 @@ test('Notebook import requires confirmation and installation instructions are vi
 test('Account forms and scanner have no serious accessibility violations',async({page})=>{
   await mockAccount(page,{});await page.goto('/#profil');await expect(page.locator('#auth-form')).toBeVisible();
   for(const mode of ['login','signup','forgot']){await page.locator(`[data-mode="${mode}"]`).first().click();const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);if(mode==='signup')await page.locator('[data-mode="login"]').first().click();}
-  await page.goto('/');await page.locator('[data-action="scan"]').click();const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id)).toEqual([]);
+  await page.goto('/');await page.locator('[data-action="scan"]').click();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))});const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))).toEqual([]);
 });
 test('Photo barcode decoding works without BarcodeDetector and the image stays local',async({page})=>{
   await page.addInitScript(()=>{window.BarcodeDetector=undefined});let calls=0;

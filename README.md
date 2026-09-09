@@ -1,12 +1,16 @@
-# Miette — Bien manger, à deux.
+# Miette — Votre assiette & votre grossesse
 
-Application en français sur l’alimentation pendant la grossesse : **100 recettes, 70 fiches alimentaires, recherche Open Food Facts, scanner et carnet synchronisé**.
+Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 100 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 
 **Application : https://mat-sandy-six.vercel.app/** · [Code source](https://github.com/Poilon/mat)
 
 L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les recettes et le carnet local restent utilisables sans compte.
 
 ## Fonctionnalités
+
+- Identité centrée sur la grossesse : symbole de maternité, palette sauge/crème/terre cuite, trois illustrations originales et icônes alimentaires. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
+- 60 nouvelles fiches d’épices, mélanges, aromates et condiments, avec une rubrique dédiée et des distinctions entre usage culinaire, infusions et extraits.
+- 360 fiches avec explication propre à chaque aliment, mécanisme du risque, conditions de consommation, préparation et liens vers les sources. Filtres fruits/légumes/herbes, recherche tolérante aux accents et navigation par lots de 48.
 
 - Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
 - Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
@@ -73,23 +77,28 @@ Avant de changer le domaine de production, l’ajouter aux domaines autorisés d
 
 ## Sources et portée des conseils
 
-Les fiches éditoriales s’appuient sur les recommandations publiques françaises de l’Assurance Maladie, de Santé publique France / Manger Bouger, des ministères de la Santé et de l’Agriculture, ainsi que sur les repères EFSA concernant la caféine. Liens et date de consultation dans chaque fiche et dans **Sources & méthode**. Références consultées le **9 septembre 2026**.
+Les fiches éditoriales s’appuient sur les recommandations publiques françaises de l’Assurance Maladie, de Santé publique France / Manger Bouger, des ministères de la Santé et de l’Agriculture, ainsi que sur les repères EFSA concernant la caféine. Des références complémentaires identifiées (FDA, CDC, FoodSafety.gov, NHS, Food Standards Agency National Kidney Foundation, NIH/NCCIH et MotherToBaby/OTIS) précisent certains cas : lavage, conserves, cuisson, riz, farine, rétinol et carambole. Les recommandations françaises restent la base ; les différences de périmètre sont expliquées. Liens et date de consultation dans chaque fiche et dans **Sources & méthode**. Références consultées le **9 septembre 2026**.
+
+Chaque fiche distingue une recommandation citant l’aliment ou sa préparation d’une application par Miette des conseils généraux à sa famille. Les sources ne sont pas présentées comme une validation individuelle de chacun des 360 aliments.
 
 Le contenu est un guide général, **sans validation clinique indépendante**. Il ne remplace pas un médecin ou une sage-femme. Allergies, diabète gestationnel, traitements et situations individuelles ne sont pas pris en charge. « Compatible » concerne un aliment du guide dans les conditions écrites de préparation et de conservation ; ce n’est pas une garantie d’absence de risque.
 
 ### Analyse Open Food Facts
 
-Open Food Facts est une base collaborative de produits, **pas une base de décisions médicales**. L’app ne charge pas toute la base : elle l’interroge à la demande. Les règles locales cherchent des signaux dans les noms, catégories et ingrédients en français et en anglais. Elles conservent tous les signaux repérés, peuvent produire des faux positifs et ne couvrent pas tous les ingrédients, langues ou traitements.
+Open Food Facts est une base collaborative de produits, **pas une base de décisions médicales**. L’app ne charge pas toute la base : elle l’interroge à la demande. Les règles locales cherchent des signaux dans les noms, catégories et ingrédients en français et en anglais. Chaque signal affiche le champ et le terme normalisé qui l’ont déclenché, une explication et les références correspondantes. Les points impossibles à confirmer sont affichés séparément. Les règles conservent tous les signaux repérés, peuvent produire des faux positifs et ne couvrent pas tous les ingrédients, langues ou traitements.
 
 **Aucun produit Open Food Facts n’est automatiquement déclaré « Compatible ».** Une fiche sans signal reste « À vérifier », y compris avec un Nutri-Score A. La pasteurisation, la cuisson réelle, la chaîne du froid et les rappels de lots ne peuvent pas être confirmés par cette app. Les règles ne suppriment pas les précautions en fonction du trimestre ou de l’immunité à la toxoplasmose.
 
-Pour maintenir le guide, modifier `js/data.js` (guide) ou `js/recipes.js` (nouvelles recettes), vérifier les recommandations auprès des sources primaires puis actualiser la date. `js/rules.js` contient séparément les règles partielles de repérage des produits.
+Pour maintenir le guide, modifier `js/catalogue.js` (explications individuelles et 230 ajouts) et `js/evidence.js` (sources, mécanismes, conditions et date), en conservant les identifiants des 70 fiches initiales dans `js/data.js`. Les 60 fiches supplémentaires d’épices et condiments sont dans `js/seasonings.js`, et les recettes supplémentaires dans `js/recipes.js`. Vérifier chaque modification médicale auprès des sources primaires, indiquer si le conseil porte sur une famille ou un aliment cité, puis actualiser la date. `js/rules.js` contient séparément les règles partielles de repérage des produits ; elles réutilisent les explications documentées.
 
 ## Organisation
 
 ```text
 index.html, styles.css  Interface native
-js/data.js             Guide, sources et recettes initiales
+js/data.js             Assemblage du guide, identifiants et recettes initiales
+js/catalogue.js        300 explications individuelles et 230 aliments ajoutés
+js/evidence.js         Sources, mécanismes, conditions et date de consultation
+js/seasonings.js       60 épices, aromates, mélanges et condiments
 js/recipes.js          90 recettes supplémentaires et collections
 js/rules.js            Repérage partiel des précautions et contrôle EAN/UPC
 js/api.js              Normalisation et cache de la recherche
@@ -100,6 +109,7 @@ src/scanner.js         Lecteur ZXing compilé en dist/js/scanner.js
 api/                   Fonctions Vercel : auth, compte, carnet, produits, configuration
 server/                Validation, connexion PostgreSQL, sessions et quotas
 scripts/               Compilation, développement et migration applicative
+assets/brand/          Logo, illustrations de grossesse et charte de marque
 assets/                Photos, polices, icônes et licences
 sw.js                  Cache du guide, des recettes et de l’interface ; aucune API privée
 ```
@@ -110,6 +120,6 @@ Changer le nom du cache dans `sw.js` lorsque les fichiers précachés évoluent.
 
 Les données OFF sont sous [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/), les contenus individuels sous Database Contents License et les images produits sous CC BY-SA. Chaque fiche produit renvoie à sa source. Cette base est distincte du guide éditorial Miette.
 
-Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miette. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
+Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miette. Les trois scènes de grossesse ont été générées avec l’outil intégré imagegen ; leurs prompts et usages sont documentés dans `assets/brand/`. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
 
 Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.
