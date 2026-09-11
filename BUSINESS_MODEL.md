@@ -1,6 +1,6 @@
-# Miamama Plus — modèle économique
+# Poum Plus — modèle économique
 
-Version du 11 septembre 2026, application 3.3.0. **Miamama — Alimentation & grossesse.** Le nom reste provisoire. Le paiement Stripe et les droits serveur sont implémentés. Leur ouverture dépend de la configuration documentée dans [STRIPE.md](STRIPE.md) ; tant qu’elle est incomplète, l’atelier et les recettes Plus restent offerts sur le site connecté, et aucun checkout n’est proposé.
+Version du 11 septembre 2026, application 3.5.0. **Poum — Ta grossesse, à ton rythme.** Stripe est configuré en production : les deux Checkouts, le portail et la réception signée des événements ont été vérifiés, sans paiement réel. Le domaine `poum.app` est en cours de raccordement.
 
 ## Ce que l’on vend
 
@@ -33,7 +33,7 @@ Les goûts culinaires sont des préférences de sélection, pas un bilan nutriti
 | --- | --- |
 | Gratuit durable | 360 fiches alimentaires sourcées, recherche/scan Open Food Facts selon disponibilité, 20 recettes complètes, ingrédients et précautions des 100 recettes, favoris, menus manuels, courses, export et synchronisation |
 | Première semaine | Tout l’atelier sur une première date de semaine, ajustable sans carte bancaire, avec un compte gratuit |
-| Miamama Plus | 80 préparations supplémentaires à consulter à la demande, nouvelles semaines personnalisées, plats modifiables, courses regroupées et carnet à partager |
+| Poum Plus | 80 préparations supplémentaires à consulter à la demande, nouvelles semaines personnalisées, plats modifiables, courses regroupées et carnet à partager |
 
 - **Pass 9 mois : 29,90 € en une fois.** Neuf mois d’accès à partir de l’activation, sans renouvellement automatique. Aucun justificatif de grossesse.
 - **Mensuel : 4,90 €/mois.** Renouvellement automatique ; résiliation possible pour empêcher la prochaine échéance, accès jusqu’à la fin de la période payée.
@@ -90,6 +90,6 @@ Les étapes de 80 recettes sont retirées des deux fichiers de catalogue lors du
 
 La réponse autorisée de l’atelier inclut les étapes des seuls plats proposés. La semaine d’essai est donc entièrement utilisable, y compris quand elle contient une recette Plus. Les préparations obtenues restent sur l’appareil, séparées par compte ; les exports déjà téléchargés restent utilisables. La suppression du compte ou du carnet efface le cache correspondant. Ce cache ne se synchronise pas : sur un nouvel appareil, un membre ouvre la recette en ligne, et une utilisatrice de l’essai peut recomposer sa semaine offerte pour récupérer ses préparations.
 
-Le mode lancement délivre les préparations sans achat tant que la configuration Stripe reste incomplète. Il est présenté comme un accès offert ; ce mode ne permet pas de mesurer une conversion payante. La clé serveur manquante doit être ajoutée avant de commencer cette mesure.
+Le mode lancement délivre les préparations sans achat tant que la configuration Stripe reste incomplète. Il est présenté comme un accès offert ; ce mode ne permet pas de mesurer une conversion payante. Ce mode de lancement n’est plus actif sur la production configurée.
 
 Le dépôt et ses anciennes versions sont publics. Le contenu qui y a déjà été publié reste copiable : aucun contrôle dans l’app ne peut retirer ces anciennes copies. La valeur récurrente doit donc venir de l’organisation des repas, de la maintenance et de l’usage, sans prétendre vendre une exclusivité absolue sur les textes. Les tarifs ne garantissent pas la conversion ; les recettes seules peuvent conduire à un achat court, alors que les semaines successives donnent une raison de revenir.

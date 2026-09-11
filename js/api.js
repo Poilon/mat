@@ -73,7 +73,7 @@
     const url = new URL(isBarcode ? '/api/v3/product/' + digits + '.json' : '/cgi/search.pl', API_ROOT);
     url.searchParams.set('fields', FIELDS);
     // Browser fetch cannot reliably set User-Agent. Identify the static client in the URL.
-    url.searchParams.set('app_name', 'Miamama');
+    url.searchParams.set('app_name', 'Poum');
     url.searchParams.set('app_version', '1.0');
     url.searchParams.set('lc', 'fr');
     if (!isBarcode) {

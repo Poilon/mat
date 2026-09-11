@@ -93,7 +93,7 @@ function createBilling({ stripe, repo, config, now = () => Date.now() }) {
   }
   async function checkout(user, plan, origin) {
     requireConfigured();
-    if (!['monthly', 'pass'].includes(plan)) throw new HttpError(400, 'Choisissez une formule Miamama Plus.');
+    if (!['monthly', 'pass'].includes(plan)) throw new HttpError(400, 'Choisissez une formule Poum Plus.');
     return locked(`checkout:${config.live}:${user.id}`, async () => {
       const row = await customerFor(user);
       const access = await repo.access(user.id, config.live);

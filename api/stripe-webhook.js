@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
     if (!config.configured) throw new HttpError(503, 'La réception des paiements est en cours de configuration.');
     json(res, 200, await service().webhook(event));
   } catch (error) {
-    if (!error.status) console.error('Miamama billing webhook:', error.name, error.code || 'upstream');
+    if (!error.status) console.error('Poum billing webhook:', error.name, error.code || 'upstream');
     json(res, error.status || 503, { error: error.status ? error.message : 'Réception temporairement indisponible.' });
   }
 };

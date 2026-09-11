@@ -29,7 +29,7 @@ window.MietteBilling = (() => {
   }
   function redirect(url) {
     const target = new URL(url);
-    if (target.protocol !== 'https:' || !['checkout.stripe.com', 'billing.stripe.com'].includes(target.hostname)) throw new Error('Le lien de paiement est invalide. Réessayez depuis Miamama.');
+    if (target.protocol !== 'https:' || !['checkout.stripe.com', 'billing.stripe.com'].includes(target.hostname)) throw new Error('Le lien de paiement est invalide. Réessayez depuis Poum.');
     location.assign(target.href);
   }
   function init() {

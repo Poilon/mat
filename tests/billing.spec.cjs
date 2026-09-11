@@ -44,11 +44,11 @@ async function signup(page) {
   await page.locator('#auth-password').fill('test-password-123'); await page.locator('#auth-confirm').fill('test-password-123');
   await page.locator('#auth-form [type="submit"]').click();
 }
-test('Miamama carries its new identity and explains Plus in the main cooking journeys', async ({ page }) => {
+test('Poum carries its new identity and explains Plus in the main cooking journeys', async ({ page }) => {
   await account(page, { loggedIn: false });
   for (const [route, place] of [['accueil', 'home'], ['recettes', 'recipes'], ['favoris', 'favorites'], ['courses', 'shopping']]) {
     await page.goto('/#' + route); await ready(page);
-    await expect(page).toHaveTitle(/Miamama/); await expect(page.locator('.wordmark')).toHaveText('miamama');
+    await expect(page).toHaveTitle(/Poum/); await expect(page.locator('.wordmark')).toHaveText('poum');
     await expect(page.locator('.premium-nudge-' + place)).toContainText('Première semaine offerte');
     await expect(page.locator('.topbar-plus')).toBeVisible();
   }

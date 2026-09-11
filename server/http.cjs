@@ -20,9 +20,9 @@ function allowRequest(req, res, { publicRead = false } = {}) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   } else if (origin && origin !== own) {
-    throw new HttpError(403, 'Cette connexion ne vient pas de l’application Miamama.');
+    throw new HttpError(403, 'Cette connexion ne vient pas de l’application Poum.');
   }
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin !== own) throw new HttpError(403, 'Rechargez Miamama avant de réessayer.');
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin !== own) throw new HttpError(403, 'Rechargez Poum avant de réessayer.');
 }
 function json(res, status, data) {
   res.statusCode = status;
@@ -36,7 +36,7 @@ function handler(fn, options) {
       const status = error.status || 503;
       if (status === 429) res.setHeader('Retry-After', '60');
       json(res, status, { error: error.status ? error.message : 'Le service ne répond pas pour le moment. Réessayez dans un instant.', ...error.details });
-      if (!error.status) console.error('Miamama service error:', error.name, error.code || 'upstream');
+      if (!error.status) console.error('Poum service error:', error.name, error.code || 'upstream');
     }
   };
 }

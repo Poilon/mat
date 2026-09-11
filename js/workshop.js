@@ -59,7 +59,7 @@ window.MietteWorkshop = (() => {
     }
     function accessNote() {
       const b = host.billing();
-      if (b.mode === 'mirror') return '<p class="workshop-discovery">Un exemple est disponible ici. Ouvrez Miamama sur sa version connectée pour composer vos propres semaines et retrouver Plus.</p>';
+      if (b.mode === 'mirror') return '<p class="workshop-discovery">Un exemple est disponible ici. Ouvrez Poum sur sa version connectée pour composer vos propres semaines et retrouver Plus.</p>';
       if (b.access.active) return '<p class="workshop-discovery">Votre atelier Plus est ouvert : composez et ajustez vos semaines. Les nouvelles propositions nécessitent une connexion ; vos carnets restent accessibles hors connexion.</p>';
       if (!b.loaded) return '<p class="workshop-discovery">Votre première semaine personnalisée est offerte avec un compte gratuit, sans carte bancaire.</p>';
       if (!b.configured && b.mode !== 'error') return '<p class="workshop-discovery">L’atelier est offert pendant l’ouverture des paiements. Aucun abonnement ne commence sans achat.</p>';
@@ -78,7 +78,7 @@ window.MietteWorkshop = (() => {
     }
     function render() {
       ensure();
-      return `<div class="workshop-page"><div class="workshop-heading"><div><a class="btn-text" href="#plus">← L’atelier Plus</a><h1>Mes repas pendant la grossesse</h1><p>Choisissez vos préférences, puis ajustez les plats. Chaque recette contient ses précautions grossesse.</p></div><span class="workshop-demo">${host.billing().access.active ? 'Miamama Plus actif' : 'Votre première semaine offerte'}</span></div><div id="workshop-access">${accessNote()}</div>${form()}<p id="workshop-feedback" class="workshop-feedback" role="status">${esc(feedback)}</p><div id="workshop-results">${results()}</div><p class="workshop-footnote"><span id="workshop-storage-note">${storageNote()}</span> Les propositions sont des idées de cuisine pour deux personnes, sans prise en charge des allergies ni de vos besoins médicaux. Les précautions et sources restent dans chaque recette.</p></div>`;
+      return `<div class="workshop-page"><div class="workshop-heading"><div><a class="btn-text" href="#plus">← L’atelier Plus</a><h1>Mes repas pendant la grossesse</h1><p>Choisissez vos préférences, puis ajustez les plats. Chaque recette contient ses précautions grossesse.</p></div><span class="workshop-demo">${host.billing().access.active ? 'Poum Plus actif' : 'Votre première semaine offerte'}</span></div><div id="workshop-access">${accessNote()}</div>${form()}<p id="workshop-feedback" class="workshop-feedback" role="status">${esc(feedback)}</p><div id="workshop-results">${results()}</div><p class="workshop-footnote"><span id="workshop-storage-note">${storageNote()}</span> Les propositions sont des idées de cuisine pour deux personnes, sans prise en charge des allergies ni de vos besoins médicaux. Les précautions et sources restent dans chaque recette.</p></div>`;
     }
     function update(message = '') {
       feedback = message; persist();

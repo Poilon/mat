@@ -1,6 +1,6 @@
 # Direction visuelle et éditoriale
 
-Version 3.4.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
+Version 3.5.0, septembre 2026. **Poum**, nom choisi avec le domaine `poum.app`. Le mot évoque le battement du cœur et permet d’étendre la marque à toute la grossesse. Signature : « Ta grossesse, à ton rythme. » Les comptes et contenus médicaux conservent leurs identifiants.
 
 ## Ton
 

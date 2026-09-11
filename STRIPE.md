@@ -1,4 +1,4 @@
-# Miamama Plus — configuration Stripe
+# Poum Plus — configuration Stripe
 
 Le compte Poilon Software est autorisé par Stripe CLI. Cette autorisation sert aux outils ; l’application utilise une **clé API serveur durable** dans Vercel. Aucune clé ni donnée de carte ne va dans le JavaScript public. Le SDK Stripe est fixé à 22.6.2, API `2026-08-26.dahlia`.
 
@@ -18,13 +18,9 @@ Mensuel : 490 centimes EUR, renouvellement mensuel. Pass : 2 990 centimes EUR, n
 
 ## État de l’ouverture
 
-Les prix, le portail et le secret du webhook sont enregistrés dans l’environnement **Production** du projet Vercel `mat`. La clé `STRIPE_SECRET_KEY` de production reste à ajouter depuis le Dashboard Stripe dans Vercel. Le webhook reste désactivé jusqu’à la vérification du déploiement. Tant que la configuration est incomplète, aucun checkout n’est proposé et l’atelier reste offert.
+Les cinq variables Stripe sont enregistrées dans l’environnement **Production** du projet Vercel `mat`. Vérification du 11 septembre 2026 : `configured: true`, mode `live`, deux pages Checkout ouvertes avec les montants corrects, portail client accessible, webhook activé et signatures valides acceptées. Les événements d’expiration des sessions ont été livrés. Aucun paiement réel n’a été effectué ; les comptes et sessions temporaires ont été nettoyés.
 
-Après ajout de la clé serveur :
-
-1. Redéployer `mat` avec les variables Production. `GET /api/billing` doit indiquer `configured: true` et `mode: live` ; sans session, aucun droit n’est renvoyé.
-2. Vérifier la signature sur `https://mat-sandy-six.vercel.app/api/stripe-webhook` avec le secret déjà enregistré, puis activer **uniquement** `we_1UEPYhBKxdkJ2tu1uWpDyVog` dans Stripe.
-3. Vérifier la création et l’expiration d’un Checkout, sans effectuer de paiement réel de test. Suivre les livraisons d’événements dans Stripe.
+Le domaine `poum.app` est rattaché à Vercel et autorisé dans Neon Auth. Tant que son DNS n’est pas raccordé, le webhook opérationnel reste `https://mat-sandy-six.vercel.app/api/stripe-webhook`. Le nom commercial devient Poum Plus ; la métadonnée interne `app=miamama`, les prix et identifiants Stripe sont conservés pour les achats existants.
 
 Ne jamais copier de clé dans le chat, le dépôt, une description de commit, un argument de commande ou une variable `PUBLIC_*`. Les fichiers `.env*.local` sont ignorés par Git. Le portail contient la mise à jour du moyen de paiement, les factures et la résiliation en fin de période. Les informations commerciales et de support affichées par Stripe proviennent du compte du vendeur.
 
