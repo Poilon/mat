@@ -1,4 +1,4 @@
-/* Reading and cooking first: quiet pages, useful labels, food photography. */
+/* Alimentation & grossesse: quiet pages, clear precautions, food photography. */
 :root {
   --green: #46583f;
   --green-dark: #303e2c;
@@ -17,7 +17,7 @@ body { background: var(--canvas); font-size: 15px; }
 .page-content { animation: none; }
 .sidebar { background: #f4f4ed; border-color: var(--line); padding-top: 35px; }
 .brand { gap: 9px; margin: 0 4px; }
-.brand img { width: 30px; height: 30px; }
+.brand img { width: 40px; height: 40px; }
 .wordmark { font-size: 29px; letter-spacing: -1.5px; }
 .wordmark>span { color: var(--green); }
 .brand-tagline { font-size: 11px; margin: 12px 4px 0; color: var(--muted); letter-spacing: 0; }
@@ -34,6 +34,9 @@ body { background: var(--canvas); font-size: 15px; }
 .breadcrumb { gap: 13px; font-size: 12px; }
 .breadcrumb>a { font-weight: 600; color: var(--green); }
 .breadcrumb>b { color: var(--muted); }
+.breadcrumb .brand-home { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.brand-home img { width: 32px; height: 32px; }
+.brand-home small { display: block; font-family: 'DM Sans', sans-serif; font-size: 10px; line-height: 1.5; letter-spacing: 0; font-weight: 400; color: var(--terracotta); }
 .topbar-right { gap: 24px; }
 .topbar-plus { border: 0; border-radius: 0; background: none; color: var(--green); padding: 8px 0; font-size: 12px; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: #aeb9a6; }
 .profile-trigger { font-size: 12px; }
@@ -64,6 +67,11 @@ body { background: var(--canvas); font-size: 15px; }
 .home-dateline>span { color: var(--ink); }
 .home-editorial { display: grid; grid-template-columns: 1.18fr .82fr; gap: 46px; align-items: center; margin: 35px 0 48px; }
 .home-search-panel { min-width: 0; }
+.pregnancy-signature { display: flex; align-items: center; gap: 13px; }
+.pregnancy-signature img { width: 46px; height: 46px; }
+.pregnancy-signature .section-kicker { line-height: 1.6; font-size: 13px; }
+.home-search-panel h1 { text-wrap: balance; }
+.home-search-panel h1 em { color: var(--terracotta); font-weight: 500; }
 .home-search-panel h1 { font-family: 'Lora', Georgia, serif; font-size: clamp(38px, 4vw, 57px); line-height: 1.15; font-weight: 500; letter-spacing: -1.9px; margin: 18px 0 22px; }
 .home-search-panel>p:not(.home-source-note) { max-width: 455px; font-size: 16px; line-height: 1.85; color: #616457; margin-bottom: 26px; }
 .home-guide-link { display: inline-flex; align-items: center; gap: 17px; font-size: 13px; font-weight: 600; color: var(--green); margin: 3px 0 23px; }
@@ -106,6 +114,8 @@ body { background: var(--canvas); font-size: 15px; }
 .recipe-card-content { padding: 15px 0 18px; }
 .recipe-card-content h3 { font-family: 'Lora', Georgia, serif; font-size: 19px; line-height: 1.45; font-weight: 500; }
 .recipe-tags { font-size: 11px; gap: 10px; }
+.recipe-pregnancy-note { display: flex; align-items: center; gap: 7px; font-size: 11px; line-height: 1.6; color: var(--terracotta); padding-top: 11px; }
+.recipe-pregnancy-note svg { flex-shrink: 0; }
 .recipe-time { font-size: 11px; border-radius: 3px; bottom: 10px; left: 10px; }
 .favorite-button { width: 32px; height: 32px; background: #fffcf5; }
 .recipe-welcome { grid-template-columns: minmax(0, 1fr) 240px; gap: 36px; min-height: 0; padding: 0 0 26px; margin-bottom: 0; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; align-items: center; }
@@ -399,6 +409,10 @@ dialog::backdrop { backdrop-filter: none; background: #2a322963; }
   .main { padding-left: 17px; padding-right: 17px; }
   .breadcrumb { max-width: none; }
   .breadcrumb>a { font-size: 20px; }
+  .breadcrumb .brand-home { gap: 6px; }
+  .brand-home img { width: 26px; height: 26px; }
+  .brand-home small { font-size: 9px; }
+  .topbar-right { gap: 8px; }
   .home-search-panel h1 { font-size: 39px; }
   .tonight-feature>button { grid-template-columns: 92px 1fr; gap: 13px; }
   .tonight-copy>strong { font-size: 19px; }

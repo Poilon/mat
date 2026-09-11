@@ -1,14 +1,14 @@
 # Direction visuelle et éditoriale
 
-Version 3.1.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
+Version 3.2.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
 
 ## Ton
 
-Écrire comme dans un carnet de cuisine : des mots usuels et des indications concrètes. Le vouvoiement reste cohérent dans l’application. Les questions concernent une action réelle : « Un doute sur un aliment ? », « On mange quoi ? », « Si un plat ne me plaît pas ? ».
+Écrire comme dans un carnet de cuisine : des mots usuels et des indications concrètes. Le vouvoiement reste cohérent dans l’application. Les questions concernent une action réelle : « Enceinte, je peux en manger ? », « Enceinte, on mange quoi ? », « Si un plat ne me plaît pas ? ».
 
 Les commandes nomment leur résultat : ingrédients, préparation, mes favoris, ma liste de courses. Éviter les diminutifs systématiques, les slogans sur chaque écran, les formules répétées autour des « envies » et les promesses d’accompagnement personnel. Aucun témoignage, auteur, avis professionnel ou processus de relecture n’est inventé.
 
-Le lien avec la grossesse est explicite dans le descriptif de l’app, dans le guide et dans les précautions de chaque recette. Les conseils restent des informations générales avec leurs sources et leurs limites.
+La grossesse est visible dès le premier écran : titre principal, symbole maternel et signature permanente « Alimentation & grossesse », y compris sur téléphone. Les cartes de recettes signalent leurs précautions grossesse, et les menus Plus gardent ce contexte. Les conseils restent des informations générales avec leurs sources et leurs limites.
 
 ## Couleurs et caractères
 

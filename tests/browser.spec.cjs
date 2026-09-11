@@ -7,7 +7,7 @@ async function routeOFF(page, handler) { await page.route('**/api/products?**', 
 test('Home, local search, risk details and favorites persist across reloads', async ({ page }) => {
   const errors = []; page.on('pageerror', err => errors.push(err.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Un doute sur un aliment ?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Enceinte, je peux en manger ?' })).toBeVisible();
   await page.locator('#home-search-input').fill('mozza');
   await page.locator('#home-search').getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(page.locator('.food-card')).toHaveCount(1);
