@@ -175,7 +175,7 @@ test.describe('Offline workshop', () => {
     test.setTimeout(60000);
     await page.goto('/#atelier');
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
-    await expect.poll(() => page.evaluate(async () => (await caches.open('miette-shell-v3.5.0')).match(new URL('js/workshop.js?v=6', location.href)).then(Boolean))).toBe(true);
+    await expect.poll(() => page.evaluate(async () => (await caches.open('miette-shell-v3.5.1')).match(new URL('js/workshop.js?v=6', location.href)).then(Boolean))).toBe(true);
     await generate(page);
     await context.setOffline(true); await page.reload();
     await page.locator('[data-action="workshop-swap"][data-index="0"]').click();

@@ -41,7 +41,7 @@ jobs:
         run: npm run build
         env:
           STATIC_MIRROR: '1'
-          PUBLIC_APP_URL: https://mat-sandy-six.vercel.app/
+          PUBLIC_APP_URL: https://poum.app/
 
       - name: Upload the static website
         uses: actions/upload-pages-artifact@v3

@@ -1,6 +1,6 @@
 # Poum Plus — modèle économique
 
-Version du 11 septembre 2026, application 3.5.0. **Poum — Ta grossesse, à ton rythme.** Stripe est configuré en production : les deux Checkouts, le portail et la réception signée des événements ont été vérifiés, sans paiement réel. Le domaine `poum.app` est en cours de raccordement.
+Version du 11 septembre 2026, application 3.5.1. **Poum — Ta grossesse, à ton rythme.** Stripe est configuré en production : les deux Checkouts, le portail et la réception signée des événements ont été vérifiés, sans paiement réel. Le domaine `poum.app` est actif avec HTTPS.
 
 ## Ce que l’on vend
 

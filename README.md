@@ -2,13 +2,13 @@
 
 Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 100 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 
-**Application : https://mat-sandy-six.vercel.app/** · [Code source](https://github.com/Poilon/mat)
+**Application : https://poum.app/** · [Code source](https://github.com/Poilon/mat)
 
 L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les 20 recettes de découverte et le carnet local restent utilisables sans compte. Les étapes des 80 recettes Plus sont délivrées par le serveur après vérification des droits (ou pendant l’accès offert de lancement).
 
 ## Fonctionnalités
 
-- Identité prune, crème et abricot : recherche dès l’accueil, deux illustrations éditoriales autour de la grossesse et de la cuisine, photographies de plats et appels à Plus plus compacts. La marque devient Poum ; le domaine `poum.app` est rattaché à Vercel, en attente de son raccordement DNS. Les scènes de grossesse générées de la version précédente sont archivées et retirées de l’interface. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
+- Identité prune, crème et abricot : recherche dès l’accueil, deux illustrations éditoriales autour de la grossesse et de la cuisine, photographies de plats et appels à Plus plus compacts. La marque devient Poum ; le domaine `poum.app` est actif avec HTTPS sur Vercel. Les scènes de grossesse générées de la version précédente sont archivées et retirées de l’interface. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
 - 60 nouvelles fiches d’épices, mélanges, aromates et condiments, avec une rubrique dédiée et des distinctions entre usage culinaire, infusions et extraits.
 - 360 fiches avec explication propre à chaque aliment, mécanisme du risque, conditions de consommation, préparation et liens vers les sources. Filtres fruits/légumes/herbes, recherche tolérante aux accents et navigation par lots de 48.
 

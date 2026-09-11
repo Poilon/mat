@@ -1,9 +1,9 @@
 /* Offline app shell. External services are deliberately excluded from this cache. */
 'use strict';
-const CACHE = 'miette-shell-v3.5.0';
+const CACHE = 'miette-shell-v3.5.1';
 const ASSETS = [
   './', 'index.html', 'styles.css?v=9', 'design.css?v=5', 'manifest.webmanifest', 'js/billing.js?v=2',
-  'js/runtime.js?v=5', 'js/notebook.js?v=4', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/recipes.js?v=3', 'js/evidence.js?v=4', 'js/catalogue.js?v=4', 'js/seasonings.js?v=4', 'js/data.js?v=5', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=4', 'js/workshop.js?v=6', 'js/recipe-access.js?v=1', 'js/app.js?v=15',
+  'js/runtime.js?v=6', 'js/notebook.js?v=4', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/recipes.js?v=3', 'js/evidence.js?v=4', 'js/catalogue.js?v=4', 'js/seasonings.js?v=4', 'js/data.js?v=5', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=4', 'js/workshop.js?v=6', 'js/recipe-access.js?v=1', 'js/app.js?v=15',
   'assets/brand/mark.svg', 'assets/brand/table-maternite-v4.png', 'assets/brand/carnet-cuisine-v4.png', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
   'assets/icon.svg', 'assets/icon-192.png', 'assets/icon-512.png',
   'assets/hero.jpg', 'assets/bowl.jpg', 'assets/salmon.jpg', 'assets/pasta.jpg',
