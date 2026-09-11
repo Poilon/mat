@@ -43,6 +43,8 @@ async function signup(page) {
   await page.locator('#auth-name').fill('Camille'); await page.locator('#auth-email').fill('camille@example.test');
   await page.locator('#auth-password').fill('test-password-123'); await page.locator('#auth-confirm').fill('test-password-123');
   await page.locator('#auth-form [type="submit"]').click();
+  await expect(page.locator('#auth-form')).toHaveCount(0);
+  await page.locator('#profile-form [type="submit"]').click();
 }
 test('Poum carries its new identity and explains Plus in the main cooking journeys', async ({ page }) => {
   await account(page, { loggedIn: false });
@@ -156,7 +158,7 @@ test('The free recipe selection is reachable and the early Plus offer never star
   await page.goto('/'); await ready(page);
   await expect(page.locator('.premium-nudge-home')).toBeInViewport();
   await page.locator('.premium-nudge-home [data-action="plus-offer"]').click();
-  await expect(page.locator('.plus-benefits')).toContainText('80 recettes complètes');
+  await expect(page.locator('.plus-benefits')).toContainText('980 recettes complètes');
   expect(state.purchases).toEqual([]);
   await page.keyboard.press('Escape');
   await page.goto('/#recettes');

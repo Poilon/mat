@@ -1,6 +1,7 @@
 /* Menu inspiration and shopping helpers. Browser state never proves a paid entitlement. */
 (root => {
   'use strict';
+  const Diet = typeof module !== 'undefined' && module.exports ? require('./diet.js') : root.PoumDiet;
   const offer = Object.freeze({ stage: 'launch', defaultPlan: 'pass', plans: Object.freeze([
     Object.freeze({ id: 'pass', name: 'Le pass 9 mois', cents: 2990, months: 9, recurring: false, cadence: 'en une fois', terms: '9 mois d’accès, sans renouvellement automatique.' }),
     Object.freeze({ id: 'monthly', name: 'Au fil des mois', cents: 490, months: 1, recurring: true, cadence: 'par mois', terms: 'Abonnement mensuel renouvelé automatiquement, résiliable à tout moment pour la prochaine échéance.' })
@@ -21,8 +22,8 @@
     { id: 'broccoli', label: 'Brocoli', pattern: /\bbrocoli\b/ }
   ];
   const dislikes = [
-    { id: 'fish', label: 'Poisson', pattern: /\b(saumon|cabillaud|poisson|truite|thon|sardines?|anchois)\b/ },
-    { id: 'mushrooms', label: 'Champignons', pattern: /\bchampignons?\b/ },
+    { id: 'fish', label: 'Poisson', pattern: /\b(saumon|cabillaud|poisson|truite|thon|sardines?|anchois|colin|merlu|lieu)\b/ },
+    { id: 'mushrooms', label: 'Champignons', pattern: /\bchampignons?|shiitakes?\b/ },
     { id: 'eggs', label: 'Œufs', pattern: /\boeufs?\b/ },
     { id: 'cheese', label: 'Fromage', pattern: /\b(fromage|ricotta|parmesan|comte|mozzarella|cheddar|feta|burrata|emmental)\b/ },
     { id: 'onion', label: 'Oignon & échalote', pattern: /\b(oignons?|echalotes?)\b/ },
@@ -45,13 +46,13 @@
     if (!validDate(value.start)) throw new Error('Choisissez une date de début valide.');
     const maxTime = Number(value.maxTime ?? 45);
     if (![30, 45, 120].includes(maxTime)) throw new Error('Choisissez une durée de 30 min, 45 min ou sans limite.');
-    return { start: value.start, maxTime, vegetarian: value.vegetarian === true, meals: value.meals === 'both' ? 'both' : 'dinner', mood: moods.some(m => m.id === value.mood) ? value.mood : 'all', pantry: cleanIDs(value.pantry, pantry), dislikes: cleanIDs(value.dislikes, dislikes) };
+    return { diet: Diet.validate(value.diet), start: value.start, maxTime, vegetarian: value.vegetarian === true, meals: value.meals === 'both' ? 'both' : 'dinner', mood: moods.some(m => m.id === value.mood) ? value.mood : 'all', pantry: cleanIDs(value.pantry, pantry), dislikes: cleanIDs(value.dislikes, dislikes) };
   }
   function pantryMatches(recipe, ids) {
     return pantry.filter(item => ids.includes(item.id) && recipe.ingredients.some(i => item.pattern.test(normalize(i.name))));
   }
   function eligible(recipes, prefs) {
-    return [...new Map(recipes.filter(r => ['lunch', 'dinner'].includes(r.type) && (!prefs.vegetarian || r.vegetarian) && r.time <= prefs.maxTime && !dislikes.some(d => prefs.dislikes.includes(d.id) && r.ingredients.some(i => d.pattern.test(normalize(i.name))))).map(r => [r.id, r])).values()];
+    return [...new Map(recipes.filter(r => Diet.allows(r,prefs.diet) && ['lunch', 'dinner'].includes(r.type) && (!prefs.vegetarian || r.vegetarian) && r.time <= prefs.maxTime && !dislikes.some(d => prefs.dislikes.includes(d.id) && r.ingredients.some(i => d.pattern.test(normalize(i.name))))).map(r => [r.id, r])).values()];
   }
   function fillEmpty(menus, entries, recipes) {
     const ids = new Set(recipes.map(r => r.id));
@@ -85,7 +86,7 @@
     if (/\b(lait|creme) de coco\b/.test(n)) return 'pantry';
     if (/\b(poulet|dinde|saumon|cabillaud|oeufs?)\b/.test(n)) return 'protein';
     if (/\b(lait|creme|yaourt|beurre|ricotta|parmesan|comte|mozzarella|cheddar|feta|fromage)\b/.test(n)) return 'dairy';
-    if (/\b(carottes?|courgettes?|tomates?|brocoli|epinards|avocats?|citron|pommes? de terre|patates? douces?|oignon|echalote|champignons?|aubergine|poivron|poireau|petits pois|chou fleur|potimarron|mangue|ananas|salade|persil|basilic|haricots verts|grenade|pomme|betterave)\b/.test(n) && !/\b(conserve|bocal|concassees)\b/.test(n)) return 'produce';
+    if (/\b(carottes?|courgettes?|tomates?|brocoli|epinards|avocats?|citron|pommes? de terre|patates? douces?|oignon|echalote|champignons?|shiitakes?|aubergine|poivron|poireau|petits pois|chou fleur|potimarron|mangue|ananas|salade|persil|basilic|haricots verts|grenade|pomme|betterave)\b/.test(n) && !/\b(conserve|bocal|concassees)\b/.test(n)) return 'produce';
     return 'pantry';
   }
   const ingredientKey = ingredient => normalize(ingredient.name) + '|' + normalize(ingredient.unit);

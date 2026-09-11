@@ -29,7 +29,7 @@ Chaque fiche reprend sans modification sa conclusion, sa préparation et les sou
 - GitHub Pages affiche `noindex,follow` et renvoie ses lecteurs vers les fiches sur Poum ; les pages éditoriales ne sont pas dupliquées dans ce miroir. L’ancien domaine Vercel conserve l’accès aux carnets, avec `X-Robots-Tag: noindex, follow`.
 - Les API ne sont pas indexables. Une adresse inexistante garde un vrai statut HTTP 404.
 
-Les 80 recettes Plus ne sont pas publiées par le générateur. Le catalogue public existant garde ses ingrédients et précautions ; leurs préparations restent soumises au contrôle serveur.
+Les 980 recettes Plus ne sont pas publiées par le générateur. Le catalogue public existant garde ses ingrédients et précautions ; leurs préparations restent soumises au contrôle serveur.
 
 ## Vitesse et accessibilité
 

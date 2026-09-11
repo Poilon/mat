@@ -1,4 +1,4 @@
-# Ce soir — Poum 3.7.0
+# Ce soir — Poum 3.8.0
 
 Le parcours `/#cesoir` propose jusqu’à trois recettes du catalogue selon les envies, la durée, le nombre de personnes, les ingrédients écartés et ceux du placard. Les durées proposées (30 min, 45 min, sans limite) correspondent au catalogue existant. Une envie influence le classement ; les exclusions et la durée restent des contraintes. Le texte libre cherche les mots indiqués dans les ingrédients : ce n’est pas un moteur de prise en charge des allergies. Aucun contenu culinaire ou médical n’est généré par une IA dans ce parcours.
 
@@ -27,10 +27,10 @@ Le bouton de partage ouvre seulement la feuille de partage du téléphone, aprè
 
 « Effacer mes dîners » demande confirmation dans le parcours, supprime les repas et les envies et désactive les liens. Seul le fait que l’essai a été consommé reste enregistré. La suppression de compte efface ses dîners dans la même transaction que le carnet et l’identité. L’export historique du carnet n’inclut pas cet espace séparé : cette limite est indiquée dans Vos données.
 
-Le miroir GitHub Pages dirige Ce soir vers Poum. Il ne publie aucune page de relais. Les étapes des 80 recettes premium ne sont toujours pas présentes dans le catalogue public généré ; l’API du dîner retourne seulement la recette choisie et autorisée.
+Le miroir GitHub Pages dirige Ce soir vers Poum. Il ne publie aucune page de relais. Les étapes des 980 recettes premium ne sont toujours pas présentes dans le catalogue public généré ; l’API du dîner retourne seulement la recette choisie et autorisée.
 
 ## Validation
 
 Tests de filtres, quantités, premier dîner, idempotence, accès payant, ownership, portée des liens, expiration, rotation, suppression et révocation. Tests navigateur entre deux contextes pour les courses, les étapes, l’état du dîner et la révocation ; mobile 320/390 px, bureau, accessibilité, paywall et maintien de l’accès au dîner offert. Vérification sur PostgreSQL réel de deux choix gratuits concurrents et de deux mises à jour simultanées de courses, puis suppression des données de test.
 
-Les textes des 100 recettes n’ont pas été réécrits. Cette livraison apporte leur lecture avec suivi des étapes ; l’enrichissement éditorial détaillé reste un chantier distinct.
+Le catalogue contient désormais 1 000 recettes et déclinaisons. Les guides détaillés, ustensiles et conseils de conservation sont disponibles dans le relais. Les étapes historiques gardent leurs indices pour préserver les coches existantes. Voir [le catalogue et les exclusions](RECIPES.md).

@@ -4,11 +4,11 @@ Version du 11 septembre 2026, application 3.5.1. **Poum — Ta grossesse, à ton
 
 ## Ce que l’on vend
 
-**« Qu’est-ce qu’on mange cette semaine ? »** L’offre réunit **80 recettes complètes supplémentaires** et un résultat utilisable : une semaine de plats choisis, les courses regroupées et un carnet qui permet à une autre personne de prendre le relais en cuisine.
+**« Qu’est-ce qu’on mange cette semaine ? »** L’offre réunit **980 recettes complètes supplémentaires** et un résultat utilisable : une semaine de plats choisis, les courses regroupées et un carnet qui permet à une autre personne de prendre le relais en cuisine.
 
 Le parcours part de trois situations concrètes : un aliment ne tente plus, des ingrédients attendent dans le placard, ou la personne qui partage le quotidien peut s’occuper des repas. Les sept jours seuls ne justifient pas le prix : l’intérêt vient de l’ensemble des préférences, des changements simples, de la liste qui se recalcule et du document prêt à emporter.
 
-Les fiches, les explications, les sources, les ingrédients et les précautions des 100 recettes restent gratuits, ainsi que 20 préparations complètes. Le produit ne vend pas un accès à la sécurité alimentaire, un régime médical, une protection contre les allergies ou un suivi professionnel. Il ne promet pas de montant économisé ni de temps gagné chiffré. Aucun terme de grossesse ou résultat médical n’est demandé.
+Les fiches, les explications, les sources, les ingrédients et les précautions des 1 000 recettes restent gratuits, ainsi que 20 préparations complètes. Le produit ne vend pas un accès à la sécurité alimentaire, un régime médical, une protection contre les allergies ou un suivi professionnel. Il ne promet pas de montant économisé ni de temps gagné chiffré. Aucun terme de grossesse ou résultat médical n’est demandé.
 
 ## Ce qui fonctionne dès maintenant
 
@@ -31,9 +31,9 @@ Les goûts culinaires sont des préférences de sélection, pas un bilan nutriti
 
 | Accès | Contenu |
 | --- | --- |
-| Gratuit durable | 360 fiches alimentaires sourcées, recherche/scan Open Food Facts selon disponibilité, 20 recettes complètes, ingrédients et précautions des 100 recettes, favoris, menus manuels, courses, export et synchronisation |
+| Gratuit durable | 360 fiches alimentaires sourcées, recherche/scan Open Food Facts selon disponibilité, 20 recettes complètes, ingrédients et précautions des 1 000 recettes, favoris, menus manuels, courses, export et synchronisation |
 | Première semaine | Tout l’atelier sur une première date de semaine, ajustable sans carte bancaire, avec un compte gratuit |
-| Poum Plus | 80 préparations supplémentaires à consulter à la demande, nouvelles semaines personnalisées, plats modifiables, courses regroupées et carnet à partager |
+| Poum Plus | 980 préparations supplémentaires à consulter à la demande, nouvelles semaines personnalisées, plats modifiables, courses regroupées et carnet à partager |
 
 - **Pass 9 mois : 29,90 € en une fois.** Neuf mois d’accès à partir de l’activation, sans renouvellement automatique. Aucun justificatif de grossesse.
 - **Mensuel : 4,90 €/mois.** Renouvellement automatique ; résiliation possible pour empêcher la prochaine échéance, accès jusqu’à la fin de la période payée.
@@ -44,7 +44,7 @@ Les tarifs sont des hypothèses à tester, pas une preuve de disposition à paye
 
 ## Un paywall après la preuve
 
-1. Dès l’accueil, un encart à côté de la recherche présente les 100 recettes, les menus et les prix. La page `#plus` montre un exemple de menu avec des recettes du catalogue, les fonctions comprises et les prix. Les exemples sont explicitement identifiés comme exemples.
+1. Dès l’accueil, un encart à côté de la recherche présente les 1 000 recettes, les menus et les prix. La page `#plus` montre un exemple de menu avec des recettes du catalogue, les fonctions comprises et les prix. Les exemples sont explicitement identifiés comme exemples.
 2. Le bouton principal ouvre l’atelier complet, également accessible depuis la navigation et **Mes menus**.
 3. L’utilisatrice compose, consulte les recettes, ajuste les plats, prépare les courses et peut emporter son carnet.
 4. Avant les cartes du résultat, **Continuer avec Plus** ouvre une présentation avec les nombres réellement obtenus : repas, plats utilisant les ingrédients sélectionnés et articles à prévoir.
@@ -86,7 +86,7 @@ La conversion est une hypothèse commerciale à mesurer ; le prix ne garantit pa
 
 ## Accès aux recettes et limites commerciales
 
-Les étapes de 80 recettes sont retirées des deux fichiers de catalogue lors du build. `GET /api/recipes?id=...` consulte les droits serveur en mode Stripe configuré : invité = 401, compte sans accès = 402, compte Plus actif = préparation délivrée. Les ingrédients, quantités, allergènes, précautions et références des 100 recettes restent publics. Le miroir GitHub Pages ouvre le compte et l’achat sur Vercel.
+Les étapes de 980 recettes sont retirées des deux fichiers de catalogue lors du build. `GET /api/recipes?id=...` consulte les droits serveur en mode Stripe configuré : invité = 401, compte sans accès = 402, compte Plus actif = préparation délivrée. Les ingrédients, quantités, allergènes, précautions et références des 1 000 recettes restent publics. Le miroir GitHub Pages ouvre le compte et l’achat sur Vercel.
 
 La réponse autorisée de l’atelier inclut les étapes des seuls plats proposés. La semaine d’essai est donc entièrement utilisable, y compris quand elle contient une recette Plus. Les préparations obtenues restent sur l’appareil, séparées par compte ; les exports déjà téléchargés restent utilisables. La suppression du compte ou du carnet efface le cache correspondant. Ce cache ne se synchronise pas : sur un nouvel appareil, un membre ouvre la recette en ligne, et une utilisatrice de l’essai peut recomposer sa semaine offerte pour récupérer ses préparations.
 

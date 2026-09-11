@@ -215,6 +215,7 @@
   const originalCollections = ['bowls', 'four', 'italie', 'brunch', 'soupes', 'bowls', 'four', 'douceurs', 'four', 'italie'];
   recipes.forEach((recipe, index) => { recipe.collection = originalCollections[index]; });
   recipes.push(...book.recipes);
+  if (typeof module !== 'undefined' && module.exports) recipes.push(...require('../server/catalogue/index.cjs').generate());
   // Connect newly documented ingredients to recipes that already use them.
   const ingredientLinks = {
     'sweet-potato': /patates? douces?/i, pineapple: /ananas/i, pear: /poires?/i,
@@ -237,6 +238,7 @@
       if (foods.some(f => f.id === id) && !recipe.foods.includes(id) && recipe.ingredients.some(i => pattern.test(i.name))) recipe.foods.push(id);
     }
   }
+  if (typeof module !== 'undefined' && module.exports) recipes.forEach(require('../server/recipe-guide.cjs').enrich);
   const data = { sources, statuses, categories, groups, foods, recipes, profiles: evidence.profiles, recipeCollections: book.collections, reviewed: evidence.reviewed, reviewedISO: evidence.reviewedISO };
   if (typeof module !== 'undefined' && module.exports) module.exports = data;
   root.MietteData = data;

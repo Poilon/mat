@@ -605,3 +605,12 @@ dialog .toast-region { left: 50%; width: min(480px, calc(100vw - 40px)); }
   .toast-region { bottom: max(16px, env(safe-area-inset-bottom)); }
   .toast { padding: 14px 16px; font-size: 14px; }
 }
+
+/* Recipe detail: quiet, optional technique notes, shared with the dinner relay. */
+.cooking-prep,.cooking-storage{background:#f8f1e9;border:1px solid #eadfd4;border-radius:12px;padding:16px 18px;margin:18px 0;color:#542b43;line-height:1.6}
+.cooking-prep summary,.cooking-storage summary,.cooking-cue summary{cursor:pointer;font-weight:600}
+.cooking-prep ul{padding-left:20px}.cooking-prep li{margin:8px 0}.cooking-prep p,.cooking-storage p{font-size:14px}
+.cooking-cue{margin-top:10px;font-size:13px;line-height:1.6;color:#675b62}.cooking-cue summary{font-size:12px}.cooking-cue p{margin:8px 0}
+.recipe-toolbar{flex-wrap:wrap}.preference-options{display:flex;flex-wrap:wrap;gap:8px}.preference-options label{display:flex;align-items:center;gap:8px;border:1px solid #d7c7ce;border-radius:10px;padding:9px 12px;font-size:14px}.preference-options input{accent-color:#542b43}.preference-note{padding:14px;border-radius:10px;background:#f8f1e9;line-height:1.6}.profile-panel fieldset{border:0;padding:0;margin:24px 0}.profile-panel legend{font-weight:600;margin-bottom:12px}
+
+.steps-list>li{font-size:14px;line-height:1.8;align-items:flex-start}.cooking-step-body{min-width:0;flex:1}.cooking-step-body .cooking-cue{display:block;margin-top:8px}.cooking-step-body .cooking-cue p{font-size:13px;line-height:1.7}

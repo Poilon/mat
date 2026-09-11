@@ -5,9 +5,9 @@ const path = require('node:path');
 const D = require('../js/data.js');
 
 test('The expanded catalogue preserves saved recipe IDs and covers nine distinct collections', () => {
-  assert.equal(D.recipes.length, 100);
-  assert.equal(new Set(D.recipes.map(r => r.title)).size, 100);
-  assert.equal(new Set(D.recipes.map(r => JSON.stringify(r.steps))).size, 100);
+  assert.equal(D.recipes.length, 1000);
+  assert.equal(new Set(D.recipes.map(r => r.title)).size, 1000);
+  assert.equal(new Set(D.recipes.map(r => JSON.stringify(r.steps))).size, 1000);
   const originalIDs = ['sunny-bowl', 'lemon-salmon', 'green-pasta', 'morning-porridge', 'lentil-soup', 'roasted-chickpeas', 'spinach-frittata', 'apple-oat', 'cod-rice', 'tomato-pasta'];
   originalIDs.forEach(id => assert.ok(D.recipes.some(r => r.id === id), id));
   assert.equal(D.recipeCollections.length, 9);
@@ -27,7 +27,7 @@ test('Every new recipe has source-backed precautions and locally available, prec
     const photo = `assets/${r.image}.jpg`;
     assert.ok(fs.existsSync(path.join(__dirname, '..', photo)), `${r.id}: ${photo}`);
     assert.ok(worker.includes(photo), `${r.id}: photo must work offline`);
-    if (r.edition !== 2) return;
+    if (![2,3].includes(r.edition)) return;
     assert.ok(r.sources.length && r.sources.every(id => D.sources[id]), r.id);
     assert.ok(r.precautions.length > 0, r.id);
     assert.ok(r.allergens.length > 15, r.id);

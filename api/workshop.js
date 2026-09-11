@@ -40,6 +40,7 @@ module.exports = handler(async (req, res) => {
   const user = config.configured ? await requireUser(req) : null;
   if (process.env.DATABASE_URL) await limit('workshop:' + (user?.id || ipKey(req)), 30);
   const input = validateRequest(await readJSON(req, 12000));
+  input.options.diet = require('../js/diet.js').merge(input.options.diet, await require('../server/diet.cjs').accountDiet(user));
   const repo = process.env.DATABASE_URL ? billingStore() : null;
   json(res, 200, await generateWeek(input, { config, user, repo }));
 });

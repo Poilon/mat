@@ -4,7 +4,7 @@ const { preferences, pantryMatches, moods, eligible, validDate } = require('../j
     const mood = moods.find(m => m.id === prefs.mood);
     const counts = new Map(); selected.forEach(r => counts.set(r.collection, (counts.get(r.collection) || 0) + 1));
     // Match known ingredient names, not vague food tags or medical requirements.
-    return pool.map(recipe => ({ recipe, score: pantryMatches(recipe, prefs.pantry).length * 8 + (mood.collections.includes(recipe.collection) ? 3 : 0) - (counts.get(recipe.collection) || 0) * 4 + random() * 3 })).sort((a, b) => b.score - a.score)[0].recipe;
+    return pool.map(recipe => ({ recipe, score: pantryMatches(recipe, prefs.pantry).length * 8 - selected.filter(r=>recipe.family&&r.family===recipe.family).length*12 - selected.filter(r=>recipe.cuisine&&r.cuisine===recipe.cuisine).length*2 + (mood.collections.includes(recipe.collection) ? 3 : 0) - (counts.get(recipe.collection) || 0) * 4 + random() * 3 })).sort((a, b) => b.score - a.score)[0].recipe;
   }
   function compose(recipes, options, previous = [], random = Math.random, days = 7) {
     const prefs = preferences(options);

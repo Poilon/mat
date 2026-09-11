@@ -264,7 +264,7 @@ test('Offline app shell survives a reload with local recipes', async ({ browser 
   await expect(page.locator('.guide-intro')).toContainText('360 fiches');
   await page.locator('a[href="#recettes"]').first().click();
   await expect(page.locator('.recipe-card')).toHaveCount(12);
-  await expect(page.locator('#recipe-count')).toContainText('100 recettes');
+  await expect(page.locator('#recipe-count')).toContainText('1000 recettes');
   await page.locator('[data-action="more-recipes"]').click();
   await expect(page.locator('.recipe-card')).toHaveCount(24);
   await page.locator('#recipe-query').fill('brownie');
@@ -280,9 +280,9 @@ test('Offline app shell survives a reload with local recipes', async ({ browser 
 test('Recipe collections, instant ingredient search, duration and vegetarian filters combine', async ({ page }) => {
   await page.goto('/#recettes');
   await expect(page.locator('.recipe-collection')).toHaveCount(9);
-  await expect(page.locator('#recipe-count')).toContainText('100 recettes');
+  await expect(page.locator('#recipe-count')).toContainText('1000 recettes');
   await page.locator('.recipe-collection[data-collection="italie"]').click();
-  await expect(page.locator('#recipe-count')).toContainText('12 recettes');
+  await expect(page.locator('#recipe-count')).toContainText('84 recettes');
   await page.locator('#recipe-duration').selectOption('30');
   await page.locator('[data-action="vegetarian"]').click();
   await page.locator('#recipe-query').fill('tomate');
@@ -299,17 +299,17 @@ test('Recipe collections, instant ingredient search, duration and vegetarian fil
   await page.locator('#recipe-query').fill('zzzintrouvable');
   await expect(page.locator('.recipe-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Réinitialiser les filtres' }).click();
-  await expect(page.locator('#recipe-count')).toContainText('100 recettes');
+  await expect(page.locator('#recipe-count')).toContainText('1000 recettes');
   await expect(page.locator('.recipe-card')).toHaveCount(12);
 });
 
-test('All 100 recipes can be browsed without duplicates and French search finds new recipes', async ({ page }) => {
+test('All 1000 recipes can be browsed without duplicates and French search finds new recipes', async ({ page }) => {
   await page.goto('/#recettes');
-  for (let i = 0; i < 8; i++) await page.locator('[data-action="more-recipes"]').click();
-  await expect(page.locator('.recipe-card')).toHaveCount(100);
+  await page.goto('/#recettes?page=84');
+  await expect(page.locator('.recipe-card')).toHaveCount(1000);
   await expect(page.locator('[data-action="more-recipes"]')).toHaveCount(0);
   const ids = await page.locator('.recipe-card-open').evaluateAll(buttons => buttons.map(b => b.dataset.id));
-  expect(new Set(ids).size).toBe(100);
+  expect(new Set(ids).size).toBe(1000);
   await page.locator('#recipe-query').fill('RICOTTA CITRON');
   await expect(page.locator('[data-action="recipe"][data-id="pancakes-citron-ricotta"]')).toBeVisible();
   await page.locator('#recipe-query').fill('oeuf avocat');

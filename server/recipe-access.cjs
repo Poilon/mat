@@ -4,10 +4,10 @@ const { HttpError } = require('./http.cjs');
 // Stable IDs keep the introductory selection and the seven-dinner example free.
 const freeIDs = new Set(['sunny-bowl', 'lemon-salmon', 'green-pasta', 'morning-porridge', 'lentil-soup', 'roasted-chickpeas', 'spinach-frittata', 'apple-oat', 'cod-rice', 'tomato-pasta', 'gnocchis-pesto', 'poke-saumon-cuit', 'dhal-coco', 'tacos-cabillaud', 'lasagnes-epinards-ricotta', 'pancakes-citron-ricotta', 'pancakes-banane-avoine', 'brownie-chocolat-noisette', 'houmous-betterave', 'cookies-avoine-chocolat']);
 function publicRecipe(recipe) {
-  return { ...recipe, premium: !freeIDs.has(recipe.id), steps: freeIDs.has(recipe.id) ? recipe.steps : [] };
+  return { ...recipe, premium: !freeIDs.has(recipe.id), steps: freeIDs.has(recipe.id) ? recipe.steps : [], guide: freeIDs.has(recipe.id) ? recipe.guide : null };
 }
 function recipeSteps(ids) {
-  return [...new Set(ids)].map(id => { const r = D.recipes.find(r => r.id === id); return { id: r.id, steps: r.steps }; });
+  return [...new Set(ids)].map(id => { const r = D.recipes.find(r => r.id === id); return { id: r.id, steps: r.steps, guide: r.guide }; });
 }
 async function readRecipe(id, { config, user, repo }) {
   const recipe = D.recipes.find(r => r.id === id);

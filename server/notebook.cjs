@@ -23,7 +23,8 @@ function validateNotebook(input) {
     return { id: i.id, name: i.name, quantity: i.quantity, unit: i.unit, checked: i.checked };
   });
   if (new Set(shopping.map(i => i.id)).size !== shopping.length) return bad();
+  let diet;try { diet = require('../js/diet.js').validate(input.diet); } catch { return bad(); }
   // Product metadata is untrusted at rest and sanitized again by the existing client normalizer.
-  return { name: input.name, vegetarian: input.vegetarian, favorites: [...new Set(input.favorites)], products: input.products, menus, shopping };
+  return { diet, name: input.name, vegetarian: input.vegetarian, favorites: [...new Set(input.favorites)], products: input.products, menus, shopping };
 }
 module.exports = { validateNotebook };

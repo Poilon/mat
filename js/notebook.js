@@ -1,12 +1,13 @@
 (function (root) {
   'use strict';
-  const empty = () => ({ name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] });
+  const Diet=typeof module !== 'undefined' && module.exports ? require('./diet.js') : root.PoumDiet;
+  const empty = () => ({ diet: Diet.clean(), name: '', vegetarian: false, favorites: [], products: [], menus: {}, shopping: [] });
   const stable = value => JSON.stringify(value && typeof value === 'object' ? Array.isArray(value) ? value.map(v => JSON.parse(stable(v))) : Object.fromEntries(Object.keys(value).sort().map(k => [k, JSON.parse(stable(value[k]))])) : value ?? null);
   const same = (a, b) => stable(a) === stable(b);
   function entries(notebook) {
     const n = { ...empty(), ...notebook };
     return new Map([
-      ['name', n.name], ['vegetarian', n.vegetarian],
+      ['diet', Diet.clean(n.diet)], ['name', n.name], ['vegetarian', n.vegetarian],
       ...n.favorites.map(id => ['favorite:' + id, true]),
       ...n.products.map(p => ['product:' + p.code, p]),
       ...n.shopping.map(item => ['shopping:' + item.id, item]),
@@ -22,7 +23,7 @@
       else if (same(r.get(key), b.get(key)) || same(l.get(key), r.get(key))) value = l.get(key);
       else { conflicts.push(key); value = l.get(key); }
       if (value === undefined) continue;
-      if (key === 'name' || key === 'vegetarian') result[key] = value;
+      if (key === 'diet' || key === 'name' || key === 'vegetarian') result[key] = value;
       else if (key.startsWith('favorite:')) result.favorites.push(key.slice(9));
       else if (key.startsWith('product:')) result.products.push(value);
       else if (key.startsWith('shopping:')) result.shopping.push(value);
@@ -32,7 +33,7 @@
   }
   function hasContent(notebook) {
     const n = notebook || empty();
-    return Boolean(n.name || n.vegetarian || n.favorites.length || n.shopping.length || Object.values(n.menus).some(slots => Object.keys(slots).length));
+    return Boolean(Diet.clean(n.diet).completed || n.name || n.vegetarian || n.favorites.length || n.shopping.length || Object.values(n.menus).some(slots => Object.keys(slots).length));
   }
   const exported = { empty, merge, same, hasContent };
   root.MietteNotebook = exported;

@@ -1,10 +1,10 @@
 # Poum — Ta grossesse, à ton rythme
 
-Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 100 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
+Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 1 000 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 
 **Application : https://poum.app/** · [Code source](https://github.com/Poilon/mat)
 
-L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les 20 recettes de découverte et le carnet local restent utilisables sans compte. Les étapes des 80 recettes Plus sont délivrées par le serveur après vérification des droits (ou pendant l’accès offert de lancement).
+L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les 20 recettes de découverte et le carnet local restent utilisables sans compte. Les étapes des 980 recettes Plus sont délivrées par le serveur après vérification des droits (ou pendant l’accès offert de lancement).
 
 ## Fonctionnalités
 
@@ -14,8 +14,8 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 
 - Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
 - Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
-- 100 recettes originales (20 complètes gratuites, 80 dans Plus) et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
-- **Poum Plus** : 80 recettes complètes supplémentaires, page d’offre `#plus`, atelier `#atelier`, première semaine complète offerte avec un compte puis 4,90 €/mois ou pass 9 mois à 29,90 €. Composition de 7 dîners ou 14 repas pour deux personnes selon le temps, les envies, le choix végétarien, six exclusions culinaires et douze ingrédients du placard. Épinglage, remplacement individuel, courses par rayon et carnet HTML autonome à partager ou imprimer. Paiement Stripe, droits vérifiés côté serveur, portail client et résiliation. **Paiements en production vérifiés le 11 septembre 2026.** [État et configuration Stripe](STRIPE.md), [modèle économique](BUSINESS_MODEL.md).
+- 1 000 recettes et déclinaisons maison (20 complètes gratuites, 980 dans Plus) et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
+- **Poum Plus** : 980 recettes complètes supplémentaires, page d’offre `#plus`, atelier `#atelier`, première semaine complète offerte avec un compte puis 4,90 €/mois ou pass 9 mois à 29,90 €. Composition de 7 dîners ou 14 repas pour deux personnes selon le temps, les envies, le choix végétarien, six exclusions culinaires et douze ingrédients du placard. Épinglage, remplacement individuel, courses par rayon et carnet HTML autonome à partager ou imprimer. Paiement Stripe, droits vérifiés côté serveur, portail client et résiliation. **Paiements en production vérifiés le 11 septembre 2026.** [État et configuration Stripe](STRIPE.md), [modèle économique](BUSINESS_MODEL.md).
 - L’atelier ajoute les créneaux libres et peut actualiser ses propres repas ; les changements faits ailleurs et les menus manuels sont préservés. Les courses identiques sont regroupées avec leurs mentions de préparation ; compléter la liste garde les quantités déjà supérieures et ne double pas les mêmes besoins.
 - Brouillon de l’atelier conservé localement, séparément pour chaque compte et le carnet invité. Seuls les menus et courses effectivement ajoutés au carnet se synchronisent. L’effacement du carnet et la suppression du compte effacent aussi son brouillon sur cet appareil. Les choix culinaires sont envoyés au serveur pour composer une semaine, sans être transmis à Stripe. Une nouvelle composition nécessite internet. Les goûts et ingrédients choisis ne sont pas des filtres d’allergies ni une prescription nutritionnelle.
 - Compte facultatif, connexion, récupération du mot de passe, déconnexion et suppression du compte avec confirmation du mot de passe.
@@ -147,3 +147,7 @@ Le build remplace `dist/js/data.js` et `dist/js/recipes.js` par un catalogue pub
 ## Ce soir et le relais
 
 Le parcours `/#cesoir` propose un premier dîner offert, puis les dîners personnalisés avec Plus. Un proche peut ouvrir un lien sans compte pour retrouver la recette et cocher les courses et les étapes. Voir [TONIGHT.md](TONIGHT.md) pour le fonctionnement, la migration, la portée des liens et la validation.
+
+### Recettes détaillées et préférences — 3.8.0
+
+1 000 recettes et déclinaisons, 360 inspirations internationales, filtres par cuisine et guides de préparation. Allergies et aliments peu appréciés configurables après inscription puis dans Mon espace, synchronisés et appliqués aux suggestions. [Fonctionnement, limites éditoriales et confidentialité](RECIPES.md).

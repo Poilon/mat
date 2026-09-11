@@ -193,3 +193,12 @@ test('Workshop drafts remain separate for guests and two accounts through sign-o
   await login(page, 'a@example.com', false); await page.goto('/#atelier');
   expect(await ids()).toEqual(account);
 });
+
+test('Allergies synchronize to a second device, remain isolated by account, and can be withdrawn',async({page,browser})=>{
+ const remote={};await mockAccount(page,remote,user);await page.goto('/#profil');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await page.locator('[name="allergy"][value="milk"]').check();await page.locator('[name="diet-consent"]').check();await page.locator('#profile-avoid').fill('coriandre');await page.locator('#profile-form [type="submit"]').click();await page.evaluate(()=>MietteCloud.sync());expect(remote[user.id].notebook.diet.allergies).toEqual(['milk']);
+ const context=await browser.newContext();try{const second=await context.newPage();await mockAccount(second,remote,user);await second.goto('http://localhost:4176/#profil');await expect(second.locator('[name="allergy"][value="milk"]')).toBeChecked();await expect(second.locator('#profile-avoid')).toHaveValue('coriandre');
+ await second.locator('[name="allergy"][value="milk"]').uncheck();await second.locator('[name="diet-consent"]').uncheck();await second.locator('#profile-form [type="submit"]').click();await second.evaluate(()=>MietteCloud.sync());await page.evaluate(()=>MietteCloud.sync());await expect(page.locator('[name="allergy"][value="milk"]')).not.toBeChecked();
+ const other=await context.newPage();await mockAccount(other,remote,{...user,id:'account-b',email:'b@example.com'});await other.goto('http://localhost:4176/#profil');await expect(other.locator('#profile-avoid')).toHaveValue('');await expect(other.locator('[name="diet-consent"]')).not.toBeChecked();
+ }finally{await context.close();}
+});

@@ -2,6 +2,7 @@
 const {createHash,randomBytes}=require('node:crypto');
 const {HttpError}=require('./http.cjs');
 const D=require('../js/data.js'),T=require('../js/tonight-rules.js');
+const Diet=require('../js/diet.js');
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const token=()=>randomBytes(32).toString('base64url');
 function hash(value) { if(typeof value!=='string'||!/^[-_a-zA-Z0-9]{43}$/.test(value))throw new HttpError(404,'Ce lien de relais est invalide ou a été désactivé.');return createHash('sha256').update(value).digest('hex'); }
@@ -9,9 +10,9 @@ function mealView(row) {
   if(!row)throw new HttpError(404,'Ce dîner est introuvable ou le lien de relais a été désactivé.');
   const r=D.recipes.find(r=>r.id===row.recipe_id);
   if(!r)throw new HttpError(404,'Cette recette n’est plus disponible.');
-  return {id:row.id,recipe:{id:r.id,title:r.title,image:r.image,time:r.time,ingredients:r.ingredients.map((i,index)=>({index,name:i.name,unit:i.unit,quantity:Number((i.quantity*row.servings/r.servings).toFixed(2))})),steps:r.steps,safety:r.safety,allergens:r.allergens,sources:(r.sources||['spf','toxo']).map(id=>D.sources[id])},servings:row.servings,checked:row.checked,status:row.status,revision:row.revision,createdAt:row.created_at,shared:Boolean(row.share_hash&&new Date(row.share_expires)>new Date()),shareExpires:row.share_expires||null};
+  return {id:row.id,recipe:{id:r.id,title:r.title,image:r.image,time:r.time,ingredients:r.ingredients.map((i,index)=>({index,name:i.name,unit:i.unit,quantity:Number((i.quantity*row.servings/r.servings).toFixed(2))})),steps:r.steps,guide:r.guide,storage:r.storage,safety:r.safety,allergens:r.allergens,sources:(r.sources||['spf','toxo']).map(id=>D.sources[id])},servings:row.servings,checked:row.checked,status:row.status,revision:row.revision,createdAt:row.created_at,shared:Boolean(row.share_hash&&new Date(row.share_expires)>new Date()),shareExpires:row.share_expires||null};
 }
-async function operation(body,{repo,owner,paid=false}) {
+async function operation(body,{repo,owner,paid=false,diet}) {
   if(!body||typeof body!=='object')throw new HttpError(400,'La demande est illisible.');
   if(body.action==='shared-read'||body.action==='shared-patch') {
     const digest=hash(body.token),row=await repo.shared(digest);mealView(row);
@@ -27,15 +28,15 @@ async function operation(body,{repo,owner,paid=false}) {
     return {meal:row?mealView(row):null,preferences:profile.preferences,trialUsed:Boolean(profile.trial_meal),paid,history:await repo.recent(owner)};
   }
   if(body.action==='suggest') {
-    let prefs;try{prefs=T.preferences(body.preferences);}catch(e){throw new HttpError(400,e.message);}
+    let prefs;try{prefs=T.preferences({...body.preferences,diet:Diet.merge(body.preferences?.diet,diet)});}catch(e){throw new HttpError(400,e.message);}
     if(!Array.isArray(body.excluded||[])||(body.excluded||[]).length>100)throw new HttpError(400,'Relancez votre recherche de dîner.');
-    await repo.preferences(owner,prefs);
+    await repo.preferences(owner,{...prefs,diet:undefined});
     return {...T.suggestions(D.recipes,prefs,body.excluded),preferences:prefs};
   }
   if(body.action==='choose') {
     if(!uuid(body.requestId))throw new HttpError(400,'Relancez votre choix de dîner.');
     const previous=await repo.meal(owner,body.requestId);if(previous)return {meal:mealView(previous)};
-    const prefs=T.preferences(profile.preferences),r=D.recipes.find(r=>r.id===body.recipeId);
+    const prefs=T.preferences({...profile.preferences,diet:Diet.clean(diet)}),r=D.recipes.find(r=>r.id===body.recipeId);
     // Recheck all stored constraints without trusting the browser's proposed IDs.
     if(!r||!T.suggestions([r],prefs).total)throw new HttpError(400,'Cette recette ne correspond plus à vos préférences. Retrouvez de nouvelles idées.');
     return {meal:mealView(await repo.create(owner,body.requestId,r.id,prefs.servings,paid))};
