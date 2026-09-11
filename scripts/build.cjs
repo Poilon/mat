@@ -24,6 +24,10 @@ const { build } = require('esbuild');
   const htmlPath = path.join(destination, 'index.html');
   fs.writeFileSync(htmlPath, fs.readFileSync(htmlPath, 'utf8').replace(/\s*<script src="js\/(?:recipes|catalogue|seasonings)\.js\?v=\d+" defer><\/script>/g, ''));
   const seo = require('./seo.cjs').writeSEO(destination, { mirror });
+  if (!mirror) {
+    fs.mkdirSync(path.join(destination, 'relais'), { recursive: true });
+    fs.copyFileSync('pages/relay.html', path.join(destination, 'relais/index.html'));
+  }
   console.log('SEO: ' + seo.pages + ' public HTML pages.');
   console.log('Poum built: static interface, local barcode reader and Vercel API.');
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

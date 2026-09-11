@@ -168,3 +168,13 @@ test('The free recipe selection is reachable and the early Plus offer never star
   await page.reload();
   await expect(page.locator('[data-access="free"]')).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('A confirmed purchase started from Ce soir returns to dinner planning', async ({ page }) => {
+  const state = await account(page); state.confirmPaid = true;
+  await page.route('**/api/tonight', r => r.fulfill({ json: { meal: null, preferences: {}, trialUsed: true, paid: state.paid, history: [] } }));
+  await page.addInitScript(() => sessionStorage.setItem('poum-dinner-checkout', String(Date.now() + 3600000)));
+  await page.goto('/?checkout=success&session_id=cs_test_dinner_return#plus');
+  await expect(page).toHaveURL(/#cesoir$/);
+  await expect(page.locator('#tonight-form')).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem('poum-dinner-checkout'))).toBe(null);
+});

@@ -20,7 +20,7 @@
   const recipePageSize = 12;
   const recipeHighlights = ['tacos-cabillaud', 'gnocchis-pesto', 'pancakes-citron-ricotta', 'burger-poulet-croustillant', 'brownie-chocolat-noisette', 'dhal-coco', 'bowl-patate-tahini', 'lasagnes-epinards-ricotta', 'soupe-minestrone', 'muffins-myrtille', 'houmous-betterave', 'sunny-bowl'];
   const recipeOrder = new Map([...recipeHighlights, ...D.recipes.filter(r => !recipeHighlights.includes(r.id)).map(r => r.id)].map((id, i) => [id, i]));
-  const labels = { accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données', plus: 'L’atelier Plus', atelier: 'Ma semaine à cuisiner' };
+  const labels = { cesoir: 'Ce soir', accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données', plus: 'L’atelier Plus', atelier: 'Ma semaine à cuisiner' };
   let storageAvailable = true;
   let store = readStore();
   let route = getRoute();
@@ -52,6 +52,19 @@
       if (!navigator.onLine) return Promise.reject(new Error('Une connexion est nécessaire pour proposer de nouveaux plats. Vos carnets enregistrés restent disponibles.'));
       const owner = Cloud.storageKey, recipeTicket = RecipeAccess.ticket();
       return Cloud.request('workshop', { method: 'POST', body: JSON.stringify(payload) }).then(result => { if (owner !== Cloud.storageKey) throw new Error('Le compte a changé. Relancez votre semaine.'); if (!RecipeAccess.accept(result.recipes, recipeTicket)) throw new Error('Le carnet a changé. Relancez votre semaine.'); Billing.refresh(); return result; });
+    }
+  });
+
+  const Tonight = window.PoumTonight.create({
+    owner: () => Cloud.storageKey, ready: () => !['checking', 'loading', 'unavailable'].includes(Cloud.state.status), page: () => route.page, vegetarian: () => store.vegetarian,
+    request: body => Cloud.request('tonight', { method: 'POST', body: JSON.stringify(body) }), notify: toast,
+    shopping: meal => {
+      for (const i of meal.recipe.ingredients.filter(i => !meal.checked[i.index])) {
+        const existing = store.shopping.find(x => !x.checked && R.normalize(x.name) === R.normalize(i.name) && x.unit === i.unit);
+        if (existing) existing.quantity = Math.max(existing.quantity || 0, i.quantity);
+        else store.shopping.push({ id: uniqueId(), name: i.name, quantity: i.quantity, unit: i.unit, checked: false });
+      }
+      persist();
     }
   });
 
@@ -160,7 +173,7 @@
   function empty(title, description, link = '', iconName = 'leaf') { return `<div class="empty-state">${icon(iconName, 30)}<h2>${title}</h2><p>${description}</p>${link}</div>`; }
 
   function sidebar() {
-    const links = [['accueil', 'home', 'Accueil'], ['aliments', 'search', 'Les aliments'], ['recettes', 'recipe', 'Les recettes']];
+    const links = [['accueil', 'home', 'Accueil'], ['cesoir', 'recipe', 'Ce soir'], ['aliments', 'search', 'Les aliments'], ['recettes', 'recipe', 'Les recettes']];
     const notebook = [['favoris', 'heart', 'Mes favoris'], ['menus', 'calendar', 'Mes menus'], ['courses', 'bag', 'Mes courses'], ['atelier', 'calendar', 'Préparer ma semaine']];
     const nav = ([page, symbol, label]) => `<a href="#${page}" class="nav-link ${route.page === page ? 'active' : ''}" ${route.page === page ? 'aria-current="page"' : ''}>${icon(symbol, 18)}<span>${label}</span>${page === 'favoris' && store.favorites.length ? `<span class="nav-count">${store.favorites.length}</span>` : ''}</a>`;
     return `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Fermer le menu">${icon('close')}</button>
@@ -219,7 +232,7 @@
     const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     return `<div class="home-dateline"><span>${store.name ? `Bonjour ${escape(store.name)}.` : 'Bonjour.'}</span><time datetime="${localDate()}">${date}</time></div>
       <section class="home-editorial" aria-labelledby="home-title"><div class="home-search-panel"><div class="pregnancy-signature"><span class="section-kicker">À table pendant la grossesse</span></div><h1 id="home-title"><em>Enceinte,</em><br>je peux en manger&nbsp;?</h1><p>Les aliments, les précautions et les recettes pour manger enceinte.</p>${searchForm('home-search')}<button class="home-plus-shortcut" data-action="plus-offer"><span>100 recettes, vos menus et les courses</span><b>Avec Plus ${icon('arrow', 14)}</b></button><div class="suggestions"><span>Par exemple</span>${['Ananas', 'Mozzarella', 'Café'].map(q => `<a class="suggestion" href="${href('aliments', { q })}">${q}</a>`).join('')}</div><a class="home-guide-link" href="#aliments">${D.foods.length} aliments expliqués pour la grossesse ${icon('arrow', 16)}</a><p class="home-source-note"><a href="#sources">Des conseils expliqués et sourcés.</a></p></div>
-      <figure class="home-illustration"><img src="assets/brand/table-maternite-v4-640.webp" srcset="assets/brand/table-maternite-v4-320.webp 320w, assets/brand/table-maternite-v4-640.webp 640w" sizes="(max-width: 600px) 103px, 430px" alt="Illustration d’une femme enceinte à table, la main posée sur son ventre" width="1254" height="1254" fetchpriority="high"></figure></section><div class="home-after-hero"><figure class="tonight-feature"><button data-action="recipe" data-id="${tonight.id}" aria-label="Voir la recette : ${escape(tonight.title)}"><img class="home-food-photo" src="assets/${tonight.image}.jpg" alt="Un plat de lasagnes gratinées" loading="lazy" width="760" height="530"><span class="tonight-copy"><span class="section-kicker">Une recette pour ce soir</span><strong>${escape(tonight.title)}</strong><span>${tonight.time} min · Pour 2 personnes ${icon('arrow', 17)}</span></span></button><figcaption>Photo d’inspiration · Précautions dans la fiche.</figcaption></figure>${premiumNudge('home')}</div>
+      <figure class="home-illustration"><img src="assets/brand/table-maternite-v4-640.webp" srcset="assets/brand/table-maternite-v4-320.webp 320w, assets/brand/table-maternite-v4-640.webp 640w" sizes="(max-width: 600px) 103px, 430px" alt="Illustration d’une femme enceinte à table, la main posée sur son ventre" width="1254" height="1254" fetchpriority="high"></figure></section>${Tonight.homeCard()}<div class="home-after-hero"><figure class="tonight-feature"><button data-action="recipe" data-id="${tonight.id}" aria-label="Voir la recette : ${escape(tonight.title)}"><img class="home-food-photo" src="assets/${tonight.image}.jpg" alt="Un plat de lasagnes gratinées" loading="lazy" width="760" height="530"><span class="tonight-copy"><span class="section-kicker">Une recette pour ce soir</span><strong>${escape(tonight.title)}</strong><span>${tonight.time} min · Pour 2 personnes ${icon('arrow', 17)}</span></span></button><figcaption>Photo d’inspiration · Précautions dans la fiche.</figcaption></figure>${premiumNudge('home')}</div>
       <section class="home-foods" aria-labelledby="search-title"><div class="section-heading"><div><h2 id="search-title">Et ça, pendant la grossesse ?</h2></div><a href="#aliments" class="btn-text">Tout le guide ${icon('arrow', 15)}</a></div><div class="food-grid">${D.foods.slice(0, 4).map(foodCard).join('')}</div></section>
       <aside class="kitchen-note"><span class="section-kicker">Les gestes pendant la grossesse</span><p><strong>Les fruits et légumes, même épluchés ?</strong> Lavez-les à l’eau potable avant de les éplucher ou de les couper.</p><a href="#guide" class="btn-text">Les gestes à connaître ${icon('arrow', 14)}</a></aside>
       <section class="recipes-section" aria-labelledby="recipes-title"><div class="section-heading"><div><h2 id="recipes-title">Des idées pour manger enceinte</h2><p>Les précautions de préparation accompagnent chacune des ${D.recipes.length} recettes.</p></div><a class="btn-text" href="#recettes">Toutes les recettes ${icon('arrow', 15)}</a></div><div class="recipe-grid">${featuredRecipes.map(recipeCard).join('')}</div></section>
@@ -384,6 +397,7 @@
   }
   async function startCheckout() {
     if (checkoutBusy) return;
+    if (route.page === 'cesoir') { try { sessionStorage.setItem('poum-dinner-checkout', String(Date.now() + 3600000)); } catch {} }
     if (Billing.state.mode === 'mirror') { location.assign(new URL('#plus?acheter=' + plusPlan, window.MietteRuntime.appURL)); return; }
     if (!Cloud.state.user) { authMode = 'signup'; go('profil', { retour: 'plus', formule: plusPlan }); toast('Un compte permet de retrouver votre achat et vos semaines.', 'lock'); return; }
     checkoutBusy = true; billingMessage = '';
@@ -418,6 +432,8 @@
       try { const result = await Billing.action('confirm', { session }); billingMessage = result.access.active ? 'Votre accès Plus est actif. Votre prochaine semaine vous attend.' : 'Stripe n’a pas encore confirmé le paiement. Vous pouvez actualiser votre accès dans un instant.'; }
       catch (error) { billingMessage = error.message; if (error.status !== 403) { rerender(true); return; } }
       pendingCheckoutSession = null; try { sessionStorage.removeItem('miamama-checkout-return'); } catch {}
+      let dinnerReturn = false; try { dinnerReturn = Number(sessionStorage.getItem('poum-dinner-checkout')) > Date.now(); if (Billing.active) sessionStorage.removeItem('poum-dinner-checkout'); } catch {}
+      if (Billing.active && dinnerReturn) { go('cesoir'); return; }
       rerender(true); return;
     }
     const destination = route.params.get('retour');
@@ -429,9 +445,9 @@
     }
   }
   function plusOffer() {
-    if (Billing.active) { go('atelier'); return; }
+    if (Billing.active) { go(route.page === 'cesoir' ? 'cesoir' : 'atelier'); return; }
     const stats = Workshop.stats();
-    openDialog(`<div class="dialog-content plus-dialog offer-dialog">${plusStamp()}<h2 id="dialog-title">Les recettes, les menus, les courses. Tout au même endroit.</h2><p class="plus-lead">Avec Plus, retrouvez les 100 recettes complètes et préparez vos semaines pendant la grossesse selon vos goûts et votre temps de cuisine.</p>${stats.ready ? `<div class="offer-proof"><b>Dans votre semaine</b><div><span><strong>${stats.meals}</strong> repas</span><span><strong>${stats.matches}</strong> avec vos ingrédients</span><span><strong>${stats.items}</strong> articles à prévoir</span></div></div>` : '<div class="offer-dialog-photo"><img src="assets/recipes/gnocchi.jpg" alt="Gnocchis dorés, une des recettes à composer dans l’atelier." width="600" height="220"><span>Un exemple de plat proposé dans l’atelier.</span></div>'}<ul class="plus-benefits"><li>${icon('check', 17)}80 recettes complètes en plus des 20 gratuites</li><li>${icon('check', 17)}7 dîners ou 14 repas selon vos préférences</li><li>${icon('check', 17)}Des recettes qui utilisent les ingrédients du placard</li><li>${icon('check', 17)}Remplacement des plats et quantités recalculées</li><li>${icon('check', 17)}Le carnet avec les recettes et les courses</li></ul>${plusPlans('dialog')}${billingNote()}${billingCta()}${billingFeedback()}<button class="btn-text plus-try" data-action="plus-preview">${stats.ready ? 'Retrouver ma semaine' : 'Commencer par ma semaine offerte'}</button><button class="btn-text plus-dismiss" data-action="close-dialog">Continuer gratuitement</button><p class="plus-free-note">Les ${D.foods.length} fiches, Open Food Facts, ${D.freeRecipeCount} recettes complètes et le carnet restent gratuits. Les précautions de toutes les recettes restent publiques.</p></div>`, { type: 'plus-offer' });
+    openDialog(`<div class="dialog-content plus-dialog offer-dialog">${plusStamp()}<h2 id="dialog-title">Les recettes, les menus, les courses. Tout au même endroit.</h2><p class="plus-lead">Avec Plus, retrouvez les 100 recettes complètes et préparez vos semaines pendant la grossesse selon vos goûts et votre temps de cuisine.</p>${stats.ready ? `<div class="offer-proof"><b>Dans votre semaine</b><div><span><strong>${stats.meals}</strong> repas</span><span><strong>${stats.matches}</strong> avec vos ingrédients</span><span><strong>${stats.items}</strong> articles à prévoir</span></div></div>` : '<div class="offer-dialog-photo"><img src="assets/recipes/gnocchi.jpg" alt="Gnocchis dorés, une des recettes à composer dans l’atelier." width="600" height="220"><span>Un exemple de plat proposé dans l’atelier.</span></div>'}<ul class="plus-benefits"><li>Les dîners selon vos envies, avec les courses partagées et le relais avec un proche</li><li>${icon('check', 17)}80 recettes complètes en plus des 20 gratuites</li><li>${icon('check', 17)}7 dîners ou 14 repas selon vos préférences</li><li>${icon('check', 17)}Des recettes qui utilisent les ingrédients du placard</li><li>${icon('check', 17)}Remplacement des plats et quantités recalculées</li><li>${icon('check', 17)}Le carnet avec les recettes et les courses</li></ul>${plusPlans('dialog')}${billingNote()}${billingCta()}${billingFeedback()}<button class="btn-text plus-try" data-action="plus-preview">${stats.ready ? 'Retrouver ma semaine' : 'Commencer par ma semaine offerte'}</button><button class="btn-text plus-dismiss" data-action="close-dialog">Continuer gratuitement</button><p class="plus-free-note">Les ${D.foods.length} fiches, Open Food Facts, ${D.freeRecipeCount} recettes complètes et le carnet restent gratuits. Les précautions de toutes les recettes restent publiques.</p></div>`, { type: 'plus-offer' });
   }
   function plusPage() {
     if (Billing.active) return `${heading('Votre abonnement Plus', 'Préparer les menus, retrouver les courses, gérer votre abonnement.')}${billingFeedback()}${memberPanel()}${premiumNudge('home')}`;
@@ -580,7 +596,7 @@
     } catch (error) { toast(error instanceof SyntaxError ? 'Le fichier JSON est illisible.' : error.message, 'info'); }
   }
   function privacyPage() {
-    return `${heading('Vos données', 'Ce qui reste sur votre appareil et ce qui est associé à votre compte.')}<div class="profile-panel legal-copy"><h3>Sans compte</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses restent dans le stockage local de ce navigateur. Une copie exportée vous permet de les conserver ou de changer d’appareil.</p><h3>Avec un compte</h3><p>La connexion est gérée par Neon Auth. Les mots de passe sont traités par ce service d’authentification ; ils ne sont pas enregistrés dans le carnet. Votre carnet est sauvegardé dans la base PostgreSQL dédiée à Poum et associé à votre compte. Le serveur vérifie la connexion avant chaque accès au carnet. Vous pouvez vous déconnecter depuis Mon espace.</p><p>Une copie reste sur l’appareil pour continuer hors connexion. Les modifications sont synchronisées au retour du réseau. Si les mêmes éléments ont changé sur deux appareils, Poum vous demande quelle version conserver.</p><h3>Recettes ouvertes</h3><p>Les préparations obtenues avec Plus, pendant la semaine offerte ou au lancement sont conservées sur cet appareil, séparément pour chaque compte, pour les relire hors connexion. Elles ne se synchronisent pas automatiquement. Effacer le carnet efface aussi ces téléchargements.</p><h3>Brouillon de l’atelier</h3><p>Vos envies, préférences culinaires, ingrédients disponibles et propositions de menus sont conservés sur cet appareil, séparément pour chaque compte. Ces choix sont transmis au serveur Poum pour composer une proposition, sans les envoyer à Stripe. Le brouillon complet ne se synchronise pas. Les repas ajoutés au carnet et les articles ajoutés aux courses suivent sa synchronisation habituelle. Effacer le carnet efface aussi ce brouillon.</p><h3>Poum Plus et les paiements</h3><p>Si vous achetez Plus, Stripe reçoit votre adresse e-mail, votre nom si vous l’avez renseigné et un identifiant de compte pour associer votre achat. Les informations de carte sont saisies chez Stripe et ne passent pas par Poum. Notre base conserve les références de l’achat, son état et la date de fin d’accès. La date de votre première semaine offerte est associée à votre compte. Vos goûts, vos recherches et votre carnet ne sont pas transmis à Stripe.</p><p>Vous retrouvez vos factures et la résiliation dans Mon espace. La suppression du compte arrête les abonnements Poum actifs et supprime leurs références de notre base ; les factures et données de paiement traitées par Stripe suivent sa <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité</a>.</p><h3>Recherche de produits et caméra</h3><p>Les noms recherchés et les codes-barres sont transmis au serveur Poum sur Vercel, puis à Open Food Facts. Les fiches publiques peuvent être mises en cache. Les images des produits viennent d’Open Food Facts. Votre carnet et votre adresse e-mail ne lui sont pas transmis.</p><p>Les images de caméra et les photos de codes-barres sont analysées sur votre appareil. Elles ne sont ni envoyées au serveur ni enregistrées dans le carnet. La caméra est arrêtée à la fermeture du scanner. Poum ne contient ni publicité ni mesure d’audience.</p><h3>Exporter ou importer</h3><p>Le fichier JSON contient les préférences, favoris, menus et courses. Il ne contient ni mot de passe ni session de connexion.</p><div class="dialog-actions"><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><button class="btn btn-outline" data-action="import-data">${icon('upload', 16)}Importer un carnet</button></div><input type="file" id="notebook-file" accept="application/json,.json" hidden><p id="import-status" role="status"></p><h3>Effacer le carnet</h3><p>${Cloud.state.user ? 'Le carnet sera vidé sur cet appareil et dans votre compte lors de la synchronisation. Le compte de connexion restera disponible.' : 'Le carnet et le cache des recherches seront effacés de ce navigateur.'} Vous pouvez exporter une copie avant cette action.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button>${Cloud.state.user ? '<h3>Supprimer le compte</h3><p>La suppression arrête vos abonnements Poum actifs, puis efface le compte de connexion et son carnet en ligne. Le carnet sans compte de cet appareil reste séparé.</p><button class="btn btn-outline" data-action="delete-account">Supprimer mon compte</button>' : ''}</div>`;
+    return `${heading('Vos données', 'Ce qui reste sur votre appareil et ce qui est associé à votre compte.')}<div class="profile-panel legal-copy"><h3>Sans compte</h3><p>Votre prénom facultatif, la préférence végétarienne, les favoris, les menus et la liste de courses restent dans le stockage local de ce navigateur. Une copie exportée vous permet de les conserver ou de changer d’appareil.</p><h3>Avec un compte</h3><p>La connexion est gérée par Neon Auth. Les mots de passe sont traités par ce service d’authentification ; ils ne sont pas enregistrés dans le carnet. Votre carnet est sauvegardé dans la base PostgreSQL dédiée à Poum et associé à votre compte. Le serveur vérifie la connexion avant chaque accès au carnet. Vous pouvez vous déconnecter depuis Mon espace.</p><p>Une copie reste sur l’appareil pour continuer hors connexion. Les modifications sont synchronisées au retour du réseau. Si les mêmes éléments ont changé sur deux appareils, Poum vous demande quelle version conserver.</p><h3>Recettes ouvertes</h3><p>Les préparations obtenues avec Plus, pendant la semaine offerte ou au lancement sont conservées sur cet appareil, séparément pour chaque compte, pour les relire hors connexion. Elles ne se synchronisent pas automatiquement. Effacer le carnet efface aussi ces téléchargements.</p><h3>Brouillon de l’atelier</h3><p>Vos envies, préférences culinaires, ingrédients disponibles et propositions de menus sont conservés sur cet appareil, séparément pour chaque compte. Ces choix sont transmis au serveur Poum pour composer une proposition, sans les envoyer à Stripe. Le brouillon complet ne se synchronise pas. Les repas ajoutés au carnet et les articles ajoutés aux courses suivent sa synchronisation habituelle. Effacer le carnet efface aussi ce brouillon.</p><h3>Ce soir et les repas partagés</h3><p>Vos envies culinaires, dîners choisis et courses partagées sont enregistrés dans la base Poum. Sans compte, un cookie fonctionnel aléatoire permet de retrouver cet espace sur ce navigateur pendant un an ; avec un compte, les dîners sont associés à votre compte. Le transfert des dîners préparés sans compte se fait uniquement avec le bouton prévu dans Ce soir.</p><p>Le lien de relais donne accès à un seul repas, ses ingrédients, sa préparation et ses précautions. Toute personne possédant ce lien peut cocher les courses et modifier son état de préparation pendant 30 jours, sauf désactivation anticipée. Il ne donne accès ni à votre nom, ni à votre profil ou aux autres dîners. Seule une empreinte du lien est enregistrée dans la base. Les préférences ne sont transmises à aucun service de génération externe.</p><p>Une copie du dernier dîner reste sur cet appareil pour la consultation hors connexion. Les modifications de courses partagées demandent une connexion. La copie ajoutée au carnet de courses est indépendante du repas partagé. Le fichier « Exporter mon carnet » ne contient pas cet espace séparé. Vous pouvez <a href="#cesoir">effacer vos dîners dans Ce soir</a> ; cela supprime les repas et désactive leurs liens. Le fait que le premier essai a été utilisé est conservé. La suppression du compte efface également ses dîners.</p><h3>Poum Plus et les paiements</h3><p>Si vous achetez Plus, Stripe reçoit votre adresse e-mail, votre nom si vous l’avez renseigné et un identifiant de compte pour associer votre achat. Les informations de carte sont saisies chez Stripe et ne passent pas par Poum. Notre base conserve les références de l’achat, son état et la date de fin d’accès. La date de votre première semaine offerte est associée à votre compte. Vos goûts, vos recherches et votre carnet ne sont pas transmis à Stripe.</p><p>Vous retrouvez vos factures et la résiliation dans Mon espace. La suppression du compte arrête les abonnements Poum actifs et supprime leurs références de notre base ; les factures et données de paiement traitées par Stripe suivent sa <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité</a>.</p><h3>Recherche de produits et caméra</h3><p>Les noms recherchés et les codes-barres sont transmis au serveur Poum sur Vercel, puis à Open Food Facts. Les fiches publiques peuvent être mises en cache. Les images des produits viennent d’Open Food Facts. Votre carnet et votre adresse e-mail ne lui sont pas transmis.</p><p>Les images de caméra et les photos de codes-barres sont analysées sur votre appareil. Elles ne sont ni envoyées au serveur ni enregistrées dans le carnet. La caméra est arrêtée à la fermeture du scanner. Poum ne contient ni publicité ni mesure d’audience.</p><h3>Exporter ou importer</h3><p>Le fichier JSON contient les préférences, favoris, menus et courses. Il ne contient ni mot de passe ni session de connexion.</p><div class="dialog-actions"><button class="btn btn-secondary" data-action="export-data">${icon('download', 16)}Exporter mon carnet</button><button class="btn btn-outline" data-action="import-data">${icon('upload', 16)}Importer un carnet</button></div><input type="file" id="notebook-file" accept="application/json,.json" hidden><p id="import-status" role="status"></p><h3>Effacer le carnet</h3><p>${Cloud.state.user ? 'Le carnet sera vidé sur cet appareil et dans votre compte lors de la synchronisation. Le compte de connexion restera disponible.' : 'Le carnet et le cache des recherches seront effacés de ce navigateur.'} Vous pouvez exporter une copie avant cette action.</p><button class="btn btn-outline" data-action="reset-data">${icon('trash', 16)}Effacer mon carnet</button>${Cloud.state.user ? '<h3>Supprimer le compte</h3><p>La suppression arrête vos abonnements Poum actifs, puis efface le compte de connexion et son carnet en ligne. Le carnet sans compte de cet appareil reste séparé.</p><button class="btn btn-outline" data-action="delete-account">Supprimer mon compte</button>' : ''}</div>`;
   }
   function renderRoute(keepDialog = false) {
     RecipeAccess.ensure();
@@ -594,9 +610,10 @@
     }
     $('#sidebar').innerHTML = sidebar();
     $('#topbar').innerHTML = topbar();
-    const pages = { accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage, plus: plusPage, atelier: Workshop.render };
+    const pages = { cesoir: Tonight.render, accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage, plus: plusPage, atelier: Workshop.render };
     $('#main').innerHTML = `<div class="page-content">${pages[route.page]()}</div>${footer()}`;
     syncSidebar();
+    Tonight.enter();
     document.title = route.page === 'accueil' ? 'Que peut-on manger enceinte ? Aliments et recettes | Poum' : `${labels[route.page]} — Poum`;
     if (oldPage !== route.page) window.scrollTo({ top: 0, behavior: 'instant' });
     if (isOFF) {
@@ -805,11 +822,12 @@
   }
 
   document.addEventListener('click', event => {
+    if (Tonight.statusClick(event)) return;
     const trigger = event.target.closest('[data-action]');
     if (!trigger || trigger.disabled) return;
     const { action, id, kind } = trigger.dataset;
     const params = Object.fromEntries(route.params);
-    if (Workshop.click(trigger)) return;
+    if (Tonight.click(trigger) || Workshop.click(trigger)) return;
     switch (action) {
       case 'food': foodDetail(id); break;
       case 'recipe': recipeDetail(id); break;
@@ -880,6 +898,7 @@
     }
   });
   document.addEventListener('submit', event => {
+    if (Tonight.submit(event)) return;
     const form = event.target;
     const data = new FormData(form);
     const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form', 'workshop-form'];
@@ -888,7 +907,8 @@
     if (form.id === 'workshop-form') { Workshop.submit(form); return; }
     if (form.id === 'delete-account-form') {
       const button = form.querySelector('[type="submit"]'); button.disabled = true;
-      Cloud.deleteAccount(String(data.get('password'))).then(() => { $('#detail-dialog').close(); toast('Votre compte et son carnet en ligne ont été supprimés.', 'check'); }).catch(error => { if ($('#delete-feedback')) $('#delete-feedback').textContent = error.message; }).finally(() => { button.disabled = false; });
+      const dinnerOwner = Cloud.storageKey;
+      Cloud.deleteAccount(String(data.get('password'))).then(() => { Tonight.forget(dinnerOwner); $('#detail-dialog').close(); toast('Votre compte et son carnet en ligne ont été supprimés.', 'check'); }).catch(error => { if ($('#delete-feedback')) $('#delete-feedback').textContent = error.message; }).finally(() => { button.disabled = false; });
       return;
     }
     if (form.id === 'auth-form') { submitAuth(form, data); return; }
@@ -934,6 +954,7 @@
     }
   });
   document.addEventListener('change', event => {
+    if (Tonight.change(event)) return;
     if (event.target.matches('[data-plus-plan]') && Plus.offer.plans.some(p => p.id === event.target.value)) {
       plusPlan = event.target.value;
       document.querySelectorAll('[data-plus-plan]').forEach(input => { input.checked = input.value === plusPlan; });
@@ -1004,8 +1025,9 @@
   const returningPortal = returnParams.get('billing') === 'updated';
   if (returnParams.has('checkout') || returningPortal) history.replaceState(null, '', location.pathname + location.hash);
   renderRoute(); updateOnline();
-  window.addEventListener('miette:cloud', () => { renderAccount(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
+  window.addEventListener('miette:cloud', () => { Tonight.enter(); renderAccount(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
   window.addEventListener('miamama:billing', () => {
+    Tonight.enter();
     document.querySelectorAll('[data-premium-place]').forEach(el => { el.outerHTML = premiumNudge(el.dataset.premiumPlace); });
     if ($('#topbar')) $('#topbar').innerHTML = topbar();
     if (['plus', 'atelier', 'profil'].includes(route.page) && !authBusy) replaceNotebook(store, { preserveEdits: true });

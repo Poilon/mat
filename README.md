@@ -143,3 +143,7 @@ Le build remplace `dist/js/data.js` et `dist/js/recipes.js` par un catalogue pub
 ## Référencement
 
 394 pages HTML publiques sont générées au build, dont les 360 fiches alimentaires et 20 recettes gratuites. Elles possèdent des URL françaises, des sources visibles, des liens entre fiches, un sitemap et des données structurées. Le guide reste lisible sans JavaScript. [Détails, tests et suivi Search Console](SEO.md).
+
+## Ce soir et le relais
+
+Le parcours `/#cesoir` propose un premier dîner offert, puis les dîners personnalisés avec Plus. Un proche peut ouvrir un lien sans compte pour retrouver la recette et cocher les courses et les étapes. Voir [TONIGHT.md](TONIGHT.md) pour le fonctionnement, la migration, la portée des liens et la validation.

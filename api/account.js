@@ -18,6 +18,8 @@ module.exports = handler(async (req, res) => {
   // Neon Auth uses cascading foreign keys from session/account/member to user.
   // Both the app notebook and managed identity are removed in one transaction.
   await sql.transaction([
+    sql`DELETE FROM poum_tonight_meals WHERE owner = ${'u:' + user.id}`,
+    sql`DELETE FROM poum_tonight_profiles WHERE owner = ${'u:' + user.id}`,
     sql`DELETE FROM miette_subscriptions WHERE user_id = ${user.id}`,
     sql`DELETE FROM miette_passes WHERE user_id = ${user.id}`,
     sql`DELETE FROM miette_billing_customers WHERE user_id = ${user.id}`,
