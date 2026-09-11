@@ -62,7 +62,7 @@
       ]
     },
     {
-      "source": "/relais/:path*",
+      "source": "/relais(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",
