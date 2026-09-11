@@ -1,4 +1,4 @@
-name: Publish Nidelle to GitHub Pages
+name: Publish Miamama to GitHub Pages
 
 on:
   push:

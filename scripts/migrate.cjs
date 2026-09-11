@@ -8,5 +8,6 @@ const { database } = require('../server/db.cjs');
   )`;
   await sql`CREATE TABLE IF NOT EXISTS miette_limits (key text PRIMARY KEY, bucket bigint NOT NULL, hits integer NOT NULL)`;
   await sql`DELETE FROM miette_limits WHERE bucket < ${Math.floor(Date.now() / 60000) - 1440}`;
-  console.log('Nidelle: notebook and request-limit tables ready.');
+  await require('../server/billing-schema.cjs').migrateBilling(sql);
+  console.log('Miamama: notebook, billing and request-limit tables ready.');
 })().catch(error => { console.error('Database initialization failed:', error.code || error.name); process.exitCode = 1; });

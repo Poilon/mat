@@ -1,12 +1,12 @@
-# Nidelle — Votre assiette & votre grossesse
+# Miamama — La grossesse a bon goût.
 
-Nidelle accompagne les petits choix alimentaires pendant la grossesse : comprendre un repère, préparer un repas et garder ses idées. La marque associe la maternité à une cuisine quotidienne gourmande, sans promesse de sécurité absolue.
+Miamama accompagne les petits choix alimentaires pendant la grossesse : comprendre un repère, préparer un repas et garder ses idées. La marque associe la maternité à une cuisine quotidienne gourmande, sans promesse de sécurité absolue.
 
 ## Signature et ton
 
-**Nidelle** associe le « nid » à « elle » : un nom doux qui place la personne enceinte au centre de l’accompagnement. La marque se décline en **Nidelle Plus** pour l’offre de menus. Le logotype s’écrit `nidelle` en minuscules ; la signature descriptive reste « Votre assiette & votre grossesse ».
+**Miamama** assemble « miam » et « mama » : la gourmandise et la maternité dans un nom simple à prononcer. La marque se décline en **Miamama Plus**. Le logotype s’écrit `miamama`, avec « ama » en terre cuite. Signature : **« La grossesse a bon goût. »**
 
-**« Bien dans l’assiette. Bien dans votre grossesse. »**
+La promesse porte sur des repas qui font envie et une organisation plus simple.
 
 Vouvoiement chaleureux, phrases courtes, explications concrètes. Parler d’envies, de repas et de gestes possibles. Expliquer les précautions sans culpabiliser, sans présenter une source générale comme une validation propre à chaque aliment. Les quatre éléments d’une fiche : pourquoi, ce qui change la réponse, gestes en cuisine et références.
 

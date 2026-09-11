@@ -14,5 +14,5 @@ const { build } = require('esbuild');
   const config = { apiBase: mirror ? new URL('/api/', appURL).href : '/api/', appURL, cloud: !mirror };
   fs.writeFileSync(path.join(destination, 'js/runtime.js'), 'window.MietteRuntime = ' + JSON.stringify(config) + ';\n');
   await build({ entryPoints: ['src/scanner.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', outfile: path.join(destination, 'js/scanner.js'), legalComments: 'eof' });
-  console.log('Nidelle built: static interface, local barcode reader and Vercel API.');
+  console.log('Miamama built: static interface, local barcode reader and Vercel API.');
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

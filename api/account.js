@@ -13,10 +13,15 @@ module.exports = handler(async (req, res) => {
   if (!check.ok) throw new HttpError(check.status === 429 ? 429 : 400, 'Le mot de passe est incorrect ou la connexion doit être renouvelée.');
   const verified = await check.json();
   if (verified.user?.id !== user.id) throw new HttpError(403, 'La confirmation du compte a échoué.');
+  await require('../server/billing.cjs').service().closeAccount(user);
   const sql = database();
   // Neon Auth uses cascading foreign keys from session/account/member to user.
   // Both the app notebook and managed identity are removed in one transaction.
   await sql.transaction([
+    sql`DELETE FROM miette_subscriptions WHERE user_id = ${user.id}`,
+    sql`DELETE FROM miette_passes WHERE user_id = ${user.id}`,
+    sql`DELETE FROM miette_billing_customers WHERE user_id = ${user.id}`,
+    sql`DELETE FROM miette_workshop_trials WHERE user_id = ${user.id}`,
     sql`DELETE FROM miette_notebooks WHERE user_id = ${user.id}`,
     sql`DELETE FROM miette_limits WHERE key = ${'notebook:' + user.id} OR key = ${'delete-account:' + user.id}`,
     sql`DELETE FROM neon_auth.verification WHERE identifier = ${user.email} OR value = ${user.id}`,

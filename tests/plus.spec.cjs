@@ -45,9 +45,11 @@ test('The full workshop respects tastes, keeps pinned meals, and replaces just o
   await page.locator('[data-action="workshop-pin"][data-index="0"]').click();
   await expect(page.locator('[data-action="workshop-swap"][data-index="0"]')).toBeDisabled();
   await page.locator('[data-action="workshop-regenerate"]').click();
+  await expect(page.locator('#workshop-feedback')).toContainText('7 repas proposés');
   const regenerated = await recipeIDs(page);
   expect(regenerated[0]).toBe(ids[0]);
   await page.locator('[data-action="workshop-swap"][data-index="1"]').click();
+  await expect.poll(async () => (await recipeIDs(page))[1]).not.toBe(regenerated[1]);
   const swapped = await recipeIDs(page);
   expect(swapped[1]).not.toBe(regenerated[1]);
   expect(swapped.filter((_, i) => i !== 1)).toEqual(regenerated.filter((_, i) => i !== 1));
@@ -71,6 +73,7 @@ test('Saving updates workshop meals while keeping manual meals and requiring new
   await expect(page.locator('#workshop-feedback')).toContainText('6 repas ajoutés');
   await expect(page.locator('[data-action="workshop-save"]')).toBeDisabled();
   await page.locator('[data-action="workshop-swap"][data-index="1"]').click();
+  await expect(page.locator('#workshop-feedback')).toContainText('Une nouvelle idée');
   const ids = await recipeIDs(page);
   await page.locator('[data-action="workshop-save"]').click();
   await expect(page.locator('#workshop-feedback')).toContainText('1 actualisés');
@@ -116,12 +119,12 @@ test('Fourteen meals produce a real grocery list and an offline booklet with com
   expect(await documentPage.locator('script[src],img,link[href]').count()).toBe(0);
 });
 
-test('The offer shows actual results and clear prices after using the workshop, without taking payment', async ({ page }) => {
-  const payments = []; page.on('request', req => { if (/stripe|checkout|billing|subscribe/i.test(req.url())) payments.push(req.url()); });
+test('The offer shows actual results and clear prices after using the workshop, while billing is not configured', async ({ page }) => {
+  const payments = []; page.on('request', req => { if (/stripe\.com|checkout|subscribe/i.test(req.url())) payments.push(req.url()); });
   await page.goto('/#atelier'); await generate(page);
   const trigger = page.locator('[data-action="plus-offer"]'); await trigger.click();
   await expect(page.locator('.offer-proof')).toContainText('7 repas');
-  await expect(page.locator('dialog')).toContainText('Les paiements ne sont pas encore ouverts');
+  await expect(page.locator('dialog')).toContainText('L’atelier reste offert pendant l’ouverture des paiements');
   await expect(page.locator('dialog [data-plus-terms]')).toContainText('29,90');
   await page.locator('#dialog-monthly').check();
   await expect(page.locator('dialog [data-plus-terms]')).toContainText('4,90');
@@ -168,14 +171,15 @@ test('Resetting a notebook clears its workshop draft and old preferences', async
 
 test.describe('Offline workshop', () => {
   test.use({ serviceWorkers: 'allow' });
-  test('The installed shell can generate, edit and retain a week without network', async ({ page, context }) => {
+  test('The installed shell retains menus and exports offline, while new generation explains the connection requirement', async ({ page, context }) => {
     test.setTimeout(60000);
     await page.goto('/#atelier');
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
-    await expect.poll(() => page.evaluate(async () => (await caches.open('miette-shell-v2.3.0')).match(new URL('js/workshop.js?v=1', location.href)).then(Boolean))).toBe(true);
-    await context.setOffline(true); await page.reload();
+    await expect.poll(() => page.evaluate(async () => (await caches.open('miette-shell-v3.0.0')).match(new URL('js/workshop.js?v=2', location.href)).then(Boolean))).toBe(true);
     await generate(page);
+    await context.setOffline(true); await page.reload();
     await page.locator('[data-action="workshop-swap"][data-index="0"]').click();
+    await expect(page.locator('#workshop-feedback')).toContainText('connexion');
     const ids = await recipeIDs(page);
     await page.locator('[data-action="workshop-save"]').click(); await page.reload();
     expect(await recipeIDs(page)).toEqual(ids);

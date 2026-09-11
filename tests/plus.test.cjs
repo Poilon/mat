@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const D = require('../js/data.js');
-const Plus = require('../js/plus.js');
+const Plus = { ...require('../js/plus.js'), ...require('../server/planner.cjs') };
 
 test('The free preview respects cooking time and vegetarian choices across the real catalogue', () => {
   let seed = 729;

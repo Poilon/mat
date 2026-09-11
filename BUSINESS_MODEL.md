@@ -1,6 +1,6 @@
-# L’atelier Plus — modèle économique proposé
+# Miamama Plus — modèle économique
 
-Version du 9 septembre 2026, application 2.3.0. **Pré-lancement : atelier complet offert, aucun paiement ouvert, aucun abonnement actif.** La page `#plus` présente le service ; `#atelier` permet de l’utiliser sans compte ni carte bancaire.
+Version du 11 septembre 2026, application 3.0.0. **Miamama — La grossesse a bon goût.** Le paiement Stripe et les droits serveur sont implémentés. Leur ouverture dépend de la configuration documentée dans [STRIPE.md](STRIPE.md) ; tant qu’elle est incomplète, l’atelier reste offert et aucun checkout n’est proposé.
 
 ## Ce que l’on vend
 
@@ -27,13 +27,13 @@ Le brouillon et les préférences sont locaux, séparés par compte. Les menus e
 
 Les goûts culinaires sont des préférences de sélection, pas un bilan nutritionnel. L’atelier ne commande pas les courses et ne dispose d’aucun prix de panier. Le document à partager est téléchargé : aucun partage avec un tiers n’est automatique.
 
-## Offre et prix proposés
+## Offre et prix
 
 | Accès | Contenu |
 | --- | --- |
 | Gratuit durable | 360 fiches alimentaires sourcées, recherche/scan Open Food Facts selon disponibilité, 100 recettes, favoris, menus manuels, courses, export et synchronisation |
-| Découverte actuelle | Tout l’atelier, renouvelable sans quota, sans compte ni carte bancaire |
-| Plus au lancement commercial envisagé | Utilisation répétée de l’atelier complet ; première semaine complète offerte avant le premier achat |
+| Première semaine | Tout l’atelier sur une première date de semaine, ajustable sans carte bancaire, avec un compte gratuit |
+| Miamama Plus | Nouvelles semaines personnalisées, plats modifiables, courses regroupées et carnet à partager |
 
 - **Pass 9 mois : 29,90 € en une fois.** Neuf mois d’accès à partir de l’activation, sans renouvellement automatique. Aucun justificatif de grossesse.
 - **Mensuel : 4,90 €/mois.** Renouvellement automatique ; résiliation possible pour empêcher la prochaine échéance, accès jusqu’à la fin de la période payée.
@@ -50,15 +50,15 @@ Les tarifs sont des hypothèses à tester, pas une preuve de disposition à paye
 4. Après le résultat, **Découvrir l’offre Plus** ouvre une présentation avec les nombres réellement obtenus : repas, plats utilisant les ingrédients sélectionnés et articles à prévoir.
 5. Le prix et les conditions sont lisibles, la fermeture et la poursuite gratuite restent accessibles. Les sources et précautions ne rencontrent jamais un paywall.
 
-**Dans cette version**, les formules affichent leurs conditions mais n’ouvrent aucun achat. Le bouton ramène à l’atelier offert. Aucune réservation, période d’essai avec facturation ultérieure ou activation d’abonnement n’est simulée. Il n’existe pas de booléen premium faisant autorité dans le navigateur.
+La formule choisie ouvre Stripe après connexion ou création de compte. Le serveur relit le paiement avant d’activer les droits ; aucun booléen premium local ne fait autorité. Le pass ne se renouvelle pas. L’abonnement mensuel se gère depuis le portail client : moyen de paiement, factures et résiliation.
 
-**Au lancement envisagé**, le premier carnet complet doit être utilisable gratuitement. Le point de conversion à tester serait la préparation d’une nouvelle semaine après cette première expérience. Remplacer les plats et corriger le premier carnet doivent rester possibles pendant la découverte. Toute future limite devra être expliquée avant le parcours et contrôlée côté serveur, avec accès permanent aux carnets déjà enregistrés.
+La deuxième date de semaine rencontre le paywall côté serveur. La première reste modifiable. Les rappels de Plus apparaissent aussi dans l’accueil, les recettes, leurs fiches, les favoris, les courses, les menus et la barre supérieure, avec un accès direct à un exemple complet. Les membres actifs voient l’accès à leur atelier et à leur abonnement.
 
-## Valider la valeur avant d’ouvrir les paiements
+## Mesurer la valeur réelle
 
 Faire essayer l’atelier à des participantes volontaires, puis vérifier des comportements concrets : gardent-elles plusieurs suggestions, utilisent-elles leurs ingrédients, emportent-elles le document, et reviennent-elles préparer la semaine suivante ? Demander ensuite si l’offre résout un problème pour lequel elles paieraient, et laquelle des deux formules elles choisiraient. Les clics sur le prix ne suffisent pas à prouver une demande solvable.
 
-Le pré-lancement n’ajoute ni mesure d’audience ni liste d’attente. Il reste sans publicité et sans vente de données. Une mesure future du parcours devrait se limiter aux événements nécessaires, en excluant les recherches d’aliments, le contenu des carnets et les informations médicales, avec information adaptée.
+L’application n’ajoute ni mesure d’audience ni liste d’attente. Il reste sans publicité et sans vente de données. Une mesure future du parcours devrait se limiter aux événements nécessaires, en excluant les recherches d’aliments, le contenu des carnets et les informations médicales, avec information adaptée.
 
 Le contenu utile peut servir à l’acquisition. Le routage actuel par fragments ne suffit pas pour un catalogue SEO : créer de vraies pages statiques par aliment et recette avant d’investir dans ce canal. Une recommandation commerciale par un professionnel ne constitue pas une validation clinique.
 
@@ -76,17 +76,10 @@ Ces scénarios excluent les renouvellements antérieurs et ne sont ni des prévi
 
 Le budget doit couvrir hébergement, comptes et base de données, frais du prestataire de paiement, maintenance des sources, relecture clinique indépendante, support, remboursements, taxes et acquisition. Vérifier les [tarifs du prestataire](https://stripe.com/fr/pricing) avant toute décision de marge. Limiter les dépenses d’acquisition jusqu’à disposer de coûts réels par cohorte et d’achats confirmés.
 
-## Passage à de vrais paiements
+## Paiement et maintien du service
 
-Le frontal peut rester statique ; un droit payant fiable nécessite une autorité serveur. Vercel et les comptes Neon sont déjà présents. `js/plus.js` fournit la composition et les prix de présentation, jamais une preuve d’achat.
+Le frontal reste en HTML/CSS/JS natifs. Vercel gère les achats authentifiés, les événements signés, les droits et la génération de semaines. Neon conserve les correspondances entre comptes et achats. Le miroir GitHub Pages ouvre le parcours de compte et de paiement sur le domaine Vercel.
 
-Avant l’ouverture :
+Les prix et le portail sont créés dans les deux modes Stripe. Le pass dure neuf mois calendaires ; le mensuel suit les périodes réellement payées. Les événements rejoués n’étendent pas le pass. Un remboursement intégral ou un litige suspend l’accès concerné. La résiliation en fin de période préserve l’accès déjà payé. À expiration, les carnets créés restent disponibles. Le mode test est affiché explicitement.
 
-1. Valider le service et les prix avec des utilisatrices ; faire relire la portée des suggestions et conserver leur statut d’idées culinaires.
-2. Configurer les produits du vendeur, les conditions de vente, le support, les taxes, la résiliation et le remboursement, en environnement de test.
-3. Créer les [sessions Checkout](https://docs.stripe.com/payments/checkout) depuis une fonction authentifiée : le serveur sélectionne le prix autorisé et identifie le compte depuis la session.
-4. Activer les droits après [webhook signé et vérifié](https://docs.stripe.com/webhooks), avec déduplication et gestion des paiements différés, échecs, remboursements, résiliations et expiration du pass. La page de retour ne débloque aucun droit par elle-même.
-5. Autoriser les nouvelles générations auprès du serveur et fournir une gestion de facturation. Les documents et menus déjà créés restent gratuits, y compris hors connexion ; une variable locale ne protège pas la génération actuellement publique.
-6. Vérifier achats de test, renouvellement, résiliation, expiration, restauration sur un autre appareil et événements rejoués avant toute facturation réelle. Le miroir GitHub Pages ouvre le parcours de compte et de paiement sur le domaine Vercel.
-
-Cette version livre le service complet à essayer et une offre fondée sur son résultat. Elle ne crée aucun produit Stripe et ne facture personne.
+La conversion est une hypothèse commerciale à mesurer ; le prix ne garantit pas la demande. Les informations du vendeur et de support utilisées par Checkout restent celles du compte Stripe. Voir [l’état exact de l’ouverture et les paramètres techniques](STRIPE.md).

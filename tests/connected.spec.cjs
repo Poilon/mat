@@ -6,6 +6,8 @@ async function mockAccount(page, remote, initialUser=null) {
   await page.route('**/api/**',async route=>{
     const req=route.request(),path=new URL(req.url()).pathname;
     let data={};if(req.method()!=='GET')data=req.postDataJSON();
+    if(path==='/api/billing')return route.fulfill({json:{configured:false,mode:'unavailable',access:{active:false},trialWeek:null,signedIn:!!user,canManage:false}});
+    if(path==='/api/workshop')return route.fallback();
     if(path==='/api/config')return route.fulfill({json:{accounts:true,appURL:'http://localhost:4176'}});
     if(path==='/api/auth/get-session')return route.fulfill({json:user?{user,session:{expiresAt:'2099-01-01'}}:null});
     if(path==='/api/auth/sign-in/email'||path==='/api/auth/sign-up/email') {
@@ -96,19 +98,19 @@ test('Competing profile edits require a visible choice before replacing the remo
   await page.context().setOffline(false);await expect(page.locator('.sync-conflict')).toBeVisible();expect(remote['account-a'].notebook.name).toBe('Ailleurs');
   await page.locator('[data-choice="remote"]').click();await expect(page.locator('#profile-name')).toHaveValue('Ailleurs');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
 });
-test('Legacy notebooks import with confirmation and Nidelle exports round-trip on mobile',async({page})=>{
+test('Legacy notebooks import with confirmation and Miamama exports round-trip on mobile',async({page})=>{
   await page.setViewportSize({width:320,height:740});await page.goto('/#confidentialite');
   await page.locator('#notebook-file').setInputFiles({name:'carnet.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({application:'Miette',version:1,notebook:{...empty(),name:'Ancien carnet',favorites:['recipe:sunny-bowl']}}))});
   await expect(page.locator('dialog')).toContainText('1 favoris');expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('miette-notebook-v1')||'null'))).toBe(null);
   await page.locator('[data-action="confirm-import"]').click();await page.goto('/#favoris');await expect(page.locator('.recipe-card')).toHaveCount(1);await page.goto('/#profil');await expect(page.locator('#profile-name')).toHaveValue('Ancien carnet');await expect(page.locator('.install-panel')).toContainText('Sur iPhone');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await expect(page.locator('.install-panel')).toContainText('Nidelle');
+  await expect(page.locator('.install-panel')).toContainText('Miamama');
   await page.goto('/#confidentialite');
   const pending=page.waitForEvent('download');await page.locator('[data-action="export-data"]').click();const download=await pending;
-  expect(download.suggestedFilename()).toBe('nidelle-mon-carnet.json');
+  expect(download.suggestedFilename()).toBe('miamama-mon-carnet.json');
   const chunks=[];for await (const chunk of await download.createReadStream())chunks.push(chunk);
   const contents=Buffer.concat(chunks),exported=JSON.parse(contents.toString());
-  expect(exported.application).toBe('Nidelle');expect(exported.notebook.favorites).toEqual(['recipe:sunny-bowl']);
-  await page.locator('#notebook-file').setInputFiles({name:'nidelle-mon-carnet.json',mimeType:'application/json',buffer:contents});
+  expect(exported.application).toBe('Miamama');expect(exported.notebook.favorites).toEqual(['recipe:sunny-bowl']);
+  await page.locator('#notebook-file').setInputFiles({name:'miamama-mon-carnet.json',mimeType:'application/json',buffer:contents});
   await expect(page.locator('dialog')).toContainText('Importer ce carnet');await page.locator('[data-action="confirm-import"]').click();
   await page.goto('/#favoris');await page.reload();await expect(page.locator('.recipe-card')).toHaveCount(1);
 });
@@ -174,6 +176,7 @@ test('Workshop drafts remain separate for guests and two accounts through sign-o
   await expect(page.locator('.workshop-before')).toBeVisible();
   await page.locator('#workshop-meals').selectOption('both');
   await page.locator('#workshop-form [type="submit"]').click();
+  await expect(page.locator('.workshop-recipe')).toHaveCount(14);
   const account = await ids(); expect(account).toHaveLength(14);
   await page.goto('/#profil'); await page.locator('[data-action="sign-out"]').click();
   await expect(page.locator('#auth-form')).toBeVisible(); await page.goto('/#atelier');
