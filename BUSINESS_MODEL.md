@@ -1,10 +1,10 @@
 # Miamama Plus — modèle économique
 
-Version du 11 septembre 2026, application 3.0.0. **Miamama — La grossesse a bon goût.** Le paiement Stripe et les droits serveur sont implémentés. Leur ouverture dépend de la configuration documentée dans [STRIPE.md](STRIPE.md) ; tant qu’elle est incomplète, l’atelier reste offert et aucun checkout n’est proposé.
+Version du 11 septembre 2026, application 3.1.0. **Miamama — Alimentation & grossesse.** Le nom reste provisoire. Le paiement Stripe et les droits serveur sont implémentés. Leur ouverture dépend de la configuration documentée dans [STRIPE.md](STRIPE.md) ; tant qu’elle est incomplète, l’atelier reste offert et aucun checkout n’est proposé.
 
 ## Ce que l’on vend
 
-**« Le menu est prêt. Vous pouvez souffler. »** L’offre porte sur un résultat utilisable : une semaine de plats choisis, les courses regroupées et un carnet qui permet à une autre personne de prendre le relais en cuisine.
+**« Qu’est-ce qu’on mange cette semaine ? »** L’offre porte sur un résultat utilisable : une semaine de plats choisis, les courses regroupées et un carnet qui permet à une autre personne de prendre le relais en cuisine.
 
 Le parcours part de trois situations concrètes : un aliment ne tente plus, des ingrédients attendent dans le placard, ou la personne qui partage le quotidien peut s’occuper des repas. Les sept jours seuls ne justifient pas le prix : l’intérêt vient de l’ensemble des préférences, des changements simples, de la liste qui se recalcule et du document prêt à emporter.
 
@@ -44,7 +44,7 @@ Les tarifs sont des hypothèses à tester, pas une preuve de disposition à paye
 
 ## Un paywall après la preuve
 
-1. La page `#plus` montre de vraies recettes du catalogue et les trois situations quotidiennes. Les exemples sont explicitement identifiés comme exemples.
+1. La page `#plus` montre un exemple de menu avec des recettes du catalogue, les fonctions comprises et les prix. Les exemples sont explicitement identifiés comme exemples.
 2. Le bouton principal ouvre l’atelier complet, également accessible depuis la navigation et **Mes menus**.
 3. L’utilisatrice compose, consulte les recettes, ajuste les plats, prépare les courses et peut emporter son carnet.
 4. Après le résultat, **Découvrir l’offre Plus** ouvre une présentation avec les nombres réellement obtenus : repas, plats utilisant les ingrédients sélectionnés et articles à prévoir.
@@ -52,7 +52,7 @@ Les tarifs sont des hypothèses à tester, pas une preuve de disposition à paye
 
 La formule choisie ouvre Stripe après connexion ou création de compte. Le serveur relit le paiement avant d’activer les droits ; aucun booléen premium local ne fait autorité. Le pass ne se renouvelle pas. L’abonnement mensuel se gère depuis le portail client : moyen de paiement, factures et résiliation.
 
-La deuxième date de semaine rencontre le paywall côté serveur. La première reste modifiable. Les rappels de Plus apparaissent aussi dans l’accueil, les recettes, leurs fiches, les favoris, les courses, les menus et la barre supérieure, avec un accès direct à un exemple complet. Les membres actifs voient l’accès à leur atelier et à leur abonnement.
+La deuxième date de semaine rencontre le paywall côté serveur. La première reste modifiable. Des accès discrets à Plus restent présents dans l’accueil, les recettes, leurs fiches, les favoris, les courses, les menus et la barre supérieure. La page d’offre permet d’ouvrir un exemple complet. Les membres actifs voient l’accès à leur atelier et à leur abonnement.
 
 ## Mesurer la valeur réelle
 

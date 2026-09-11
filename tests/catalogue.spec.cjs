@@ -51,11 +51,12 @@ test('Product explanations show the ingredient that triggered the precaution and
   await expect(page.locator('.product-unknowns')).toContainText('ne peut pas confirmer');
 });
 
-test('Pregnancy branding and expanded detail remain legible on mobile', async ({ page }) => {
+test('Food photography, direct search and source-backed details remain legible on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.locator('.pregnancy-hero')).toBeVisible();
-  expect(await page.locator('.pregnancy-hero').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.locator('#home-search')).toBeInViewport();
+  await expect(page.locator('.home-food-photo')).toBeVisible();
+  expect(await page.locator('.home-food-photo').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.goto('/#aliments?q=ananas');
   await page.locator('.food-card-open').click();

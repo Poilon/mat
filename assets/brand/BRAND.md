@@ -1,47 +1,42 @@
-# Miamama — La grossesse a bon goût.
+# Direction visuelle et éditoriale
 
-Miamama accompagne les petits choix alimentaires pendant la grossesse : comprendre un repère, préparer un repas et garder ses idées. La marque associe la maternité à une cuisine quotidienne gourmande, sans promesse de sécurité absolue.
+Version 3.1.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
 
-## Signature et ton
+## Ton
 
-**Miamama** assemble « miam » et « mama » : la gourmandise et la maternité dans un nom simple à prononcer. La marque se décline en **Miamama Plus**. Le logotype s’écrit `miamama`, avec « ama » en terre cuite. Signature : **« La grossesse a bon goût. »**
+Écrire comme dans un carnet de cuisine : des mots usuels et des indications concrètes. Le vouvoiement reste cohérent dans l’application. Les questions concernent une action réelle : « Un doute sur un aliment ? », « On mange quoi ? », « Si un plat ne me plaît pas ? ».
 
-La promesse porte sur des repas qui font envie et une organisation plus simple.
+Les commandes nomment leur résultat : ingrédients, préparation, mes favoris, ma liste de courses. Éviter les diminutifs systématiques, les slogans sur chaque écran, les formules répétées autour des « envies » et les promesses d’accompagnement personnel. Aucun témoignage, auteur, avis professionnel ou processus de relecture n’est inventé.
 
-Vouvoiement chaleureux, phrases courtes, explications concrètes. Parler d’envies, de repas et de gestes possibles. Expliquer les précautions sans culpabiliser, sans présenter une source générale comme une validation propre à chaque aliment. Les quatre éléments d’une fiche : pourquoi, ce qui change la réponse, gestes en cuisine et références.
+Le lien avec la grossesse est explicite dans le descriptif de l’app, dans le guide et dans les précautions de chaque recette. Les conseils restent des informations générales avec leurs sources et leurs limites.
 
-## Identité visuelle
+## Couleurs et caractères
 
-| Élément | Valeur | Usage |
-| --- | --- | --- |
-| Sauge | `#496453` | Marque, boutons principaux |
-| Sauge foncé | `#334d3d` | Titres et navigation active |
-| Ivoire | `#fcfaf5` | Fond de l’application |
-| Crème | `#fbf6ed` | Scènes illustrées |
-| Terre cuite | `#9b5948` | Signature et accents |
-| Pêche | `#ebc1a9` | Aplats décoratifs |
-| Texte | `#354237` | Lecture |
+| Élément | Couleur |
+| --- | --- |
+| Texte | `#32372f` |
+| Boutons et liens | `#46583f` |
+| Fond | `#fbfaf7` |
+| Navigation | `#f4f4ed` |
+| Filets | `#dedfd5` |
+| Accents ponctuels | `#885844` |
 
-**Lora** pour la signature et les titres, **DM Sans** pour les explications et les commandes. Polices hébergées localement. Les couleurs des statuts gardent leur sens et sont accompagnées d’un libellé et d’un symbole.
+Lora est réservée aux titres et aux noms des plats ; DM Sans sert à la lecture et aux commandes. Les textes et formulaires sont plus grands, y compris sur téléphone. Les statuts alimentaires conservent des libellés et des symboles en plus des couleurs.
 
-Le symbole `mark.svg` évoque une personne enceinte tenant son ventre, avec un cœur. Utiliser ce fichier vectoriel comme référence. Les versions PNG servent à l’installation sur l’écran d’accueil ; la version 512 px conserve une marge adaptée au masque des icônes mobiles.
+Les aplats restent discrets. Les sections se distinguent par l’espace et les filets ; les panneaux encadrés servent principalement aux formulaires, aux fiches et au choix d’abonnement. Pas d’étoiles décoratives, de collages de cartes inclinées ou d’animations de flottement.
 
-## Illustrations
+## Photographies et illustrations
 
-Trois scènes originales à la gouache numérique, grain de papier, formes souples et palette coordonnée. La grossesse est visible, avec des postures naturelles et une place pour le quotidien. Les images sont décoratives ; les consignes alimentaires restent écrites.
+Les pages utilisent les photographies culinaires locales déjà documentées dans [les crédits](../CREDITS.md). Elles illustrent des idées de plats ; l’application ne prétend pas qu’elles montrent les recettes testées ou cuisinées par son équipe. Les ingrédients écrits et les précautions font référence.
 
-| Fichier | Placement | Format |
-| --- | --- | --- |
-| [pregnancy-hero.webp](pregnancy-hero.webp) | Accueil : femme enceinte à table | 1000 × 1000 |
-| [pregnancy-foods.webp](pregnancy-foods.webp) | Catalogue et guide : panier de fruits et légumes | 700 × 700 |
-| [pregnancy-notebook.webp](pregnancy-notebook.webp) | Menus, carnet et états vides | 700 × 700 |
-| [mark.svg](mark.svg) | Logo et favicon | SVG |
-| [icon-192.png](icon-192.png), [icon-512.png](icon-512.png) | Icône d’application | PNG |
+Le [symbole vectoriel](mark.svg), ses variantes d’installation et les petits SVG alimentaires sont conservés. Les trois scènes de grossesse générées précédemment ne sont plus utilisées par l’interface ni précachées. Leurs fichiers et [leur provenance](PROMPTS.md) restent dans le dépôt comme archives de la version précédente.
 
-Les scènes ont été créées avec l’outil intégré **imagegen**. Les [prompts complets](PROMPTS.md) sont conservés pour prolonger la direction artistique. Compression WebP après génération, fichiers locaux et précachés pour le mode hors connexion.
+## Pages
 
-Les petites illustrations alimentaires restent des SVG natifs dans `js/icons.js`. Le catalogue étend ce vocabulaire avec notamment ananas, patate douce, poire, agrumes, cerise, kiwi, aubergine, poivron, courge et asperges. Certaines icônes représentent une famille d’aliments.
+- **Accueil :** recherche immédiatement disponible, liens vers les aliments, une photographie avec une recette du catalogue, puis quelques idées de repas.
+- **Catalogue :** titre, portée du guide, accès aux sources, recherche et filtres. Les explications individuelles sont conservées.
+- **Recettes :** recherche par ingrédient, collections et photos sans superposition. Une recette par ligne sur les petits écrans pour garder les titres lisibles.
+- **Plus :** un exemple de menu, les fonctions comprises, les deux prix et les questions pratiques. Les autres pages proposent un accès discret à Plus.
+- **Atelier :** préférences, repas, courses, enregistrement. Les intitulés suivent l’ordre des actions.
 
-## Mise en page
-
-Sur ordinateur, la scène principale accompagne le texte sur deux colonnes. Sur téléphone, le texte précède une illustration pleine largeur. Le catalogue affiche 48 aliments à la fois avec un bouton explicite pour continuer. Les fiches conservent une lecture verticale, des sources cliquables et des commandes accessibles au clavier.
+Les règles visuelles communes se trouvent dans `design.css`, chargé après les styles fonctionnels de `styles.css`. Les deux fichiers sont locaux, copiés par la compilation et précachés pour le mode hors connexion.

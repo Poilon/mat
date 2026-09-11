@@ -7,7 +7,7 @@ async function routeOFF(page, handler) { await page.route('**/api/products?**', 
 test('Home, local search, risk details and favorites persist across reloads', async ({ page }) => {
   const errors = []; page.on('pageerror', err => errors.push(err.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'La grossesse a bon goût.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Un doute sur un aliment ?' })).toBeVisible();
   await page.locator('#home-search-input').fill('mozza');
   await page.locator('#home-search').getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(page.locator('.food-card')).toHaveCount(1);
@@ -160,7 +160,7 @@ test('Profile preferences are local and vegetarian recipes exclude fish', async 
   await page.locator('#profile-vegetarian').check();
   await page.locator('#profile-form button[type="submit"]').click();
   await page.goto('/#accueil');
-  await expect(page.locator('.page-heading')).toContainText('Bonjour Camille');
+  await expect(page.locator('.home-dateline')).toContainText('Bonjour Camille');
   await page.goto('/#recettes');
   await expect(page.locator('[data-action="recipe"][data-id="lemon-salmon"]')).toHaveCount(0);
   await page.goto('/#confidentialite');
@@ -221,14 +221,14 @@ test('Offline app shell survives a reload with local recipes', async ({ browser 
   await page.waitForFunction(() => navigator.serviceWorker.controller);
   await context.setOffline(true);
   await page.reload();
-  await expect(page.locator('.hero')).toBeVisible();
-  expect(await page.locator('.pregnancy-hero').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.locator('.home-editorial')).toBeVisible();
+  expect(await page.locator('.home-food-photo').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   await page.goto('/#aliments?q=ananas');
   await page.locator('.food-card-open').click();
   await expect(page.locator('.food-explanation')).toContainText('ananas');
   await expect(page.locator('.sources-inline .source-link').first()).toHaveAttribute('href', /^https:\/\//);
   await page.keyboard.press('Escape');
-  expect(await page.locator('.illustrated-intro img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.locator('.guide-intro')).toContainText('360 fiches');
   await page.locator('a[href="#recettes"]').first().click();
   await expect(page.locator('.recipe-card')).toHaveCount(12);
   await expect(page.locator('#recipe-count')).toContainText('100 recettes');

@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Miamama — La grossesse a bon goût.",
+  "name": "Miamama — Alimentation & grossesse",
   "short_name": "Miamama",
-  "description": "Votre compagnon alimentaire pendant la grossesse.",
+  "description": "Aliments, recettes et menus pendant la grossesse.",
   "lang": "fr",
   "start_url": "./#accueil",
   "scope": "./",

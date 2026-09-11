@@ -1,4 +1,4 @@
-# Miamama — La grossesse a bon goût.
+# Miamama — Alimentation & grossesse
 
 Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 100 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 
@@ -8,7 +8,7 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 
 ## Fonctionnalités
 
-- Identité centrée sur la grossesse : symbole de maternité, palette sauge/crème/terre cuite, trois illustrations originales et icônes alimentaires. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
+- Présentation sobre : recherche dès l’accueil, photographies de plats, textes directs et mise en page plus lisible. Le nom Miamama reste provisoire. Les scènes de grossesse générées de la version précédente sont archivées et retirées de l’interface. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
 - 60 nouvelles fiches d’épices, mélanges, aromates et condiments, avec une rubrique dédiée et des distinctions entre usage culinaire, infusions et extraits.
 - 360 fiches avec explication propre à chaque aliment, mécanisme du risque, conditions de consommation, préparation et liens vers les sources. Filtres fruits/légumes/herbes, recherche tolérante aux accents et navigation par lots de 48.
 
@@ -99,7 +99,8 @@ Pour maintenir le guide, modifier `js/catalogue.js` (explications individuelles 
 ## Organisation
 
 ```text
-index.html, styles.css  Interface native
+index.html, styles.css  Structure et styles fonctionnels de l’interface
+design.css             Direction visuelle commune, typographie et mise en page
 js/data.js             Assemblage du guide, identifiants et recettes initiales
 js/catalogue.js        300 explications individuelles et 230 aliments ajoutés
 js/evidence.js         Sources, mécanismes, conditions et date de consultation
@@ -130,6 +131,6 @@ Changer le nom du cache dans `sw.js` lorsque les fichiers précachés évoluent.
 
 Les données OFF sont sous [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/), les contenus individuels sous Database Contents License et les images produits sous CC BY-SA. Chaque fiche produit renvoie à sa source. Cette base est distincte du guide éditorial Miamama.
 
-Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miamama. Les trois scènes de grossesse ont été générées avec l’outil intégré imagegen ; leurs prompts et usages sont documentés dans `assets/brand/`. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
+Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miamama. Les trois anciennes scènes de grossesse ont été générées avec imagegen. Elles sont archivées dans `assets/brand/`, avec leur provenance, et ne sont plus affichées ni précachées. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
 
 Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.

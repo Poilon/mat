@@ -6,7 +6,7 @@ const { build } = require('esbuild');
   const destination = path.resolve('dist');
   fs.rmSync(destination, { recursive: true, force: true });
   fs.mkdirSync(destination, { recursive: true });
-  for (const file of ['index.html', 'styles.css', 'manifest.webmanifest', 'sw.js', '.nojekyll']) fs.copyFileSync(file, path.join(destination, file));
+  for (const file of ['index.html', 'styles.css', 'design.css', 'manifest.webmanifest', 'sw.js', '.nojekyll']) fs.copyFileSync(file, path.join(destination, file));
   for (const folder of ['assets', 'js']) fs.cpSync(folder, path.join(destination, folder), { recursive: true });
   const appURL = process.env.PUBLIC_APP_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : '');
   const mirror = process.env.STATIC_MIRROR === '1';
