@@ -619,9 +619,12 @@
   function openDialog(content, context) {
     stopCamera();
     const dialog = $('#detail-dialog');
+    // Keep the live region in the modal's top layer, including when its contents refresh.
+    const notifications = $('#toasts');
     if (!dialog.open) lastDialogTrigger = document.activeElement;
     dialogContext = context;
     dialog.innerHTML = `<button class="dialog-close" data-action="close-dialog" aria-label="Fermer la fiche" autofocus>${icon('close', 19)}</button>${content}`;
+    dialog.append(notifications);
     if (!dialog.open) dialog.showModal();
     dialog.scrollTop = 0;
     document.body.style.overflow = 'hidden';
@@ -980,6 +983,7 @@
   $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${migrationNote()}${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
   const dialog = $('#detail-dialog');
   dialog.addEventListener('close', () => {
+    document.body.append($('#toasts'));
     stopCamera(); dialogContext = null; document.body.style.overflow = '';
     if (lastDialogTrigger?.isConnected) lastDialogTrigger.focus({ preventScroll: true });
     if (route.page === 'favoris') { const y = window.scrollY; $('#main').innerHTML = `<div class="page-content">${favoritesPage()}</div>${footer()}`; window.scrollTo({ top: y, behavior: 'instant' }); }

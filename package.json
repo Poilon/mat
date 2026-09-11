@@ -1,6 +1,6 @@
 {
   "name": "poum",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "private": true,
   "description": "Poum : alimentation pendant la grossesse, recettes et carnet synchronisé.",
   "scripts": {

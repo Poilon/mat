@@ -57,6 +57,39 @@ test('Portions update ingredient quantities and add to shopping without losing t
   expect((await download).suggestedFilename()).toBe('poum-mes-courses.txt');
 });
 
+for (const width of [390, 1440]) test(`Shopping confirmation stays above a scrolled recipe modal at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 844 });
+  await page.goto('/#recettes');
+  await page.locator('[data-action="recipe"][data-id="sunny-bowl"]').click();
+  const add = page.locator('[data-action="recipe-shopping"]');
+  await add.click();
+  const toast = page.locator('#toasts .toast').last();
+  await expect(toast).toContainText('6 ingrédients ajoutés');
+  await expect(add).toBeFocused();
+  const assertOnTop = async () => {
+    expect(await toast.evaluate(el => {
+      const box = el.getBoundingClientRect();
+      el.style.pointerEvents = 'auto';
+      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+      el.style.pointerEvents = '';
+      return box.top >= 0 && box.bottom <= innerHeight && box.left >= 0 && box.right <= innerWidth && el.contains(hit);
+    })).toBe(true);
+  };
+  await assertOnTop();
+  await page.locator('dialog').evaluate(el => { el.scrollTop = 0; });
+  await assertOnTop();
+  // Rebuilding the recipe for a new portion count must preserve the live notification.
+  await page.locator('[data-action="servings"][data-delta="1"]').click();
+  await expect(toast).toContainText('6 ingrédients ajoutés');
+  await assertOnTop();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('body > #toasts .toast')).toContainText('6 ingrédients ajoutés');
+  await page.locator('[data-action="recipe"][data-id="sunny-bowl"]').click();
+  await assertOnTop();
+  await expect(toast).toHaveCount(0, { timeout: 6000 });
+  await expect(page.locator('dialog')).toBeVisible();
+});
+
 test('Meal planner saves a recipe, generates shopping and removes a meal', async ({ page }) => {
   await page.goto('/#menus');
   await page.locator('[data-action="pick-recipe"]').first().click();
