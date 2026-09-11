@@ -8,7 +8,7 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 
 ## Fonctionnalités
 
-- Présentation sobre : recherche dès l’accueil, photographies de plats, textes directs et mise en page plus lisible. Le nom Miamama reste provisoire. Les scènes de grossesse générées de la version précédente sont archivées et retirées de l’interface. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
+- Identité prune, crème et abricot : recherche dès l’accueil, deux illustrations éditoriales autour de la grossesse et de la cuisine, photographies de plats et appels à Plus plus compacts. Le nom Miamama reste provisoire. Les scènes de grossesse générées de la version précédente sont archivées et retirées de l’interface. [Charte de marque et fichiers](assets/brand/BRAND.md), [prompts des illustrations](assets/brand/PROMPTS.md).
 - 60 nouvelles fiches d’épices, mélanges, aromates et condiments, avec une rubrique dédiée et des distinctions entre usage culinaire, infusions et extraits.
 - 360 fiches avec explication propre à chaque aliment, mécanisme du risque, conditions de consommation, préparation et liens vers les sources. Filtres fruits/légumes/herbes, recherche tolérante aux accents et navigation par lots de 48.
 
