@@ -6,6 +6,7 @@ const { settings } = require('../server/billing.cjs');
 const P = require('../js/plus.js');
 const D = require('../js/data.js');
 const Planner = require('../server/planner.cjs');
+const { recipeSteps } = require('../server/recipe-access.cjs');
 function validateRequest(body, now = Date.now()) {
   if (!['compose', 'swap'].includes(body?.action)) throw new HttpError(400, 'Cette opération est inconnue.');
   let options;
@@ -31,7 +32,7 @@ async function generateWeek(input, { config, user, repo }) {
   if (config.configured && !(await repo.access(user.id, config.live)).active && !await repo.claimTrial(user.id, input.options.start)) {
     throw new HttpError(402, 'Votre semaine offerte a déjà été choisie. Passez à Plus pour préparer une autre semaine.', { code: 'premium_required', trialWeek: await repo.trial(user.id) });
   }
-  return { entries, trialWeek: user ? await repo.trial(user.id) : null };
+  return { entries, recipes: recipeSteps(entries.map(e => e.recipeId)), trialWeek: user ? await repo.trial(user.id) : null };
 }
 module.exports = handler(async (req, res) => {
   if (req.method !== 'POST') throw new HttpError(405, 'Méthode non autorisée.');

@@ -154,6 +154,7 @@ test('Deleting an account needs confirmation and retains the separate guest note
   await page.locator('#delete-password').fill('correct-password');await page.locator('#delete-account-form [type="submit"]').click();await expect(page.locator('dialog')).not.toBeVisible();
   expect(await page.evaluate(()=>MietteCloud.state.user)).toBe(null);expect(await page.evaluate(()=>localStorage.getItem('miette-account-account-a'))).toBe(null);
   expect(await page.evaluate(()=>localStorage.getItem('miette-workshop-v1:miette-account-account-a'))).toBe(null);
+  expect(await page.evaluate(()=>localStorage.getItem('miamama-recipes-v1:miette-account-account-a'))).toBe(null);
   await page.goto('/#profil');await expect(page.locator('#profile-name')).toHaveValue('Invitée');
 });
 

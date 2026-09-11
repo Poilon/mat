@@ -8,6 +8,12 @@ const { build } = require('esbuild');
   fs.mkdirSync(destination, { recursive: true });
   for (const file of ['index.html', 'styles.css', 'design.css', 'manifest.webmanifest', 'sw.js', '.nojekyll']) fs.copyFileSync(file, path.join(destination, file));
   for (const folder of ['assets', 'js']) fs.cpSync(folder, path.join(destination, folder), { recursive: true });
+  // The public deployment contains previews, never the premium preparation steps.
+  const D = require('../js/data.js');
+  const { publicRecipe, freeIDs } = require('../server/recipe-access.cjs');
+  const recipes = D.recipes.map(publicRecipe);
+  fs.writeFileSync(path.join(destination, 'js/data.js'), 'window.MietteData = ' + JSON.stringify({ ...D, recipes, freeRecipeCount: freeIDs.size }) + ';\n');
+  fs.writeFileSync(path.join(destination, 'js/recipes.js'), 'window.MietteRecipeBook = ' + JSON.stringify({ recipes, collections: D.recipeCollections }) + ';\n');
   const appURL = process.env.PUBLIC_APP_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : '');
   const mirror = process.env.STATIC_MIRROR === '1';
   if (mirror && !appURL.startsWith('https://')) throw new Error('PUBLIC_APP_URL HTTPS is required for the GitHub Pages mirror.');

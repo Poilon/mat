@@ -1,6 +1,6 @@
 # Direction visuelle et éditoriale
 
-Version 3.2.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
+Version 3.3.0, septembre 2026. Le nom affiché reste provisoirement **Miamama**, en attendant le choix d’un nouveau nom. Cette version reprend la présentation, sans changer les identifiants des carnets ou les contenus médicaux.
 
 ## Ton
 
@@ -36,7 +36,7 @@ Le [symbole vectoriel](mark.svg), ses variantes d’installation et les petits S
 - **Accueil :** recherche immédiatement disponible, liens vers les aliments, une photographie avec une recette du catalogue, puis quelques idées de repas.
 - **Catalogue :** titre, portée du guide, accès aux sources, recherche et filtres. Les explications individuelles sont conservées.
 - **Recettes :** recherche par ingrédient, collections et photos sans superposition. Une recette par ligne sur les petits écrans pour garder les titres lisibles.
-- **Plus :** un exemple de menu, les fonctions comprises, les deux prix et les questions pratiques. Les autres pages proposent un accès discret à Plus.
+- **Plus :** un exemple de menu, les fonctions comprises, les deux prix et les questions pratiques. L’accueil présente l’offre à côté de la recherche. Les recettes distinguent les 20 gratuites et les 80 Plus. Les autres pages proposent un accès direct à l’offre, et le résultat de l’atelier montre les nombres effectivement obtenus.
 - **Atelier :** préférences, repas, courses, enregistrement. Les intitulés suivent l’ordre des actions.
 
 Les règles visuelles communes se trouvent dans `design.css`, chargé après les styles fonctionnels de `styles.css`. Les deux fichiers sont locaux, copiés par la compilation et précachés pour le mode hors connexion.

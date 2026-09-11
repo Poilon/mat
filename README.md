@@ -4,7 +4,7 @@ Application en français sur l’alimentation pendant la grossesse : **360 fiche
 
 **Application : https://mat-sandy-six.vercel.app/** · [Code source](https://github.com/Poilon/mat)
 
-L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les recettes et le carnet local restent utilisables sans compte.
+L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichiers statiques et les fonctions serveur ; Neon PostgreSQL et Neon Auth assurent la sauvegarde et la connexion par e-mail et mot de passe. Les 20 recettes de découverte et le carnet local restent utilisables sans compte. Les étapes des 80 recettes Plus sont délivrées par le serveur après vérification des droits (ou pendant l’accès offert de lancement).
 
 ## Fonctionnalités
 
@@ -14,15 +14,15 @@ L’interface reste en HTML, CSS et JavaScript natifs. Vercel héberge les fichi
 
 - Recherche par aliment, nom de produit, marque ou code-barres. L’accueil passe automatiquement à Open Food Facts pour une recherche sans correspondance dans le guide.
 - Codes EAN/UPC vérifiés avant recherche ; caméra native ou lecteur ZXing pour les navigateurs sans `BarcodeDetector` ; lecture d’une photo de code-barres entièrement sur l’appareil.
-- 100 recettes originales et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
-- **Miamama Plus** : page d’offre `#plus`, atelier `#atelier`, première semaine complète offerte avec un compte puis 4,90 €/mois ou pass 9 mois à 29,90 €. Composition de 7 dîners ou 14 repas pour deux personnes selon le temps, les envies, le choix végétarien, six exclusions culinaires et douze ingrédients du placard. Épinglage, remplacement individuel, courses par rayon et carnet HTML autonome à partager ou imprimer. Paiement Stripe, droits vérifiés côté serveur, portail client et résiliation. **L’ouverture effective dépend des variables Stripe ; l’atelier reste offert tant que la configuration est incomplète.** [État et configuration Stripe](STRIPE.md), [modèle économique](BUSINESS_MODEL.md).
+- 100 recettes originales (20 complètes gratuites, 80 dans Plus) et 9 collections, recherche par ingrédients, filtres, portions, favoris, menus de la semaine et courses calculées à partir des recettes.
+- **Miamama Plus** : 80 recettes complètes supplémentaires, page d’offre `#plus`, atelier `#atelier`, première semaine complète offerte avec un compte puis 4,90 €/mois ou pass 9 mois à 29,90 €. Composition de 7 dîners ou 14 repas pour deux personnes selon le temps, les envies, le choix végétarien, six exclusions culinaires et douze ingrédients du placard. Épinglage, remplacement individuel, courses par rayon et carnet HTML autonome à partager ou imprimer. Paiement Stripe, droits vérifiés côté serveur, portail client et résiliation. **L’ouverture effective dépend des variables Stripe ; l’atelier reste offert tant que la configuration est incomplète.** [État et configuration Stripe](STRIPE.md), [modèle économique](BUSINESS_MODEL.md).
 - L’atelier ajoute les créneaux libres et peut actualiser ses propres repas ; les changements faits ailleurs et les menus manuels sont préservés. Les courses identiques sont regroupées avec leurs mentions de préparation ; compléter la liste garde les quantités déjà supérieures et ne double pas les mêmes besoins.
 - Brouillon de l’atelier conservé localement, séparément pour chaque compte et le carnet invité. Seuls les menus et courses effectivement ajoutés au carnet se synchronisent. L’effacement du carnet et la suppression du compte effacent aussi son brouillon sur cet appareil. Les choix culinaires sont envoyés au serveur pour composer une semaine, sans être transmis à Stripe. Une nouvelle composition nécessite internet. Les goûts et ingrédients choisis ne sont pas des filtres d’allergies ni une prescription nutritionnelle.
 - Compte facultatif, connexion, récupération du mot de passe, déconnexion et suppression du compte avec confirmation du mot de passe.
 - Carnet sauvegardé automatiquement, copie locale hors connexion, synchronisation au retour du réseau. Les modifications indépendantes sont fusionnées ; un conflit sur le même élément demande un choix explicite.
 - Carnets séparés par compte et carnet invité distinct. L’ajout du carnet invité lors de la connexion est facultatif.
 - Export/import JSON avec confirmation, export texte des courses, effacement du carnet.
-- Application web installable depuis les navigateurs compatibles et instructions iPhone/Android/ordinateur. Les recettes, leurs photos et le guide sont mis en cache après la première visite.
+- Application web installable depuis les navigateurs compatibles et instructions iPhone/Android/ordinateur. Les 20 recettes gratuites, les photos et le guide sont précachés. Les préparations Plus obtenues via le serveur sont conservées séparément par compte sur l’appareil, y compris celles de la semaine d’essai.
 
 ## Ancienne adresse et transfert
 
@@ -105,7 +105,10 @@ js/data.js             Assemblage du guide, identifiants et recettes initiales
 js/catalogue.js        300 explications individuelles et 230 aliments ajoutés
 js/evidence.js         Sources, mécanismes, conditions et date de consultation
 js/seasonings.js       60 épices, aromates, mélanges et condiments
-js/recipes.js          90 recettes supplémentaires et collections
+js/recipes.js          Source des recettes (préparations Plus retirées au build)
+js/recipe-access.js    Chargement des préparations autorisées, cache par compte
+api/recipes.js         Accès serveur aux préparations Plus
+server/recipe-access.cjs  Sélection gratuite et contrôle des droits
 js/rules.js            Repérage partiel des précautions et contrôle EAN/UPC
 js/api.js              Normalisation et cache de la recherche
 js/app.js              Pages, fiches, compte, menus, courses, transfert et installation
@@ -134,3 +137,5 @@ Les données OFF sont sous [Open Database License](https://opendatacommons.org/l
 Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne remplacent pas les ingrédients écrits des recettes. Illustrations SVG créées pour Miamama. Les trois anciennes scènes de grossesse ont été générées avec imagegen. Elles sont archivées dans `assets/brand/`, avec leur provenance, et ne sont plus affichées ni précachées. DM Sans et Lora sont distribuées sous SIL Open Font License ; les licences sont incluses dans `assets/fonts/`.
 
 Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.
+
+Le build remplace `dist/js/data.js` et `dist/js/recipes.js` par un catalogue public contenant toutes les précautions mais seulement les 20 préparations gratuites. Ne pas publier directement le dossier source comme site. Le dépôt et ses anciennes versions étant publics, cette séparation protège le parcours de l’app et ne rend pas rétroactivement confidentielles les recettes déjà publiées.

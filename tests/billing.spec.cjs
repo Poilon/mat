@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const { empty } = require('../js/notebook.js');
 const { validateRequest, generateWeek } = require('../api/workshop.js');
+const { readRecipe } = require('../server/recipe-access.cjs');
 const user = { id: 'buyer-a', name: 'Camille', email: 'camille@example.test' };
 async function account(page, { loggedIn = true, paid = false, trialWeek = null } = {}) {
   const state = { user: loggedIn ? user : null, paid, trialWeek, purchases: [], actions: [], confirmPaid: false, cancel: false, notebook: empty(), revision: 0 };
@@ -16,6 +17,10 @@ async function account(page, { loggedIn = true, paid = false, trialWeek = null }
     if (['/api/auth/sign-in/email', '/api/auth/sign-up/email'].includes(path)) { state.user = user; return route.fulfill({ json: { user } }); }
     if (path === '/api/auth/sign-out') { state.user = null; return route.fulfill({ json: { success: true } }); }
     if (path === '/api/notebook') { if (req.method() === 'PUT') { state.notebook = body.notebook; state.revision++; } return route.fulfill({ json: { notebook: state.notebook, revision: state.revision } }); }
+    if (path === '/api/recipes') {
+      try { return route.fulfill({ json: await readRecipe(new URL(req.url()).searchParams.get('id'), { config: { configured: true, live: false }, user: state.user, repo }) }); }
+      catch (e) { return route.fulfill({ status: e.status || 500, json: { error: e.message, ...e.details } }); }
+    }
     if (path === '/api/billing') {
       if (req.method() === 'GET') return route.fulfill({ json: status() });
       if (!state.user) return route.fulfill({ status: 401, json: { error: 'Connectez-vous.' } });
@@ -113,4 +118,53 @@ test('Checkout choices and subscription management stay accessible on mobile', a
   async function check() { await page.evaluate(() => document.fonts.ready); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); const audit = await new AxeBuilder({ page }).analyze(); expect(audit.violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => v.id)).toEqual([]); }
   await page.goto('/#plus'); await ready(page); await check();
   state.paid = true; await page.evaluate(() => MietteBilling.refresh()); await expect(page.locator('.member-panel')).toBeVisible(); await check();
+});
+
+test('Recipe paywall keeps precautions public, checks the server and isolates downloaded preparations by account', async ({ page, context }) => {
+  const state = await account(page, { loggedIn: true });
+  const id = 'burger-poulet-croustillant';
+  const target = require('../js/data.js').recipes.find(r => r.id === id);
+  await page.goto('/#recettes?q=burger%20poulet'); await ready(page);
+  expect(await page.evaluate(id => window.MietteData.recipes.find(r => r.id === id).steps, id)).toEqual([]);
+  await page.locator('.recipe-card-open').click();
+  await expect(page.locator('.recipe-paywall')).toContainText('Cette recette fait partie de Plus');
+  await expect(page.locator('.advice-box')).toContainText(target.safety);
+  await expect(page.locator('.sources-inline a').first()).toBeVisible();
+  await expect(page.locator('.steps-list')).toHaveCount(0);
+  await page.evaluate(() => { window.MietteBilling.state.access.active = true; });
+  await page.locator('.recipe-paywall [data-action="recipe"]').click();
+  await expect(page.locator('.recipe-paywall')).toContainText('Cette recette fait partie de Plus');
+  state.paid = true;
+  await page.evaluate(() => window.MietteBilling.refresh());
+  await page.locator('.recipe-paywall [data-action="recipe"]').click();
+  await expect(page.locator('.steps-list')).toContainText(target.steps[0]);
+  await page.keyboard.press('Escape');
+  await context.setOffline(true);
+  await page.locator('.recipe-card-open').click();
+  await expect(page.locator('.steps-list')).toContainText(target.steps[0]);
+  await context.setOffline(false); await page.keyboard.press('Escape');
+  await page.goto('/#profil'); await page.locator('[data-action="sign-out"]').click();
+  await expect.poll(() => page.evaluate(() => window.MietteCloud.state.user)).toBe(null);
+  expect(await page.evaluate(id => window.MietteData.recipes.find(r => r.id === id).steps, id)).toEqual([]);
+  await page.goto('/#recettes?q=burger%20poulet'); await page.locator('.recipe-card-open').click();
+  await expect(page.locator('.recipe-paywall')).toBeVisible();
+  await expect(page.locator('.steps-list')).toHaveCount(0);
+});
+
+test('The free recipe selection is reachable and the early Plus offer never starts a purchase by itself', async ({ page }) => {
+  const state = await account(page, { loggedIn: false });
+  await page.goto('/'); await ready(page);
+  await expect(page.locator('.premium-nudge-home')).toBeInViewport();
+  await page.locator('.premium-nudge-home [data-action="plus-offer"]').click();
+  await expect(page.locator('.plus-benefits')).toContainText('80 recettes complètes');
+  expect(state.purchases).toEqual([]);
+  await page.keyboard.press('Escape');
+  await page.goto('/#recettes');
+  await page.locator('[data-access="free"]').click();
+  await expect(page.locator('#recipe-count')).toContainText('20 recettes');
+  await page.locator('[data-action="more-recipes"]').click();
+  await expect(page.locator('.recipe-card')).toHaveCount(20);
+  await expect(page.locator('.recipe-access-tag.is-plus')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('[data-access="free"]')).toHaveAttribute('aria-pressed', 'true');
 });

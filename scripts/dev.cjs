@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.webmanifest': 'application/manifest+json' };
 const root = path.resolve('dist');
-const routes = Object.fromEntries(['config', 'auth', 'notebook', 'products', 'account', 'billing', 'stripe-webhook', 'workshop'].map(name => [name, require('../api/' + name + '.js')]));
+const routes = Object.fromEntries(['config', 'auth', 'notebook', 'products', 'account', 'billing', 'stripe-webhook', 'workshop', 'recipes'].map(name => [name, require('../api/' + name + '.js')]));
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname.startsWith('/api/')) {
