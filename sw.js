@@ -1,10 +1,10 @@
 /* Offline app shell. External services are deliberately excluded from this cache. */
 'use strict';
-const CACHE = 'miette-shell-v3.5.1';
+const CACHE = 'miette-shell-v3.6.0';
 const ASSETS = [
-  './', 'index.html', 'styles.css?v=9', 'design.css?v=5', 'manifest.webmanifest', 'js/billing.js?v=2',
-  'js/runtime.js?v=6', 'js/notebook.js?v=4', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/recipes.js?v=3', 'js/evidence.js?v=4', 'js/catalogue.js?v=4', 'js/seasonings.js?v=4', 'js/data.js?v=5', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=4', 'js/workshop.js?v=6', 'js/recipe-access.js?v=1', 'js/app.js?v=15',
-  'assets/brand/mark.svg', 'assets/brand/table-maternite-v4.png', 'assets/brand/carnet-cuisine-v4.png', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
+  './', 'index.html', 'styles.css?v=9', 'design.css?v=6', 'manifest.webmanifest', 'js/billing.js?v=2',
+  'js/runtime.js?v=6', 'js/notebook.js?v=4', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/evidence.js?v=4', 'js/data.js?v=5', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=4', 'js/workshop.js?v=6', 'js/recipe-access.js?v=1', 'js/seo-routes.js?v=1', 'js/app.js?v=16', 'assets/seo.css?v=1',
+  'assets/brand/mark.svg', 'assets/brand/table-maternite-v4-320.webp', 'assets/brand/table-maternite-v4-640.webp', 'assets/brand/carnet-cuisine-v4-320.webp', 'assets/brand/carnet-cuisine-v4-640.webp', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
   'assets/icon.svg', 'assets/icon-192.png', 'assets/icon-512.png',
   'assets/hero.jpg', 'assets/bowl.jpg', 'assets/salmon.jpg', 'assets/pasta.jpg',
   'assets/porridge.jpg', 'assets/vegetables.jpg', 'assets/soup.jpg',
@@ -25,11 +25,11 @@ const ASSETS = [
   'assets/recipes/sandwich.jpg',
   'assets/recipes/tacos.jpg',
   'assets/recipes/waffles.jpg',
-  'assets/fonts/dm-sans.css', 'assets/fonts/lora.css',
-  'assets/fonts/dm-sans-0.ttf', 'assets/fonts/dm-sans-1.ttf',
-  'assets/fonts/dm-sans-2.ttf', 'assets/fonts/dm-sans-3.ttf',
-  'assets/fonts/lora-0.ttf', 'assets/fonts/lora-1.ttf',
-  'assets/fonts/lora-2.ttf', 'assets/fonts/lora-3.ttf'
+  'assets/fonts/dm-sans.css?v=2', 'assets/fonts/lora.css?v=2',
+  'assets/fonts/dm-sans-0.woff2', 'assets/fonts/dm-sans-1.woff2',
+  'assets/fonts/dm-sans-2.woff2', 'assets/fonts/dm-sans-3.woff2',
+  'assets/fonts/lora-0.woff2', 'assets/fonts/lora-1.woff2',
+  'assets/fonts/lora-2.woff2', 'assets/fonts/lora-3.woff2'
 ].map(path => new URL(path, self.registration.scope).href);
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));

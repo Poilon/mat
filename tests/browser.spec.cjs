@@ -202,7 +202,7 @@ test('Main pages have no serious or critical accessibility violations', async ({
   for (const path of ['accueil', 'aliments', 'recettes', 'menus', 'guide']) {
     await page.goto('/#' + path);
     // A hash navigation resolves before the app's hashchange handler. Sample the settled page.
-    await expect(page).toHaveTitle(titles[path] + ' — Poum');
+    await expect(page).toHaveTitle(path === 'accueil' ? 'Que peut-on manger enceinte ? Aliments et recettes | Poum' : titles[path] + ' — Poum');
     await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all(document.querySelector('.page-content').getAnimations().map(a => a.finished));

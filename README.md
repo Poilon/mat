@@ -139,3 +139,7 @@ Photos d’inspiration : Unsplash, voir `assets/CREDITS.md`. Les images ne rempl
 Lecture des codes-barres : [ZXing Browser](https://github.com/zxing-js/browser), licence MIT, et ZXing Library, licence Apache-2.0. Les licences des bibliothèques sont incluses dans `assets/licenses/` et les mentions présentes dans les sources sont conservées par la compilation.
 
 Le build remplace `dist/js/data.js` et `dist/js/recipes.js` par un catalogue public contenant toutes les précautions mais seulement les 20 préparations gratuites. Ne pas publier directement le dossier source comme site. Le dépôt et ses anciennes versions étant publics, cette séparation protège le parcours de l’app et ne rend pas rétroactivement confidentielles les recettes déjà publiées.
+
+## Référencement
+
+394 pages HTML publiques sont générées au build, dont les 360 fiches alimentaires et 20 recettes gratuites. Elles possèdent des URL françaises, des sources visibles, des liens entre fiches, un sitemap et des données structurées. Le guide reste lisible sans JavaScript. [Détails, tests et suivi Search Console](SEO.md).

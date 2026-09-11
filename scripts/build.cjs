@@ -20,5 +20,10 @@ const { build } = require('esbuild');
   const config = { apiBase: mirror ? new URL('/api/', appURL).href : '/api/', appURL, cloud: !mirror };
   fs.writeFileSync(path.join(destination, 'js/runtime.js'), 'window.MietteRuntime = ' + JSON.stringify(config) + ';\n');
   await build({ entryPoints: ['src/scanner.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', outfile: path.join(destination, 'js/scanner.js'), legalComments: 'eof' });
+  // The serialized data bundle already contains these catalogues. Keep their source files for development, but avoid downloading duplicate data at startup.
+  const htmlPath = path.join(destination, 'index.html');
+  fs.writeFileSync(htmlPath, fs.readFileSync(htmlPath, 'utf8').replace(/\s*<script src="js\/(?:recipes|catalogue|seasonings)\.js\?v=\d+" defer><\/script>/g, ''));
+  const seo = require('./seo.cjs').writeSEO(destination, { mirror });
+  console.log('SEO: ' + seo.pages + ' public HTML pages.');
   console.log('Poum built: static interface, local barcode reader and Vercel API.');
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

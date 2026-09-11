@@ -18,3 +18,7 @@ Fichier : [carnet-cuisine-v4.png](carnet-cuisine-v4.png)
 Use case: illustration-story. Asset type: small supporting editorial illustration for a French pregnancy food app's recipe and menu pages. A simple still life of an open plum-colored recipe notebook with blank ivory pages, one ripe apricot and a pear, a small pale pink ceramic bowl with cooked vegetables, and a single fork, on a warm ivory #fff9f2 background. No text whatsoever on the pages. Hand-painted gouache, cut-paper shapes, sparse confident ink contours, subtle tactile paper grain. Restricted deep plum #542b43, apricot #edaa84, dusty pink #e9c7cc, warm ivory #fff9f2, a little ochre. Sophisticated editorial art, warm and domestic, not cute cartoon icons. Compact balanced grouping in the center with generous blank margins, horizontal landscape composition. No people, no decorative stars, no hearts, no gradients, no glossy 3D, no typography, no logos.
 ```
 
+
+## Diffusion web (version 3.6)
+
+Des variantes WebP de 320 et 640 pixels de large servent les illustrations selon la taille de l’écran. Elles sont dérivées des PNG par redimensionnement proportionnel sans recadrage, puis encodage WebP sans perte avec Sharp. Les PNG originaux restent archivés ; la composition, les couleurs et le contenu des illustrations ne changent pas.

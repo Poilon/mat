@@ -1,0 +1,1 @@
+Les fichiers WOFF2 sont des conversions des TTF présents dans ce répertoire, effectuées avec fontTools et Brotli, sans réduction du jeu de caractères. Les fontes originales et leurs licences SIL Open Font License restent disponibles.
