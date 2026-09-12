@@ -255,7 +255,7 @@ test('Offline app shell survives a reload with local recipes', async ({ browser 
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.home-editorial')).toBeVisible();
-  expect(await page.locator('.home-food-photo').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  expect(await page.locator('.home-illustration img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   await page.goto('/#aliments?q=ananas');
   await page.locator('.food-card-open').click();
   await expect(page.locator('.food-explanation')).toContainText('ananas');

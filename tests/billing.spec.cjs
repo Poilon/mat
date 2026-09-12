@@ -48,7 +48,7 @@ async function signup(page) {
 }
 test('Poum carries its new identity and explains Plus in the main cooking journeys', async ({ page }) => {
   await account(page, { loggedIn: false });
-  for (const [route, place] of [['accueil', 'home'], ['recettes', 'recipes'], ['favoris', 'favorites'], ['courses', 'shopping']]) {
+  for (const [route, place] of [['recettes', 'recipes'], ['favoris', 'favorites'], ['courses', 'shopping']]) {
     await page.goto('/#' + route); await ready(page);
     await expect(page).toHaveTitle(/Poum/); await expect(page.locator('.wordmark')).toHaveText('poum');
     await expect(page.locator('.premium-nudge-' + place)).toContainText('Première semaine offerte');
@@ -156,8 +156,10 @@ test('Recipe paywall keeps precautions public, checks the server and isolates do
 test('The free recipe selection is reachable and the early Plus offer never starts a purchase by itself', async ({ page }) => {
   const state = await account(page, { loggedIn: false });
   await page.goto('/'); await ready(page);
-  await expect(page.locator('.premium-nudge-home')).toBeInViewport();
-  await page.locator('.premium-nudge-home [data-action="plus-offer"]').click();
+  await expect(page.locator('.home-simple')).toBeVisible();
+  await expect(page.locator('.premium-nudge-home')).toHaveCount(0);
+  await page.locator('.topbar-plus').click();
+  await page.locator('[data-action="plus-offer"]').first().click();
   await expect(page.locator('.plus-benefits')).toContainText('980 recettes complètes');
   expect(state.purchases).toEqual([]);
   await page.keyboard.press('Escape');

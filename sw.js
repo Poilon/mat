@@ -1,9 +1,9 @@
 /* Offline app shell. External services are deliberately excluded from this cache. */
 'use strict';
-const CACHE = 'miette-shell-v3.8.0';
+const CACHE = 'miette-shell-v3.9.0';
 const ASSETS = [
-  './', 'index.html', 'styles.css?v=9', 'design.css?v=9', 'manifest.webmanifest', 'js/billing.js?v=2',
-  'js/diet.js?v=1', 'js/cooking.js?v=1', 'js/runtime.js?v=6', 'js/notebook.js?v=5', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/evidence.js?v=4', 'js/data.js?v=6', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=5', 'js/workshop.js?v=7', 'js/recipe-access.js?v=2', 'js/seo-routes.js?v=1', 'js/app.js?v=19', 'js/tonight-rules.js?v=2', 'js/tonight-view.js?v=2', 'js/tonight.js?v=2', 'assets/tonight.css?v=1', 'assets/seo.css?v=1',
+  './', 'index.html', 'styles.css?v=9', 'design.css?v=10', 'manifest.webmanifest', 'js/billing.js?v=2',
+  'js/diet.js?v=1', 'js/cooking.js?v=1', 'js/runtime.js?v=6', 'js/notebook.js?v=5', 'js/cloud.js?v=7', 'js/scanner.js', 'js/icons.js?v=6', 'js/evidence.js?v=4', 'js/data.js?v=6', 'js/rules.js?v=3', 'js/api.js?v=7', 'js/plus.js?v=5', 'js/workshop.js?v=7', 'js/recipe-access.js?v=2', 'js/seo-routes.js?v=1', 'js/app.js?v=20', 'js/tonight-rules.js?v=2', 'js/tonight-view.js?v=3', 'js/tonight.js?v=3', 'assets/tonight.css?v=1', 'assets/seo.css?v=1',
   'assets/brand/mark.svg', 'assets/brand/table-maternite-v4-320.webp', 'assets/brand/table-maternite-v4-640.webp', 'assets/brand/carnet-cuisine-v4-320.webp', 'assets/brand/carnet-cuisine-v4-640.webp', 'assets/brand/icon-192.png', 'assets/brand/icon-512.png',
   'assets/icon.svg', 'assets/icon-192.png', 'assets/icon-512.png',
   'assets/hero.jpg', 'assets/bowl.jpg', 'assets/salmon.jpg', 'assets/pasta.jpg',

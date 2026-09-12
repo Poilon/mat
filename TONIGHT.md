@@ -1,4 +1,4 @@
-# Ce soir — Poum 3.8.0
+# Ce soir — Poum 3.9.0
 
 Le parcours `/#cesoir` propose jusqu’à trois recettes du catalogue selon les envies, la durée, le nombre de personnes, les ingrédients écartés et ceux du placard. Les durées proposées (30 min, 45 min, sans limite) correspondent au catalogue existant. Une envie influence le classement ; les exclusions et la durée restent des contraintes. Le texte libre cherche les mots indiqués dans les ingrédients : ce n’est pas un moteur de prise en charge des allergies. Aucun contenu culinaire ou médical n’est généré par une IA dans ce parcours.
 
@@ -15,7 +15,7 @@ Le parcours `/#cesoir` propose jusqu’à trois recettes du catalogue selon les 
 
 La page `/relais/` reçoit un jeton aléatoire de 256 bits dans le fragment de l’URL. Il ne figure donc pas dans la requête HTTP du document, ni dans son référent. Le lecteur le transmet dans le corps JSON des appels à l’API. Seule son empreinte SHA-256 est stockée en base.
 
-Le lien ouvre un seul dîner et permet de cocher ses ingrédients et ses étapes, ainsi que de changer son état de préparation. Il ne révèle ni propriétaire, ni profil, ni préférences, ni autres repas. Il expire au bout de 30 jours. Le propriétaire peut le désactiver ou le remplacer ; l’autorisation du lien est revérifiée dans chaque UPDATE, y compris si la désactivation arrive pendant une requête. Les champs autorisés sont explicitement validés. Le repas reste accessible à son propriétaire après révocation ou fin de l’abonnement.
+Le lien ouvre un seul dîner et permet de cocher ses ingrédients et ses étapes, sans devoir indiquer un état de préparation. Il ne révèle ni propriétaire, ni profil, ni préférences, ni autres repas. Il expire au bout de 30 jours. Le propriétaire peut le désactiver ou le remplacer ; l’autorisation du lien est revérifiée dans chaque UPDATE, y compris si la désactivation arrive pendant une requête. Les champs autorisés sont explicitement validés. Le repas reste accessible à son propriétaire après révocation ou fin de l’abonnement.
 
 Les pages visibles actualisent les données toutes les cinq secondes. Les modifications de deux ingrédients différents se combinent atomiquement ; sur un même ingrédient, la dernière modification enregistrée l’emporte. Les réponses plus anciennes ne remplacent pas une révision plus récente. Le suivi des étapes réutilise ce mécanisme. L’API est limitée en fréquence, ne permet pas les mutations interorigines et ne met aucune réponse en cache. La page de relais est exclue du sitemap, marquée noindex/nofollow, sans référent et sans inscription obligatoire. Elle ne télécharge pas le carnet de l’application.
 
@@ -31,6 +31,12 @@ Le miroir GitHub Pages dirige Ce soir vers Poum. Il ne publie aucune page de rel
 
 ## Validation
 
-Tests de filtres, quantités, premier dîner, idempotence, accès payant, ownership, portée des liens, expiration, rotation, suppression et révocation. Tests navigateur entre deux contextes pour les courses, les étapes, l’état du dîner et la révocation ; mobile 320/390 px, bureau, accessibilité, paywall et maintien de l’accès au dîner offert. Vérification sur PostgreSQL réel de deux choix gratuits concurrents et de deux mises à jour simultanées de courses, puis suppression des données de test.
+Tests de filtres, quantités, premier dîner, idempotence, accès payant, ownership, portée des liens, expiration, rotation, suppression et révocation. Tests navigateur entre deux contextes pour les courses, les étapes, la navigation recette/courses et la révocation ; mobile 320/390 px, bureau, accessibilité, paywall et maintien de l’accès au dîner offert. Vérification sur PostgreSQL réel de deux choix gratuits concurrents et de deux mises à jour simultanées de courses, puis suppression des données de test.
 
 Le catalogue contient désormais 1 000 recettes et déclinaisons. Les guides détaillés, ustensiles et conseils de conservation sont disponibles dans le relais. Les étapes historiques gardent leurs indices pour préserver les coches existantes. Voir [le catalogue et les exclusions](RECIPES.md).
+
+## Lecture simplifiée
+
+Le dîner ouvre directement la préparation. Deux boutons permettent de consulter « La recette » ou « Liste de courses » ; ce changement de vue est local et ne modifie pas le repas en base. Le partage est explicite : « Partager la recette et les courses ». Les cases d’ingrédients et d’étapes restent synchronisées. Les boutons de changement de statut sont retirés de l’application et du lien partagé ; les anciens statuts restent lisibles par le serveur pour compatibilité.
+
+L’accueil contient uniquement la recherche d’aliment, une illustration, deux raccourcis (dîner et recettes) et le lien vers les sources. Les cartes d’aliments, sélections de recettes et promotions répétées en sont retirées.
