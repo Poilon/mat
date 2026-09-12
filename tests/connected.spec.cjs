@@ -213,3 +213,25 @@ test('Unsaved allergy checkboxes survive background synchronization and save wit
  remote['account-a'].revision=3;await page.evaluate(()=>MietteCloud.sync());await page.mouse.up();
  await page.evaluate(()=>MietteCloud.sync());expect(remote['account-a'].notebook.diet.allergies).toEqual(['milk','eggs']);await expect(page.locator('#profile-feedback')).toContainText('synchronisées');await expect(page.locator('#profile-feedback a')).toHaveAttribute('href','#recettes');
 });
+
+test('Gluten is restored from the account on reload even when the local copy lost diet at the same revision',async({page})=>{
+ const notebook={...empty(),diet:{...empty().diet,allergies:['gluten'],consent:true,completed:true}};
+ const remote={'account-a':{notebook,revision:15}};await mockAccount(page,remote,user);
+ await page.addInitScript(({notebook})=>{
+   const local={...notebook};delete local.diet;
+   localStorage.setItem('miette-account-account-a',JSON.stringify(local));
+   localStorage.setItem('miette-sync-account-a',JSON.stringify({revision:15,base:notebook,dirty:false}));
+ },{notebook});
+ await page.goto('/#profil');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await expect(page.locator('#profile-allergy-gluten')).toBeChecked();
+ await page.reload();await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await expect(page.locator('#profile-allergy-gluten')).toBeChecked();
+ expect(remote['account-a'].revision).toBe(15);
+});
+
+test('Gluten saved to a connected account survives immediate reload before the delayed sync',async({page})=>{
+ const remote={'account-a':{notebook:empty(),revision:1}};await mockAccount(page,remote,user);await page.goto('/#profil');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await page.locator('#profile-allergy-gluten').check();await page.locator('#profile-consent').check();await page.locator('#profile-save').click();await page.reload();
+ await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await expect(page.locator('#profile-allergy-gluten')).toBeChecked();expect(remote['account-a'].notebook.diet.allergies).toEqual(['gluten']);
+});

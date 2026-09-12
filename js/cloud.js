@@ -89,6 +89,12 @@
           apply(merged.notebook, true);
         } else apply(remote.notebook || N.empty(), true);
         meta.revision = remote.revision; meta.base = remote.notebook || N.empty(); saveMeta();
+      } else if (!meta.dirty && remote.notebook && !N.same(local, remote.notebook)) {
+        // A matching revision does not guarantee an intact local copy (old tabs,
+        // cleared storage, or a previous app version may have dropped fields).
+        // Only restore clean copies; pending edits still follow the merge path.
+        apply(remote.notebook, true);
+        meta.base = remote.notebook; saveMeta();
       }
       if (meta.dirty || (!remote.notebook && N.hasContent(hooks.read()))) {
         const snapshot = structuredClone(hooks.read());
