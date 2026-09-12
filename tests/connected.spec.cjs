@@ -202,3 +202,14 @@ test('Allergies synchronize to a second device, remain isolated by account, and 
  const other=await context.newPage();await mockAccount(other,remote,{...user,id:'account-b',email:'b@example.com'});await other.goto('http://localhost:4176/#profil');await expect(other.locator('#profile-avoid')).toHaveValue('');await expect(other.locator('[name="diet-consent"]')).not.toBeChecked();
  }finally{await context.close();}
 });
+
+test('Unsaved allergy checkboxes survive background synchronization and save with visible confirmation',async({page})=>{
+ const remote={'account-a':{notebook:{...empty(),name:'Camille'},revision:1}};await mockAccount(page,remote,user);await page.goto('/#profil');await expect.poll(()=>page.evaluate(()=>MietteCloud.state.status)).toBe('synced');
+ await page.locator('[name="allergy"][value="milk"]').check();await page.locator('[name="allergy"][value="eggs"]').check();await page.locator('[name="diet-consent"]').check();
+ await page.locator('#profile-form [type="submit"]').focus();
+ remote['account-a']={notebook:{...empty(),name:'Camille',favorites:['recipe:sunny-bowl']},revision:2};await page.evaluate(()=>MietteCloud.sync());
+ await expect(page.locator('[name="allergy"][value="milk"]')).toBeChecked();await expect(page.locator('[name="allergy"][value="eggs"]')).toBeChecked();await expect(page.locator('[name="diet-consent"]')).toBeChecked();
+ await page.locator('#profile-save').scrollIntoViewIfNeeded();const button=await page.locator('#profile-save').boundingBox();await page.mouse.move(button.x+button.width/2,button.y+button.height/2);await page.mouse.down();
+ remote['account-a'].revision=3;await page.evaluate(()=>MietteCloud.sync());await page.mouse.up();
+ await page.evaluate(()=>MietteCloud.sync());expect(remote['account-a'].notebook.diet.allergies).toEqual(['milk','eggs']);await expect(page.locator('#profile-feedback')).toContainText('synchronisées');await expect(page.locator('#profile-feedback a')).toHaveAttribute('href','#recettes');
+});

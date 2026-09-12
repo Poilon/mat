@@ -35,6 +35,7 @@
   let installPrompt = null;
   let scannerControls = null;
   let scannerLoading = null;
+  let profileNotice = null;
   let authMode = 'login';
   let authBusy = false;
   let plusPlan = Plus.offer.defaultPlan;
@@ -433,8 +434,11 @@
     if (destination === 'plus') { plusPlan = Plus.offer.plans.some(p => p.id === route.params.get('formule')) ? route.params.get('formule') : plusPlan; go('plus'); await startCheckout(); }
     if (destination === 'atelier') {
       let intent; try { intent = JSON.parse(sessionStorage.getItem('miamama-workshop-intent') || 'null'); sessionStorage.removeItem('miamama-workshop-intent'); } catch {}
-      Workshop.resume(intent); go('atelier');
-      requestAnimationFrame(() => { if (intent && $('#workshop-form')) Workshop.submit($('#workshop-form')); });
+      Workshop.resume(intent);
+      const submitWeek=()=>{if(intent && route.page==='atelier' && $('#workshop-form'))Workshop.submit($('#workshop-form'));};
+      // Resume after the destination is rendered; an animation frame can precede hashchange.
+      if(location.hash===href('atelier')){go('atelier');submitWeek();}
+      else {window.addEventListener('hashchange',submitWeek,{once:true});go('atelier');}
     }
   }
   function plusOffer() {
@@ -583,10 +587,25 @@
   }
   function dietFields() {
     const d=window.PoumDiet.clean(store.diet);
-    return `<fieldset><legend>Mes allergies alimentaires</legend><p class="field-hint">Les ingrédients et allergènes déclarés ou possibles servent au filtrage. Poum ne garantit pas l’absence de traces ni de contamination croisée : vérifiez chaque produit et suivez votre prise en charge habituelle.</p><div class="preference-options">${window.PoumDiet.allergens.map(a=>`<label><input type="checkbox" name="allergy" value="${a.id}" ${d.allergies.includes(a.id)?'checked':''}>${escape(a.label)}</label>`).join('')}</div></fieldset><div class="field"><label for="profile-other-allergies">D’autres allergies ?</label><input class="text-input" id="profile-other-allergies" name="otherAllergies" maxlength="240" value="${escape(d.otherAllergies)}" placeholder="Kiwi, banane…"><p class="field-hint">Séparez les aliments par des virgules. Ce champ recherche leur nom dans les ingrédients ; il ne reconnaît pas tous leurs dérivés.</p></div><label class="check-label"><input type="checkbox" name="diet-consent" ${d.consent?'checked':''}>J’accepte que Poum enregistre mes allergies pour filtrer mes recettes et les synchronise avec mon compte.</label><p class="field-hint">Facultatif, modifiable à tout moment. Pour retirer votre accord, retirez les allergies ci-dessus et enregistrez.</p><div class="field"><label for="profile-avoid">Ce que je n’aime pas, ou qui ne passe pas en ce moment</label><input class="text-input" id="profile-avoid" name="avoid" maxlength="240" value="${escape(d.avoid)}" placeholder="Champignons, coriandre, oignon…"><p class="field-hint">Séparez les ingrédients par des virgules. Ce sont des goûts, distincts des allergies.</p></div>`;
+    return `<fieldset><legend>Mes allergies alimentaires</legend><p class="field-hint">Les ingrédients et allergènes déclarés ou possibles servent au filtrage. Poum ne garantit pas l’absence de traces ni de contamination croisée : vérifiez chaque produit et suivez votre prise en charge habituelle.</p><div class="preference-options">${window.PoumDiet.allergens.map(a=>`<label><input type="checkbox" id="profile-allergy-${a.id}" name="allergy" value="${a.id}" ${d.allergies.includes(a.id)?'checked':''}>${escape(a.label)}</label>`).join('')}</div></fieldset><div class="field"><label for="profile-other-allergies">D’autres allergies ?</label><input class="text-input" id="profile-other-allergies" name="otherAllergies" maxlength="240" value="${escape(d.otherAllergies)}" placeholder="Kiwi, banane…"><p class="field-hint">Séparez les aliments par des virgules. Ce champ recherche leur nom dans les ingrédients ; il ne reconnaît pas tous leurs dérivés.</p></div><label class="check-label"><input type="checkbox" id="profile-consent" aria-describedby="profile-consent-error" name="diet-consent" ${d.consent?'checked':''}>J’accepte que Poum enregistre mes allergies pour filtrer mes recettes et les synchronise avec mon compte.</label><p id="profile-consent-error" class="profile-error" hidden></p><p class="field-hint">Facultatif, modifiable à tout moment. Pour retirer votre accord, retirez les allergies ci-dessus et enregistrez.</p><div class="field"><label for="profile-avoid">Ce que je n’aime pas, ou qui ne passe pas en ce moment</label><input class="text-input" id="profile-avoid" name="avoid" maxlength="240" value="${escape(d.avoid)}" placeholder="Champignons, coriandre, oignon…"><p class="field-hint">Séparez les ingrédients par des virgules. Ce sont des goûts, distincts des allergies.</p></div>`;
+  }
+  function profileFeedback() {
+    if(!profileNotice || profileNotice.owner!==Cloud.storageKey)return '';
+    if(profileNotice.kind==='error')return `<p class="profile-error">${escape(profileNotice.message)}</p>`;
+    if(profileNotice.kind==='draft')return '<p>Modifications à enregistrer.</p>';
+    let message;
+    if(Cloud.state.user && Cloud.state.status==='synced')message='Vos préférences sont enregistrées et synchronisées avec votre compte.';
+    else if(Cloud.state.user && Cloud.state.status==='conflict')message='Vos choix sont conservés ici. Deux versions du carnet doivent être rapprochées dans votre compte ci-dessus.';
+    else if(Cloud.state.user && Cloud.state.status==='error')message='Vos choix sont conservés ici. La synchronisation a échoué : réessayez depuis votre compte ci-dessus.';
+    else if(Cloud.state.user)message=profileNotice.localSaved?'Préférences enregistrées sur cet appareil. Synchronisation avec votre compte en attente.':'Vos choix sont appliqués dans cet onglet. Sauvegarde en ligne en attente ; le navigateur ne peut pas les conserver.';
+    else message=profileNotice.localSaved?'Vos préférences sont enregistrées sur cet appareil.':'Vos choix sont appliqués dans cet onglet, mais votre navigateur ne peut pas les enregistrer. Gardez cet onglet ouvert.';
+    return `<p><strong>${escape(message)}</strong></p><p>Vos exclusions sont appliquées aux recettes et aux prochaines propositions de menus.</p><a class="btn-text" href="#recettes">Voir mes recettes ${icon('arrow',15)}</a>`;
+  }
+  function updateProfileFeedback() {
+    const target=$('#profile-feedback');if(target)target.innerHTML=profileFeedback();
   }
   function profilePage() {
-    return `${route.params.has('retour') || pendingCheckoutSession ? '<div class="checkout-account-note"><b>Se connecter pour continuer</b><p>Connectez-vous ou créez votre compte pour retrouver votre accès Plus. Aucun paiement n’est effectué sur ce formulaire.</p></div>' : ''}<div id="account-panel">${accountPanel()}</div>${heading('Mes préférences', 'Des repas qui tiennent compte de vos goûts et des ingrédients à écarter.')}<form id="profile-form" class="profile-panel"><h2 id="diet-title" tabindex="-1">À votre table</h2><p>Facultatif. Ces choix seront appliqués aux recettes proposées, aux menus et à Ce soir.</p><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Enregistré sur cet appareil et synchronisé si vous êtes connectée.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce choix est indépendant des exclusions alimentaires ci-dessous.</p></div>${dietFields()}<div class="form-actions"><button class="btn btn-primary" type="submit">${icon('check', 15)}${route.params.has('retour')?'Enregistrer et continuer':'Enregistrer'}</button>${route.params.has('retour')?'<button class="btn-text" type="button" data-action="diet-later">Plus tard</button>':''}<a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div></form>${Billing.state.canManage ? memberPanel() : premiumNudge('home')}${installationPanel()}`;
+    return `${route.params.has('retour') || pendingCheckoutSession ? '<div class="checkout-account-note"><b>Se connecter pour continuer</b><p>Connectez-vous ou créez votre compte pour retrouver votre accès Plus. Aucun paiement n’est effectué sur ce formulaire.</p></div>' : ''}<div id="account-panel">${accountPanel()}</div>${heading('Mes préférences', 'Des repas qui tiennent compte de vos goûts et des ingrédients à écarter.')}<form id="profile-form" class="profile-panel" data-owner="${escape(Cloud.storageKey)}"><h2 id="diet-title" tabindex="-1">À votre table</h2><p>Facultatif. Ces choix seront appliqués aux recettes proposées, aux menus et à Ce soir.</p><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Enregistré sur cet appareil et synchronisé si vous êtes connectée.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce choix est indépendant des exclusions alimentaires ci-dessous.</p></div>${dietFields()}<div class="form-actions"><button class="btn btn-primary" type="submit" id="profile-save">${icon('check', 15)}${route.params.has('retour')?'Enregistrer et continuer':'Enregistrer'}</button>${route.params.has('retour')?'<button class="btn-text" type="button" data-action="diet-later">Plus tard</button>':''}<a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div><div id="profile-feedback" class="profile-feedback" role="status" tabindex="-1">${profileFeedback()}</div></form>${Billing.state.canManage ? memberPanel() : premiumNudge('home')}${installationPanel()}`;
   }
   async function importNotebook(file) {
     try {
@@ -627,10 +646,15 @@
   function rerender(keepDialog = false) { const y = window.scrollY; renderRoute(keepDialog); window.scrollTo({ top: y, behavior: 'instant' }); }
   function replaceNotebook(notebook, { preserveEdits = false } = {}) {
     const active = document.activeElement;
-    const form = preserveEdits && active?.matches('input,textarea,select') && active.closest('#profile-form,#shopping-add,#home-search,#explore-search,#recipe-search,#workshop-form');
+    const profile=$('#profile-form');
+    const keepProfile=preserveEdits && profile?.dataset.dirty==='true' && profile.dataset.owner===Cloud.storageKey;
+    const form = !keepProfile && preserveEdits && active?.matches('input,textarea,select') && active.closest('#profile-form,#shopping-add,#home-search,#explore-search,#recipe-search,#workshop-form');
     const draft = form ? [...form.querySelectorAll('input[id]:not([type="file"]),select[id],textarea[id]')].map(input => ({ id: input.id, value: input.value, checked: input.checked })) : [];
     const focus = form ? { id: active.id, start: active.selectionStart, end: active.selectionEnd } : null;
-    productMap.clear(); store = readStore(notebook); rerender(preserveEdits);
+    productMap.clear(); store = readStore(notebook);
+    // Keep an edited profile mounted, including while a save click is in progress.
+    if(keepProfile){updateProfileFeedback();return;}
+    rerender(preserveEdits);
     for (const saved of draft) { const input = document.getElementById(saved.id); if (input) { input.value = saved.value; input.checked = saved.checked; } }
     if (focus) { const input = document.getElementById(focus.id); input?.focus({ preventScroll: true }); if (input && typeof focus.start === 'number') input.setSelectionRange(focus.start, focus.end); }
     if ($('#detail-dialog').open) document.body.style.overflow = 'hidden';
@@ -934,10 +958,19 @@
       const name = String(data.get('item') || '').trim(); if (!name) return;
       store.shopping.push({ id: uniqueId(), name: name.slice(0, 150), quantity: 0, unit: '', checked: false }); persist(); rerender(); $('#shopping-input')?.focus();
     } else if (form.id === 'profile-form') {
-      let diet; try { diet = window.PoumDiet.validate({allergies:data.getAll('allergy'),otherAllergies:String(data.get('otherAllergies')||''),avoid:String(data.get('avoid')||''),consent:data.has('diet-consent'),completed:true}); } catch(error) { toast(error.message,'info'); return; }
+      let diet; try { diet = window.PoumDiet.validate({allergies:data.getAll('allergy'),otherAllergies:String(data.get('otherAllergies')||''),avoid:String(data.get('avoid')||''),consent:data.has('diet-consent'),completed:true}); } catch(error) {
+        profileNotice={owner:Cloud.storageKey,kind:'error',message:error.message};updateProfileFeedback();
+        const consent=$('#profile-consent'),hint=$('#profile-consent-error');
+        if(consent&&!consent.checked){consent.setAttribute('aria-invalid','true');hint.hidden=false;hint.textContent='Cochez votre accord pour enregistrer les allergies sélectionnées.';consent.focus({preventScroll:true});consent.scrollIntoView({block:'center'});}
+        else $('#profile-feedback')?.focus();return;
+      }
+      form.dataset.dirty='false';
       store.diet = diet;
       store.name = String(data.get('name') || '').trim().slice(0, 30); store.vegetarian = data.get('vegetarian') === 'on';
-      persist(); rerender(); toast('Vos préférences sont enregistrées et appliquées aux prochains menus.', 'leaf'); resumeCommerce().catch(error=>toast(error.message,'info'));
+      profileNotice={owner:Cloud.storageKey,kind:'saved',localSaved:false};
+      profileNotice.localSaved=persist();rerender();
+      $('#profile-feedback')?.focus({preventScroll:true});$('#profile-feedback')?.scrollIntoView({block:'nearest'});
+      if(route.params.has('retour')||pendingCheckoutSession)resumeCommerce().catch(error=>toast(error.message,'info'));
     } else if (form.id === 'plan-recipe-form') assignRecipe(form.dataset.id, String(data.get('date')), String(data.get('meal')));
     else if (form.id === 'barcode-form') {
       const q = String(data.get('code') || '').replace(/[\s-]/g, '');
@@ -946,6 +979,9 @@
     }
   });
   document.addEventListener('input', event => {
+    const profile=event.target.closest('#profile-form');
+    if(profile){profile.dataset.dirty='true';profileNotice={owner:Cloud.storageKey,kind:'draft'};updateProfileFeedback();const consent=$('#profile-consent');if(consent?.checked){consent.removeAttribute('aria-invalid');$('#profile-consent-error').hidden=true;}}
+
     if (event.target.id === 'recipe-query') updateRecipeFilters({ q: event.target.value.trim() });
     if (event.target.id === 'picker-query') {
       const query = R.normalize(event.target.value);
@@ -1038,7 +1074,7 @@
   const returningPortal = returnParams.get('billing') === 'updated';
   if (returnParams.has('checkout') || returningPortal) history.replaceState(null, '', location.pathname + location.hash);
   renderRoute(); updateOnline();
-  window.addEventListener('miette:cloud', () => { Tonight.enter(); renderAccount(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
+  window.addEventListener('miette:cloud', () => { Tonight.enter(); renderAccount(); updateProfileFeedback(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
   window.addEventListener('miamama:billing', () => {
     Tonight.enter();
     document.querySelectorAll('[data-premium-place]').forEach(el => { el.outerHTML = premiumNudge(el.dataset.premiumPlace); });

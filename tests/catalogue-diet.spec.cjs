@@ -16,8 +16,8 @@ test('Cuisine filters combine with search, premium guides stay gated and free gu
 test('Profile exclusions persist and apply to browsing, menus, replacements and dinner ideas',async({page})=>{
  const repo=memoryTonight();await page.route('**/api/tonight',async r=>{try{const body=r.request().postDataJSON();await r.fulfill({json:await operation(body,{repo,owner:'diet-user',paid:true,diet:body.diet})});}catch(e){await r.fulfill({status:e.status||500,json:{error:e.message}});}});
  await page.goto('/#profil');await page.locator('[name="allergy"][value="milk"]').check();await page.locator('[name="allergy"][value="fish"]').check();await page.locator('#profile-avoid').fill('champignons, coriandre');
- await page.locator('#profile-form [type="submit"]').click();await expect(page.locator('#toasts')).toContainText('accord');
- await page.locator('[name="diet-consent"]').check();await page.locator('#profile-form [type="submit"]').click();await page.reload();await expect(page.locator('[name="allergy"][value="milk"]')).toBeChecked();
+ await page.locator('#profile-form [type="submit"]').click();await expect(page.locator('#profile-feedback')).toContainText('accord');await expect(page.locator('#profile-consent-error')).toBeVisible();await expect(page.locator('#profile-consent')).toBeFocused();
+ await page.locator('[name="diet-consent"]').check();await page.locator('#profile-form [type="submit"]').click();await expect(page.locator('#profile-feedback')).toContainText('enregistrées sur cet appareil');await page.reload();await expect(page.locator('[name="allergy"][value="milk"]')).toBeChecked();
  const exclusions=await page.evaluate(()=>JSON.parse(localStorage.getItem('miette-notebook-v1')).diet);
  await page.goto('/#recettes');const ids=await page.locator('.recipe-card-open').evaluateAll(nodes=>nodes.map(n=>n.dataset.id));expect(ids.length).toBeGreaterThan(0);for(const id of ids)expect(Diet.allows(D.recipes.find(r=>r.id===id),exclusions)).toBe(true);
  await page.goto('/#atelier');await page.locator('#workshop-start').fill('2026-09-14');await page.locator('#workshop-time').selectOption('120');await page.locator('#workshop-form [type="submit"]').click();await expect(page.locator('.workshop-recipe')).toHaveCount(7);
@@ -30,4 +30,12 @@ test('Profile exclusions persist and apply to browsing, menus, replacements and 
 test('Preferences remain readable and accessible on a small phone',async({page})=>{
  await page.setViewportSize({width:320,height:850});await page.goto('/#profil');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  const audit=await new AxeBuilder({page}).analyze();expect(audit.violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);
+});
+
+test('Unavailable browser storage shows a persistent explanation instead of claiming the allergies are saved',async({page})=>{
+ await page.goto('/#profil');
+ await page.evaluate(()=>{Storage.prototype.setItem=function(){throw new DOMException('Storage unavailable','QuotaExceededError');};});
+ await page.locator('#profile-allergy-milk').check();await page.locator('#profile-consent').check();await page.locator('#profile-save').click();
+ await expect(page.locator('#profile-feedback')).toContainText('votre navigateur ne peut pas les enregistrer');
+ await expect(page.locator('#profile-allergy-milk')).toBeChecked();
 });
