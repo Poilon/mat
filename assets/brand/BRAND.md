@@ -40,3 +40,7 @@ Le [symbole vectoriel](mark.svg) et ses variantes d’installation reprennent la
 - **Atelier :** préférences, repas, courses, enregistrement. Les intitulés suivent l’ordre des actions.
 
 Les règles visuelles communes se trouvent dans `design.css`, chargé après les styles fonctionnels de `styles.css`. Les deux fichiers sont locaux, copiés par la compilation et précachés pour le mode hors connexion.
+
+## Première visite
+
+Le parcours facultatif `#bienvenue` emploie les illustrations existantes, un fond crème et une colonne prune sur ordinateur. Deux étapes recueillent les envies du jour, le temps disponible et les exclusions alimentaires. Le résultat propose une préparation gratuite du catalogue avec les filtres appliqués, puis présente Plus. Aucun résultat incompatible ne remplace une sélection vide. Le parcours est accessible depuis l’accueil pour les nouveaux profils, depuis Mon espace, et après une inscription sans achat en cours. Les envies et le temps restent dans le parcours ; les exclusions et la préférence végétarienne rejoignent le carnet avec l’accord requis.

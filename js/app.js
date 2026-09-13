@@ -20,7 +20,7 @@
   const recipePageSize = 12;
   const recipeHighlights = ['tacos-cabillaud', 'gnocchis-pesto', 'pancakes-citron-ricotta', 'burger-poulet-croustillant', 'brownie-chocolat-noisette', 'dhal-coco', 'bowl-patate-tahini', 'lasagnes-epinards-ricotta', 'soupe-minestrone', 'muffins-myrtille', 'houmous-betterave', 'sunny-bowl'];
   const recipeOrder = new Map([...recipeHighlights, ...D.recipes.filter(r => !recipeHighlights.includes(r.id)).map(r => r.id)].map((id, i) => [id, i]));
-  const labels = { cesoir: 'Ce soir', accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données', plus: 'L’atelier Plus', atelier: 'Ma semaine à cuisiner' };
+  const labels = { bienvenue: 'Bienvenue chez Poum', cesoir: 'Ce soir', accueil: 'Mon quotidien', aliments: 'Explorer les aliments', recettes: 'Idées de recettes', favoris: 'Mes favoris', menus: 'Mes menus', courses: 'Ma liste de courses', guide: 'Les bons repères', sources: 'Sources & méthode', profil: 'Mon espace', confidentialite: 'Mes données', plus: 'L’atelier Plus', atelier: 'Ma semaine à cuisiner' };
   let storageAvailable = true;
   let store = readStore();
   let route = getRoute();
@@ -68,6 +68,12 @@
       }
       persist();
     }
+  });
+
+  const Onboarding = window.PoumOnboarding.create({
+    read: () => store, owner: () => Cloud.storageKey, cloud: () => Cloud.state,
+    recipes: D.recipes, escape, icon, render: () => rerender(true),
+    commit: patch => { Object.assign(store,patch); return persist(); }
   });
 
   function readStore(provided) {
@@ -229,7 +235,7 @@
     return `<form id="${id}" class="search-box" role="search">${icon('search', 21)}<label class="sr-only" for="${id}-input">${source === 'off' ? 'Nom, marque ou code-barres du produit' : 'Rechercher un aliment'}</label><input id="${id}-input" name="q" type="search" placeholder="${source === 'off' ? 'Un produit, une marque ou un code-barres…' : id === 'home-search' ? 'Un aliment…' : 'Rechercher un aliment…'}" value="${escape(value)}" maxlength="150" autocomplete="off"><button type="button" class="search-scan" data-action="scan" aria-label="Rechercher par code-barres" title="Rechercher par code-barres">${icon('scan', 20)}</button><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form>`;
   }
   function homePage() {
-    return `<div class="home-simple"><p class="home-dateline">${store.name ? `Bonjour ${escape(store.name)}.` : 'Bienvenue chez Poum.'}</p><section class="home-editorial" aria-labelledby="home-title"><div class="home-search-panel"><span class="section-kicker">À table pendant la grossesse</span><h1 id="home-title"><em>Enceinte,</em><br>je peux en manger&nbsp;?</h1><p>Cherchez un aliment pour connaître les précautions à prendre.</p>${searchForm('home-search')}<div class="suggestions"><span>Par exemple</span>${['Ananas','Mozzarella','Café'].map(q=>`<a class="suggestion" href="${href('aliments',{q})}">${q}</a>`).join('')}</div></div><figure class="home-illustration"><img src="assets/brand/table-maternite-v4-640.webp" srcset="assets/brand/table-maternite-v4-320.webp 320w, assets/brand/table-maternite-v4-640.webp 640w" sizes="(max-width: 600px) 90px, 300px" alt="Illustration d’une femme enceinte à table, la main posée sur son ventre" width="1254" height="1254" fetchpriority="high"></figure></section><div class="home-shortcuts">${Tonight.homeCard()}<a class="home-shortcut" href="#recettes"><span><strong>Parcourir les recettes</strong><small>Choisir selon vos envies.</small></span>${icon('arrow',20)}</a></div><p class="home-source-note"><a href="#sources">Des précautions expliquées et sourcées</a> · Le guide des aliments est gratuit.</p></div>`;
+    return `<div class="home-simple"><p class="home-dateline">${store.name ? `Bonjour ${escape(store.name)}.` : 'Bienvenue chez Poum.'}</p><section class="home-editorial" aria-labelledby="home-title"><div class="home-search-panel"><span class="section-kicker">À table pendant la grossesse</span><h1 id="home-title"><em>Enceinte,</em><br>je peux en manger&nbsp;?</h1><p>Cherchez un aliment pour connaître les précautions à prendre.</p>${searchForm('home-search')}<div class="suggestions"><span>Par exemple</span>${['Ananas','Mozzarella','Café'].map(q=>`<a class="suggestion" href="${href('aliments',{q})}">${q}</a>`).join('')}</div></div><figure class="home-illustration"><img src="assets/brand/table-maternite-v4-640.webp" srcset="assets/brand/table-maternite-v4-320.webp 320w, assets/brand/table-maternite-v4-640.webp 640w" sizes="(max-width: 600px) 90px, 300px" alt="Illustration d’une femme enceinte à table, la main posée sur son ventre" width="1254" height="1254" fetchpriority="high"></figure></section><div class="home-shortcuts">${Tonight.homeCard()}${store.diet.completed?'<a class="home-shortcut" href="#recettes"><span><strong>Parcourir les recettes</strong><small>Choisir selon vos envies.</small></span>'+icon('arrow',20)+'</a>':'<a class="home-shortcut" href="#bienvenue"><span><strong>Votre premier repas avec Poum</strong><small>Deux petites étapes, selon vos envies.</small></span>'+icon('arrow',20)+'</a>'}</div><p class="home-source-note"><a href="#sources">Des précautions expliquées et sourcées</a> · Le guide des aliments est gratuit.</p></div>`;
   }
   function familyFilters() {
     const category = route.params.get('categorie');
@@ -542,7 +548,7 @@
       } else {
         await Cloud.request('auth/' + (mode === 'signup' ? 'sign-up/email' : 'sign-in/email'), { method: 'POST', body: JSON.stringify({ email, password, ...(mode === 'signup' ? { name: String(data.get('name')).trim().slice(0, 30) } : {}), ...(mode === 'signup' && location.protocol === 'https:' ? { callbackURL: callbacks } : {}) }) });
         await Cloud.refreshSession(data.get('import') === 'on');
-        if (Cloud.state.user) { renderAccount(); toast(mode === 'signup' ? 'Compte créé. Vous pouvez maintenant personnaliser vos repas.' : 'Vous êtes connecté·e.', 'heart'); if(mode === 'signup') { document.querySelector('#diet-title')?.focus(); document.querySelector('#profile-form')?.scrollIntoView({behavior:'smooth'}); } else await resumeCommerce(); }
+        if (Cloud.state.user) { renderAccount(); toast(mode === 'signup' ? 'Compte créé. Vous pouvez maintenant personnaliser vos repas.' : 'Vous êtes connecté·e.', 'heart'); if(mode === 'signup') { if(!route.params.has('retour')&&!pendingCheckoutSession){go('bienvenue');} document.querySelector('#diet-title')?.focus(); document.querySelector('#profile-form')?.scrollIntoView({behavior:'smooth'}); } else await resumeCommerce(); }
         else { renderAccount(); if ($('#auth-feedback')) $('#auth-feedback').textContent = 'Vérifiez votre boîte e-mail pour confirmer le compte, puis connectez-vous.'; }
       }
     } catch (error) {
@@ -605,7 +611,7 @@
     const target=$('#profile-feedback');if(target)target.innerHTML=profileFeedback();
   }
   function profilePage() {
-    return `${route.params.has('retour') || pendingCheckoutSession ? '<div class="checkout-account-note"><b>Se connecter pour continuer</b><p>Connectez-vous ou créez votre compte pour retrouver votre accès Plus. Aucun paiement n’est effectué sur ce formulaire.</p></div>' : ''}<div id="account-panel">${accountPanel()}</div>${heading('Mes préférences', 'Des repas qui tiennent compte de vos goûts et des ingrédients à écarter.')}<form id="profile-form" class="profile-panel" data-owner="${escape(Cloud.storageKey)}"><h2 id="diet-title" tabindex="-1">À votre table</h2><p>Facultatif. Ces choix seront appliqués aux recettes proposées, aux menus et à Ce soir.</p><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Enregistré sur cet appareil et synchronisé si vous êtes connectée.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce choix est indépendant des exclusions alimentaires ci-dessous.</p></div>${dietFields()}<div class="form-actions"><button class="btn btn-primary" type="submit" id="profile-save">${icon('check', 15)}${route.params.has('retour')?'Enregistrer et continuer':'Enregistrer'}</button>${route.params.has('retour')?'<button class="btn-text" type="button" data-action="diet-later">Plus tard</button>':''}<a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div><div id="profile-feedback" class="profile-feedback" role="status" tabindex="-1">${profileFeedback()}</div></form>${Billing.state.canManage ? memberPanel() : premiumNudge('home')}${installationPanel()}`;
+    return `${route.params.has('retour') || pendingCheckoutSession ? '<div class="checkout-account-note"><b>Se connecter pour continuer</b><p>Connectez-vous ou créez votre compte pour retrouver votre accès Plus. Aucun paiement n’est effectué sur ce formulaire.</p></div>' : ''}<div id="account-panel">${accountPanel()}</div>${heading('Mes préférences', 'Des repas qui tiennent compte de vos goûts et des ingrédients à écarter.')}<p class="profile-onboarding-link"><a href="#bienvenue">Trouver un premier repas avec Poum ${icon('arrow',15)}</a></p><form id="profile-form" class="profile-panel" data-owner="${escape(Cloud.storageKey)}"><h2 id="diet-title" tabindex="-1">À votre table</h2><p>Facultatif. Ces choix seront appliqués aux recettes proposées, aux menus et à Ce soir.</p><div class="field"><label for="profile-name">Votre prénom ou surnom</label><input class="text-input" id="profile-name" name="name" value="${escape(store.name)}" maxlength="30" placeholder="Comment vous appelle-t-on ?" autocomplete="given-name"><p class="field-hint">Facultatif. Enregistré sur cet appareil et synchronisé si vous êtes connectée.</p></div><div class="field"><label class="check-label" for="profile-vegetarian"><input type="checkbox" id="profile-vegetarian" name="vegetarian" ${store.vegetarian ? 'checked' : ''}> Privilégier les recettes végétariennes</label><p class="field-hint">Ce choix est indépendant des exclusions alimentaires ci-dessous.</p></div>${dietFields()}<div class="form-actions"><button class="btn btn-primary" type="submit" id="profile-save">${icon('check', 15)}${route.params.has('retour')?'Enregistrer et continuer':'Enregistrer'}</button>${route.params.has('retour')?'<button class="btn-text" type="button" data-action="diet-later">Plus tard</button>':''}<a class="btn-text" href="#confidentialite">Mes données ${icon('arrow', 15)}</a></div><div id="profile-feedback" class="profile-feedback" role="status" tabindex="-1">${profileFeedback()}</div></form>${Billing.state.canManage ? memberPanel() : premiumNudge('home')}${installationPanel()}`;
   }
   async function importNotebook(file) {
     try {
@@ -623,6 +629,7 @@
     RecipeAccess.ensure();
     const oldPage = route.page;
     route = getRoute();
+    document.body.classList.toggle('onboarding-mode',route.page==='bienvenue');
     if (keepDialog !== true && $('#detail-dialog').open) $('#detail-dialog').close();
     closeMenu();
     const isOFF = route.page === 'aliments' && route.params.get('source') === 'off';
@@ -631,12 +638,12 @@
     }
     $('#sidebar').innerHTML = sidebar();
     $('#topbar').innerHTML = topbar();
-    const pages = { cesoir: Tonight.render, accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage, plus: plusPage, atelier: Workshop.render };
+    const pages = { bienvenue: Onboarding.render, cesoir: Tonight.render, accueil: homePage, aliments: explorePage, recettes: recipePage, favoris: favoritesPage, menus: plannerPage, courses: shoppingPage, guide: guidePage, sources: sourcesPage, profil: profilePage, confidentialite: privacyPage, plus: plusPage, atelier: Workshop.render };
     $('#main').innerHTML = `<div class="page-content">${pages[route.page]()}</div>${footer()}`;
     syncSidebar();
     Tonight.enter();
     document.title = route.page === 'accueil' ? 'Que peut-on manger enceinte ? Aliments et recettes | Poum' : `${labels[route.page]} — Poum`;
-    if (oldPage !== route.page) window.scrollTo({ top: 0, behavior: 'instant' });
+    if (oldPage !== route.page) { window.scrollTo({ top: 0, behavior: 'instant' }); if(route.page==='bienvenue')requestAnimationFrame(()=>$('#ob-title')?.focus({preventScroll:true})); }
     if (isOFF) {
       const q = route.params.get('q') || '';
       if (!q) { apiAbort?.abort(); requestGeneration++; apiState = { key: '', products: [], loading: false, error: '', count: 0 }; }
@@ -654,6 +661,7 @@
     productMap.clear(); store = readStore(notebook);
     // Keep an edited profile mounted, including while a save click is in progress.
     if(keepProfile){updateProfileFeedback();return;}
+    if(preserveEdits && route.page==='bienvenue' && Onboarding.editing())return;
     rerender(preserveEdits);
     for (const saved of draft) { const input = document.getElementById(saved.id); if (input) { input.value = saved.value; input.checked = saved.checked; } }
     if (focus) { const input = document.getElementById(focus.id); input?.focus({ preventScroll: true }); if (input && typeof focus.start === 'number') input.setSelectionRange(focus.start, focus.end); }
@@ -860,7 +868,7 @@
     if (!trigger || trigger.disabled) return;
     const { action, id, kind } = trigger.dataset;
     const params = Object.fromEntries(route.params);
-    if (Tonight.click(trigger) || Workshop.click(trigger)) return;
+    if (Onboarding.click(trigger) || Tonight.click(trigger) || Workshop.click(trigger)) return;
     switch (action) {
       case 'food': foodDetail(id); break;
       case 'recipe': recipeDetail(id); break;
@@ -935,9 +943,10 @@
     if (Tonight.submit(event)) return;
     const form = event.target;
     const data = new FormData(form);
-    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form', 'workshop-form'];
+    const known = ['home-search', 'explore-search', 'recipe-search', 'shopping-add', 'profile-form', 'plan-recipe-form', 'barcode-form', 'auth-form', 'delete-account-form', 'workshop-form', 'ob-form'];
     if (!known.includes(form.id)) return;
     event.preventDefault();
+    if (Onboarding.submit(form)) return;
     if (form.id === 'workshop-form') { Workshop.submit(form); return; }
     if (form.id === 'delete-account-form') {
       const button = form.querySelector('[type="submit"]'); button.disabled = true;
@@ -979,6 +988,7 @@
     }
   });
   document.addEventListener('input', event => {
+    if (Onboarding.input(event)) return;
     const profile=event.target.closest('#profile-form');
     if(profile){profile.dataset.dirty='true';profileNotice={owner:Cloud.storageKey,kind:'draft'};updateProfileFeedback();const consent=$('#profile-consent');if(consent?.checked){consent.removeAttribute('aria-invalid');$('#profile-consent-error').hidden=true;}}
 
@@ -1074,7 +1084,7 @@
   const returningPortal = returnParams.get('billing') === 'updated';
   if (returnParams.has('checkout') || returningPortal) history.replaceState(null, '', location.pathname + location.hash);
   renderRoute(); updateOnline();
-  window.addEventListener('miette:cloud', () => { Tonight.enter(); renderAccount(); updateProfileFeedback(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
+  window.addEventListener('miette:cloud', () => { if(route.page==='bienvenue')Onboarding.refresh(); Tonight.enter(); renderAccount(); updateProfileFeedback(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
   window.addEventListener('miamama:billing', () => {
     Tonight.enter();
     document.querySelectorAll('[data-premium-place]').forEach(el => { el.outerHTML = premiumNudge(el.dataset.premiumPlace); });
