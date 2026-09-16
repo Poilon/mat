@@ -75,3 +75,7 @@ Le premier calendrier confondait visuellement le début d’une plage d’organi
 Références relues : [premier trimestre Ameli](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/grossesse-soins-dentaires-dentiste-consultation), [suivi mensuel Ameli](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/consultation-suivi-mensuel), [déclaration Service Public](https://www.service-public.gouv.fr/particuliers/vosdroits/F968), [examens Service Public](https://www.service-public.gouv.fr/particuliers/vosdroits/F963), [vaccinations pendant la grossesse — Santé publique France](https://professionnels.vaccination-info-service.fr/Recommandations-vaccinales-specifiques/Personnes-exposees-a-des-risques-specifiques/Femmes-enceintes).
 
 Cette revue documentaire corrige les règles et leur présentation ; elle ne constitue pas une validation clinique indépendante. Le calcul depuis la DDR reste une estimation, même corrigé de la durée du cycle ; les rendez-vous fixés et la datation clinique priment.
+
+## Cocher les étapes terminées
+
+Le calendrier s’ouvre sur « À faire ». Cocher « Fait » retire immédiatement l’étape de cette liste et des filtres de catégories, tout en conservant ses dates, notes et attribution. Le filtre « Faits » permet de retrouver l’historique et de décocher pour remettre l’étape à faire. Les étapes écartées restent dans « Écartés ». Le statut utilise le carnet et sa synchronisation existants.
