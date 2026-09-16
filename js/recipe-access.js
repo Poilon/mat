@@ -4,7 +4,8 @@ window.MietteRecipeAccess = (() => {
   const D = window.MietteData, Cloud = window.MietteCloud;
   const originals = new Map(D.recipes.map(r => [r.id, {steps:[...r.steps],guide:r.guide}]));
   let owner, revision = 0;
-  const key = () => 'miamama-recipes-v1:' + Cloud.storageKey;
+  const scope = () => Cloud.storageKey + (window.MietteBilling?.state.preview?.mode && window.MietteBilling.state.preview.mode !== 'auto' ? ':preview-' + window.MietteBilling.state.preview.mode : '');
+  const key = () => 'miamama-recipes-v1:' + scope();
   function apply(rows) {
     if (!Array.isArray(rows)) return;
     for (const row of rows.slice(0, D.recipes.length)) {
@@ -13,9 +14,9 @@ window.MietteRecipeAccess = (() => {
     }
   }
   function ensure() {
-    if (owner === Cloud.storageKey) return;
+    if (owner === scope()) return;
     revision++;
-    owner = Cloud.storageKey;
+    owner = scope();
     D.recipes.forEach(r => { r.steps = [...originals.get(r.id).steps]; r.guide = originals.get(r.id).guide; });
     try { apply(JSON.parse(localStorage.getItem(key()) || '[]')); } catch {}
   }
@@ -38,6 +39,7 @@ window.MietteRecipeAccess = (() => {
   }
   function clear() { ensure(); revision++; try { localStorage.removeItem(key()); } catch {} D.recipes.forEach(r => { r.steps = [...originals.get(r.id).steps]; r.guide = originals.get(r.id).guide; }); }
   window.addEventListener('miette:cloud', ensure);
+  window.addEventListener('miamama:billing', ensure);
   ensure();
   return { ensure, accept, load, clear, ticket };
 })();

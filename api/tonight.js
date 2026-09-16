@@ -22,7 +22,7 @@ module.exports=handler(async(req,res)=>{
     await repo.adopt(guestOwner,owner); body.action='state';
   }
   const config=settings();
-  const paid=Boolean(user&&config.configured&&(await billingStore().access(user.id,config.live)).active);
+  const paid=Boolean(user&&config.configured&&(await require('../server/preview.cjs').effectiveRepo(req,user,billingStore()).access(user.id,config.live)).active);
   let incoming;try{incoming=require('../js/diet.js').validate(body.diet);}catch(e){throw new HttpError(400,e.message);}
   const diet=require('../js/diet.js').merge(incoming,await require('../server/diet.cjs').accountDiet(user));
   const result=await operation(body,{repo,owner,paid,diet});

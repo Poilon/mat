@@ -1,6 +1,6 @@
 {
   "name": "poum",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "private": true,
   "description": "Poum : calendrier de grossesse, suivi documentaire des examens et repas adaptés.",
   "scripts": {

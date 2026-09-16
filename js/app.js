@@ -39,6 +39,7 @@
   let authMode = 'login';
   let authBusy = false;
   let plusPlan = Plus.offer.defaultPlan;
+  let previewBusy = false;
   let checkoutBusy = false, billingMessage = '', pendingCheckoutSession = null;
   const RecipeAccess = window.MietteRecipeAccess;
   const Workshop = window.MietteWorkshop.create({
@@ -197,7 +198,31 @@
       <nav aria-label="Navigation principale"><p class="nav-label">Pour commencer</p>${links.map(nav).join('')}<p class="nav-label secondary">Mon carnet</p>${notebook.map(nav).join('')}<p class="nav-label secondary">À lire</p>${nav(['guide', 'book', 'Précautions grossesse'])}${nav(['sources', 'shield', 'Sources & méthode'])}</nav>
       <div class="sidebar-bottom"><a class="sidebar-plus" href="#plus"><span>${Billing.active ? 'Mon abonnement' : 'Ma grossesse avec Plus'}</span>${icon('arrow', 16)}</a><p>20 recettes, les aliments et votre carnet restent gratuits.</p></div>`;
   }
+  function previewBar() {
+    const p = Billing.state.preview;
+    if (Billing.state.owner !== Cloud.state.user?.id) return '';
+    if (p?.requiresVerification) return `<div class="access-preview"><div><b>Votre switch Gratuit / Plus</b><small>Confirmez votre adresse e-mail pour activer le mode test.</small></div><button class="btn-text" data-action="preview-verify" ${previewBusy ? 'disabled' : ''}>Confirmer mon e-mail</button></div>`;
+    if (!p?.eligible) return '';
+    const paid = Billing.active;
+    return `<div class="access-preview"><div><b>Mode test · ${p.mode === 'auto' ? 'Accès réel' : paid ? 'Plus' : 'Gratuit'}</b><small>Visible uniquement sur votre compte · aucun achat</small></div><div class="access-preview-controls"><span>Gratuit</span><button type="button" role="switch" aria-label="Tester le mode Plus" aria-checked="${paid}" data-action="billing-preview" data-mode="${paid ? 'free' : 'plus'}" ${previewBusy ? 'disabled' : ''}><span></span></button><span>Plus</span><button class="btn-text" data-action="billing-preview" data-mode="auto" ${previewBusy || p.mode === 'auto' ? 'disabled' : ''}>Accès réel</button></div></div>`;
+  }
+  function renderPreviewBar() { if ($('#access-preview')) $('#access-preview').innerHTML = previewBar(); }
+  async function verifyPreviewEmail() {
+    if (previewBusy || !Cloud.state.user) return;
+    previewBusy = true; renderPreviewBar();
+    try { await Cloud.request('auth/send-verification-email', { method: 'POST', body: JSON.stringify({ email: Cloud.state.user.email, callbackURL: location.origin + '/#profil' }) }); toast('Le lien de confirmation a été envoyé à votre adresse e-mail.', 'check'); }
+    catch (error) { toast(error.message, 'info'); }
+    finally { previewBusy = false; renderPreviewBar(); }
+  }
+  async function changePreview(mode) {
+    if (previewBusy) return;
+    previewBusy = true; renderPreviewBar();
+    try { await Billing.action('preview', { mode }); if ($('#detail-dialog').open) $('#detail-dialog').close(); rerender(true); toast(mode === 'auto' ? 'Votre accès réel est rétabli.' : mode === 'plus' ? 'Mode Plus activé pour vos tests.' : 'Mode gratuit activé pour vos tests.', 'check'); }
+    catch (error) { toast(error.message, 'info'); }
+    finally { previewBusy = false; renderPreviewBar(); }
+  }
   function topbar() {
+    renderPreviewBar();
     return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb"><a class="brand-home" href="#accueil"><img src="assets/brand/mark.svg" alt="" width="32" height="32"><span>Poum<small>Votre compagnon de grossesse</small></span></a><span aria-hidden="true">/</span><b>${labels[route.page]}</b></div><div class="topbar-right"><a href="#plus" class="topbar-plus">${Billing.active ? 'Mon accès Plus' : 'Plus'}</a><a href="#profil" class="profile-trigger" aria-label="Mon compte et mes préférences"><span class="avatar">${store.name ? escape(store.name.charAt(0).toUpperCase()) : icon('user', 17)}</span><span>${escape(store.name || (Cloud.state.user ? 'Mon compte' : 'Se connecter'))}</span></a></div>`;
   }
   function footer() {
@@ -392,7 +417,7 @@
   function memberPanel() {
     const b = Billing.state, active = Billing.active;
     const until = b.access.until ? new Date(b.access.until).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-    return `<section class="member-panel"><div class="member-symbol">${icon('calendar', 28)}</div><div><span class="eyebrow">${active ? 'Votre accès Plus' : 'VOTRE ABONNEMENT'}</span><h2>${active ? 'Votre atelier est disponible.' : 'Retrouvez votre accès Plus.'}</h2><p>${active ? b.access.plan === 'pass' ? `Votre pass est actif jusqu’au ${until}, sans renouvellement automatique.` : b.access.cancelAtPeriodEnd ? `Le renouvellement est arrêté. Plus reste accessible jusqu’au ${until}.` : `Votre abonnement est actif. Période payée jusqu’au ${until}.` : b.access.subscriptionStatus === 'past_due' ? 'Le paiement doit être mis à jour pour retrouver les nouvelles semaines.' : 'Vos menus enregistrés restent accessibles. Vous pouvez gérer vos achats depuis Stripe.'}</p><div class="dialog-actions">${active ? '<a class="btn btn-primary" href="#atelier">Préparer ma prochaine semaine</a>' : ''}${b.canManage ? '<button class="btn btn-outline" data-action="billing-portal">Mon abonnement & mes factures</button><button class="btn-text" data-action="billing-restore">Actualiser mon accès</button>' : ''}</div></div></section>`;
+    return `<section class="member-panel"><div class="member-symbol">${icon('calendar', 28)}</div><div><span class="eyebrow">${active ? 'Votre accès Plus' : 'VOTRE ABONNEMENT'}</span><h2>${active ? 'Votre atelier est disponible.' : 'Retrouvez votre accès Plus.'}</h2><p>${b.preview?.mode === 'plus' ? 'Mode test Plus actif. Aucun achat ni abonnement n’a été créé.' : active ? b.access.plan === 'pass' ? `Votre pass est actif jusqu’au ${until}, sans renouvellement automatique.` : b.access.cancelAtPeriodEnd ? `Le renouvellement est arrêté. Plus reste accessible jusqu’au ${until}.` : `Votre abonnement est actif. Période payée jusqu’au ${until}.` : b.access.subscriptionStatus === 'past_due' ? 'Le paiement doit être mis à jour pour retrouver les nouvelles semaines.' : 'Vos menus enregistrés restent accessibles. Vous pouvez gérer vos achats depuis Stripe.'}</p><div class="dialog-actions">${active ? '<a class="btn btn-primary" href="#atelier">Préparer ma prochaine semaine</a>' : ''}${b.canManage ? '<button class="btn btn-outline" data-action="billing-portal">Mon abonnement & mes factures</button><button class="btn-text" data-action="billing-restore">Actualiser mon accès</button>' : ''}</div></div></section>`;
   }
   function premiumNudge(place = 'home') {
     const copy = {
@@ -923,6 +948,8 @@
       case 'plan-recipe': planRecipe(id); break;
       case 'plus-offer': plusOffer(); break;
       case 'plus-example': Workshop.example(); go('atelier'); break;
+      case 'preview-verify': verifyPreviewEmail(); break;
+      case 'billing-preview': changePreview(trigger.dataset.mode); break;
       case 'billing-checkout': startCheckout(); break;
       case 'billing-portal': billingPortal(); break;
       case 'billing-refresh': Billing.refresh(); break;
@@ -1072,7 +1099,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden && dialogContext?.type === 'scanner') { stopCamera(); if ($('#camera-status')) $('#camera-status').textContent = 'Caméra mise en pause. Fermez et rouvrez le scanner pour reprendre.'; } });
   window.addEventListener('pagehide', stopCamera);
   window.matchMedia('(max-width:760px)').addEventListener('change', () => { closeMenu(); syncSidebar(); });
-  $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="connection-status" aria-live="polite"></div>${migrationNote()}${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
+  $('#app').innerHTML = `<aside id="sidebar" class="sidebar"></aside><button class="mobile-overlay" data-action="close-menu" aria-label="Fermer le menu" tabindex="-1"></button><div class="app-shell"><header id="topbar" class="topbar"></header><div id="access-preview"></div><div id="connection-status" aria-live="polite"></div>${migrationNote()}${!storageAvailable ? '<div class="storage-notice">Le stockage local n’est pas disponible. Votre carnet restera dans cet onglet jusqu’à sa fermeture.</div>' : ''}<main id="main" class="main" tabindex="-1"></main></div>`;
   const dialog = $('#detail-dialog');
   dialog.addEventListener('close', () => {
     document.body.append($('#toasts'));

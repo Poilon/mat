@@ -48,3 +48,9 @@ Cette version n'a pas fait l'objet d'une validation clinique indépendante. Elle
 Node.js 24 est indiqué dans `.nvmrc` et `package.json`. Le build Vercel exécute les tests unitaires avant la compilation. Le workflow `ci.yml` vérifie les tests unitaires et les parcours Chromium ; les simulations ne contactent pas Neon ou Stripe. La protection de branche n'est pas modifiée par ce changement.
 
 La suite couvre notamment les corrections de datation sans perte de rendez-vous, consentement/retrait, fusion des comptes, vrai PDF, vraie image OCR avec contrôle des appels réseau, revue explicite des extraits, allergies persistantes et expiration des envies. La recette en production vérifie les pages et ressources publiques sans créer d'achat ni importer de données médicales réelles.
+
+## Switch de test propriétaire
+
+Le compte Neon `poilon@gmail.com`, avec e-mail vérifié, dispose d’un bandeau « Mode test » global. Le switch choisit Gratuit ou Plus ; « Accès réel » rétablit les droits Stripe. Le choix est conservé 30 jours dans un cookie HttpOnly, Secure en HTTPS, propre au navigateur et lié à l’identifiant du compte. Le cookie exprime seulement une préférence : chaque requête vérifie à nouveau l’identité et l’e-mail confirmé côté serveur. Aucun autre compte ne bénéficie de cette option.
+
+Les recettes, la composition des menus, les dîners et les exports calendrier utilisent le même accès effectif. Les téléchargements de recettes sont séparés par mode pour retrouver les paywalls en revenant au gratuit. Les carnets et la semaine d’essai déjà utilisée restent conservés. Les achats et la gestion Stripe demandent de revenir à l’accès réel ; la simulation ne modifie jamais un abonnement ni un paiement. Une adresse non vérifiée doit être confirmée avant que le switch apparaisse.

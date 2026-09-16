@@ -10,5 +10,5 @@ module.exports = handler(async (req, res) => {
   const user = config.configured ? (await getSession(req))?.user : null;
   if (process.env.DATABASE_URL) await limit('recipes:' + (user?.id || ipKey(req)), 90);
   const id = new URL(req.url, 'http://localhost').searchParams.get('id');
-  json(res, 200, await readRecipe(id, { config, user, repo: config.configured ? billingStore() : null }));
+  json(res, 200, await readRecipe(id, { config, user, repo: config.configured ? require('../server/preview.cjs').effectiveRepo(req, user, billingStore()) : null }));
 });
