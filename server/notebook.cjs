@@ -25,6 +25,14 @@ function validateNotebook(input) {
   if (new Set(shopping.map(i => i.id)).size !== shopping.length) return bad();
   let diet;try { diet = require('../js/diet.js').validate(input.diet); } catch { return bad(); }
   // Product metadata is untrusted at rest and sanitized again by the existing client normalizer.
-  return { diet, name: input.name, vegetarian: input.vegetarian, favorites: [...new Set(input.favorites)], products: input.products, menus, shopping };
+  let journey;try { journey = require('../js/pregnancy.js').validate(input.journey); } catch { return bad(); }
+  return { journey, diet, name: input.name, vegetarian: input.vegetarian, favorites: [...new Set(input.favorites)], products: input.products, menus, shopping };
 }
-module.exports = { validateNotebook };
+function preserveLegacyFields(input, previous) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+  const result = { ...input };
+  if (!Object.hasOwn(input, 'journey') && previous?.journey) result.journey = previous.journey;
+  if (input.diet && typeof input.diet === 'object' && !Array.isArray(input.diet) && !Object.hasOwn(input.diet, 'temporary') && previous?.diet?.temporary) result.diet = { ...input.diet, temporary: previous.diet.temporary };
+  return result;
+}
+module.exports = { validateNotebook, preserveLegacyFields };

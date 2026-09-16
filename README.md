@@ -1,4 +1,6 @@
-# Poum — Ta grossesse, à ton rythme
+# Poum — Ma grossesse, une étape après l’autre
+
+**Version 4 :** calendrier personnalisé, rendez-vous et questions de consultation, suivi documentaire des examens avec lecture locale de PDF/photos, allergies visibles et envies temporaires. [Fonctionnement, données et limites](COMPANION.md). Le calendrier et les examens dans Poum restent gratuits ; Plus ajoute les exports d’agenda aux menus et recettes existants.
 
 Application en français sur l’alimentation pendant la grossesse : **360 fiches alimentaires, dont 105 fruits, légumes et herbes, 1 000 recettes, recherche Open Food Facts, scanner et carnet synchronisé**.
 

@@ -176,7 +176,7 @@ test('Workshop drafts remain separate for guests and two accounts through sign-o
   const remote = {}; await mockAccount(page, remote);
   const ids = () => page.locator('[data-action="workshop-recipe"]').evaluateAll(nodes => nodes.map(n => n.dataset.id));
   await page.goto('/#atelier'); await page.locator('#workshop-form [type="submit"]').click();
-  const guest = await ids(); expect(guest).toHaveLength(7);
+  await expect(page.locator('[data-action="workshop-recipe"]')).toHaveCount(7); const guest = await ids(); expect(guest).toHaveLength(7);
   await login(page, 'a@example.com', false); await page.goto('/#atelier');
   await expect(page.locator('.workshop-before')).toBeVisible();
   await page.locator('#workshop-meals').selectOption('both');

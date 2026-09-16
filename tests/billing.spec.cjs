@@ -103,7 +103,7 @@ test('Paid users see the renewal status, can use the portal, and never leak acce
   await page.locator('[data-action="billing-portal"]').click(); await expect(page).toHaveURL(/billing\.stripe\.com/);
   await page.goto('/#profil'); await ready(page); await page.locator('[data-action="sign-out"]').click();
   await expect.poll(() => page.evaluate(() => MietteBilling.active)).toBe(false);
-  await page.goto('/#plus'); await expect(page.locator('.offer-hero')).toBeVisible();
+  await page.goto('/#plus'); await expect(page.locator('.j-offer-hero')).toBeVisible();
   expect(state.actions).toContain('portal');
 });
 test('Cancellation and service errors keep free content available and do not create purchases', async ({ page }) => {

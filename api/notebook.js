@@ -1,7 +1,7 @@
 const { handler, json, readJSON, HttpError } = require('../server/http.cjs');
 const { requireUser } = require('../server/auth.cjs');
 const { database, limit } = require('../server/db.cjs');
-const { validateNotebook } = require('../server/notebook.cjs');
+const { validateNotebook, preserveLegacyFields } = require('../server/notebook.cjs');
 module.exports = handler(async (req, res) => {
   if (!['GET', 'PUT', 'DELETE'].includes(req.method)) throw new HttpError(405, 'Méthode non autorisée.');
   const user = await requireUser(req);
@@ -17,6 +17,11 @@ module.exports = handler(async (req, res) => {
   }
   const body = await readJSON(req);
   if (!Number.isSafeInteger(body?.revision) || body.revision < 0) throw new HttpError(400, 'La version du carnet est invalide.');
+  // Older installed clients omit the new fields: preserve them during their writes.
+  if (body.notebook && (!Object.hasOwn(body.notebook, 'journey') || !Object.hasOwn(body.notebook.diet || {}, 'temporary'))) {
+    const [previous] = await sql`SELECT data FROM miette_notebooks WHERE user_id = ${user.id}`;
+    body.notebook = preserveLegacyFields(body.notebook, previous?.data);
+  }
   const notebook = validateNotebook(body.notebook);
   const [row] = await sql`INSERT INTO miette_notebooks (user_id, data, revision)
     SELECT ${user.id}, ${JSON.stringify(notebook)}::jsonb, 1 WHERE ${body.revision} = 0

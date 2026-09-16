@@ -20,6 +20,18 @@ const { build } = require('esbuild');
   const config = { apiBase: mirror ? new URL('/api/', appURL).href : '/api/', appURL, cloud: !mirror };
   fs.writeFileSync(path.join(destination, 'js/runtime.js'), 'window.MietteRuntime = ' + JSON.stringify(config) + ';\n');
   await build({ entryPoints: ['src/scanner.js'], bundle: true, minify: true, format: 'iife', target: 'es2020', outfile: path.join(destination, 'js/scanner.js'), legalComments: 'eof' });
+  await build({ entryPoints: ['src/documents.js'], bundle: true, minify: true, format: 'esm', target: 'es2022', outfile: path.join(destination, 'js/documents.js'), legalComments: 'eof' });
+  const reader = path.join(destination, 'assets/document-reader');
+  fs.mkdirSync(reader, {recursive:true});
+  for (const folder of ['cmaps','standard_fonts','wasm']) fs.cpSync(path.join('node_modules/pdfjs-dist',folder),path.join(reader,folder),{recursive:true});
+  fs.copyFileSync('node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs', path.join(reader,'pdf.worker.min.mjs'));
+  fs.copyFileSync('node_modules/tesseract.js/dist/worker.min.js',path.join(reader,'worker.min.js'));
+  fs.copyFileSync('node_modules/@tesseract.js-data/fra/4.0.0/fra.traineddata.gz',path.join(reader,'fra.traineddata.gz'));
+  for (const file of fs.readdirSync('node_modules/tesseract.js-core').filter(f=>/^tesseract-core.*\.wasm\.js$/.test(f))) fs.copyFileSync(path.join('node_modules/tesseract.js-core',file),path.join(reader,file));
+  for (const [folder,name] of [['pdfjs-dist','pdfjs'],['tesseract.js','tesseract'],['tesseract.js-core','tesseract-core']]) {
+    const source=path.join('node_modules',folder,'LICENSE');
+    if(fs.existsSync(source))fs.copyFileSync(source,path.join(destination,'assets/licenses',name+'.txt'));
+  }
   // The serialized data bundle already contains these catalogues. Keep their source files for development, but avoid downloading duplicate data at startup.
   const htmlPath = path.join(destination, 'index.html');
   fs.writeFileSync(htmlPath, fs.readFileSync(htmlPath, 'utf8').replace(/\s*<script src="js\/(?:recipes|catalogue|seasonings)\.js\?v=\d+" defer><\/script>/g, ''));

@@ -54,9 +54,9 @@ test('Product explanations show the ingredient that triggered the precaution and
 test('Food photography, direct search and source-backed details remain legible on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.locator('#home-search')).toBeInViewport();
-  await expect(page.locator('.home-food-photo')).toBeVisible();
-  expect(await page.locator('.home-food-photo').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await page.locator('#home-search').scrollIntoViewIfNeeded(); await expect(page.locator('#home-search')).toBeInViewport();
+  await expect(page.locator('.home-illustration img')).toBeVisible();
+  expect(await page.locator('.home-illustration img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.goto('/#aliments?q=ananas');
   await page.locator('.food-card-open').click();

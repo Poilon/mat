@@ -2,9 +2,9 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const types = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
+const types = { '.mjs': 'application/javascript', '.wasm': 'application/wasm', '.gz': 'application/gzip', '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
 const root = path.resolve('dist');
-const routes = Object.fromEntries(['config', 'auth', 'notebook', 'products', 'account', 'billing', 'stripe-webhook', 'workshop', 'recipes', 'tonight'].map(name => [name, require('../api/' + name + '.js')]));
+const routes = Object.fromEntries(['companion', 'config', 'auth', 'notebook', 'products', 'account', 'billing', 'stripe-webhook', 'workshop', 'recipes', 'tonight'].map(name => [name, require('../api/' + name + '.js')]));
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname.startsWith('/api/')) {
