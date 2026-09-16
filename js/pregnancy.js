@@ -123,9 +123,19 @@
       const end=m.days?add(d.start,m.days[1]):m.months?add(addMonths(conception,m.months[1]),-1):d.due;
       return {...m,order,start,end,source:sources[m.source]||null,...j.tasks[m.id],title:j.tasks[m.id]?.title||m.title};
     });
-    for(const t of items) if(t.after && j.tasks[t.after]?.date && !t.date) t.start = [t.start,j.tasks[t.after].date].sort().at(-1);
     for(const [id,t] of Object.entries(j.tasks)) if(id.startsWith('custom-'))items.push({id,kind:'personal',category:'personnel',description:'Votre rendez-vous personnel.',prepare:'',source:null,start:t.date||at,end:t.date||at,...t,order:items.length});
-    return items.map(t=>({...t,status:t.status||'todo',when:t.date||t.start,phase:t.date?(t.date<at?'past':t.date>at?'future':'now'):t.end<at?'past':t.start>at?'future':'now'})).sort((a,b)=>a.when.localeCompare(b.when)||a.order-b.order);
+    const byId=new Map(items.map(t=>[t.id,t]));
+    function place(t){
+      if(t.when)return;
+      // Follow the whole prerequisite chain even when no date is entered.
+      // These ordering references never create or overwrite appointments.
+      if(t.date){t.when=t.date;t.sortTime=t.time||'';return;}
+      const previous=byId.get(t.after);
+      if(previous){place(previous);if(previous.when>t.start)t.start=previous.when;}
+      t.when=t.start;t.sortTime=previous?.when===t.when?previous.sortTime:'';
+    }
+    items.forEach(place);
+    return items.map(t=>({...t,status:t.status||'todo',phase:t.date?(t.date<at?'past':t.date>at?'future':'now'):t.end<at?'past':t.start>at?'future':'now'})).sort((a,b)=>a.when.localeCompare(b.when)||a.sortTime.localeCompare(b.sortTime)||a.order-b.order);
   }
   const aliases = [
     ['Groupe sanguin',/\b(?:groupe sanguin|groupage|abo)\b/],['Rhésus',/\b(?:rhesus|rhd|rh d)\b/],['RAI',/\b(?:rai|agglutinines irregulieres|anticorps irreguliers)\b/],

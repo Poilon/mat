@@ -35,3 +35,47 @@
 .j-task-complete{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 4px;font-size:13px;font-weight:600;color:#50364d;cursor:pointer}.j-task-complete input{width:22px;height:22px;margin:0;accent-color:#613c56;cursor:pointer}.j-task-complete input:focus-visible{outline:2px solid #613c56;outline-offset:4px}.j-task-card>.j-status{margin:0 0 6px}
 
 button.j-next-card{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}button.j-next-card:focus-visible{outline:3px solid #613c56;outline-offset:4px}.j-step-detail h2{margin:18px 0 26px}.j-step-detail section{margin:22px 0}.j-step-detail h3{font-size:17px;margin-bottom:8px}.j-step-detail p{line-height:1.75}.j-step-date{padding:12px 16px;background:#f1f3ea;border-radius:12px}.j-step-source{font-size:13px}.j-step-source a{color:#613c56;text-decoration:underline}
+
+/* A compact checklist; explanations unfold inside the selected step. */
+.j-calendar-intro{font-size:14px;color:var(--j-muted)}
+details.j-calendar-explanation{padding:3px 18px;margin:16px 0;background:transparent;border-radius:12px}
+details.j-calendar-explanation>summary{font-size:12px}
+details.j-calendar-explanation p{font-size:12px}
+details.j-calendar-explanation>a{display:inline-block;margin-bottom:14px;font-size:12px}
+.j-timeline{border:1px solid var(--j-line);border-radius:16px;background:#fffdf9;overflow:hidden;align-self:start}
+.j-task-row{display:block;padding:0;border-bottom:1px solid var(--j-line)}
+.j-task-row:last-child{border-bottom:0}
+.j-task-row:before,.j-task-row:after{display:none}
+.j-task-row .j-task-card{position:relative;border:0;border-radius:0;background:transparent;padding:0;margin:0}
+.j-task-row .j-task-complete{position:absolute;right:18px;top:20px;z-index:1;font-size:12px;gap:7px}
+.j-task-row .j-task-details{border:0;margin:0}
+.j-task-details>summary{display:flex;align-items:flex-start;gap:15px;padding:25px 115px 25px 22px!important;list-style:none;min-height:115px}
+.j-task-details>summary::-webkit-details-marker{display:none}
+.j-task-details>summary:focus-visible{outline:2px solid var(--j-plum);outline-offset:-4px}
+.j-task-details>summary:hover{background:#f9f3ec}
+.j-list-number{font:20px 'Lora',serif;color:#76604d;flex-shrink:0;padding-top:3px}
+.j-list-copy{flex:1;min-width:0}
+.j-task-row .j-timeline-date{padding:0;display:block}
+.j-task-row .j-timeline-date strong{font-size:11px;font-weight:500;color:#76665c}
+.j-task-row .j-timeline-date span{font-size:10px;margin-top:2px}
+.j-task-row h2{margin:5px 0 3px;font-size:16px;overflow-wrap:anywhere}
+.j-list-chevron{align-self:center;color:var(--j-plum)}
+.j-list-chevron svg{margin:0!important;transition:transform .15s}
+.j-task-details[open] .j-list-chevron svg{transform:rotate(90deg)}
+.j-task-body{padding:0 30px 28px 59px;max-width:800px}
+.j-step-guide{font-size:13px;line-height:1.8}
+.j-step-guide section{margin:22px 0}
+.j-step-guide h3,.j-task-edit h3{font:600 15px 'DM Sans',sans-serif;margin:0 0 10px}
+.j-step-guide p{font-size:13px;margin:5px 0 0;color:#655b61;line-height:1.8}
+.j-step-guide ul{padding-left:18px;margin:8px 0}
+.j-step-guide li{padding-left:3px;margin:12px 0}
+.j-step-guide li strong{font-size:13px}
+.j-task-edit{border-top:1px solid var(--j-line);margin-top:26px;padding-top:23px}
+.j-habitual{padding-bottom:26px;margin-bottom:26px;border-bottom:1px solid var(--j-line)}
+.j-habitual h2{font-size:26px}
+.j-dashboard-hero h1{overflow-wrap:anywhere}
+.j-task-details>summary{position:relative}
+.j-calendar-aside>details.j-calendar-explanation{align-self:start;margin:0}
+.j-calendar-aside .j-help{margin:14px 0 22px}
+@media(max-width:600px){.j-task-details>summary{padding:20px 82px 20px 14px!important;gap:10px;min-height:115px}.j-task-row .j-task-complete{right:10px;top:15px;gap:5px;font-size:11px}.j-list-number{font-size:16px}.j-task-row h2{font-size:14px}.j-list-chevron{display:none}.j-task-body{padding:0 19px 24px}.j-calendar-layout{margin-top:22px}.j-step-guide p,.j-step-guide{font-size:13px}}
+@media(max-width:600px){.j-list-chevron{display:block;position:absolute;right:25px;top:77px}.j-calendar-intro{font-size:13px}}

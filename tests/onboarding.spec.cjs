@@ -21,7 +21,7 @@ test('Choices and allergy consent lead to a real free recipe and persist after r
  const id=await page.locator('.ob-recipe [data-action="recipe"]').getAttribute('data-id');expect(id).toBe('sunny-bowl');
  const diet=await page.evaluate(()=>JSON.parse(localStorage.getItem('miette-notebook-v1')).diet);expect(diet.allergies).toEqual(['gluten']);expect(Diet.allows(D.recipes.find(r=>r.id===id),diet)).toBe(true);
  await page.locator('.ob-recipe [data-action="recipe"]').click();await expect(page.locator('.cooking-prep')).toBeVisible();await expect(page.locator('.recipe-paywall')).toHaveCount(0);await page.keyboard.press('Escape');
- await page.goto('/#profil');await page.reload();await expect(page.locator('#profile-allergy-gluten')).toBeChecked();await expect(page.locator('#profile-avoid')).toHaveValue('coriandre');
+ await page.goto('/#profil');await page.reload();await expect(page.locator('#profile-allergy-gluten')).toBeChecked();await page.goto('/#envies');await expect(page.locator('#craving-avoid')).toHaveValue('coriandre');
 });
 
 test('Returning keeps choices, and restrictive exclusions never produce an incompatible meal',async({page})=>{

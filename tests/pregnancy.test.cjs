@@ -74,3 +74,26 @@ test('Calendar export includes only user-entered future dates, never estimated w
  assert.equal((P.calendar(j,{at:'2026-06-10',partnerOnly:true}).match(/BEGIN:VEVENT/g)||[]).length,1);
  assert.equal((P.calendar(j,{at:'2026-09-01'}).match(/BEGIN:VEVENT/g)||[]).length,0);
 });
+
+test('Undated steps follow their prerequisite chain across LMP and confirmed-term dating',()=>{
+ for(const profile of [{date:'2026-08-11',cycle:28},{date:'2026-08-11',cycle:35},{basis:'term',date:'2027-05-25'}]){
+  const j=journey();Object.assign(j.profile,profile);const items=P.timeline(j,'2026-09-16'),ids=items.map(t=>t.id);
+  assert.equal(ids[0],'first');
+  for(const t of items.filter(t=>t.after))assert(ids.indexOf(t.after)<ids.indexOf(t.id),`${t.after} must precede ${t.id}`);
+  assert(items.every(t=>!t.date));assert.equal(P.calendar(j,{at:'2026-09-16'}).includes('BEGIN:VEVENT'),false);
+ }
+});
+test('A scheduled first visit anchors indirect steps without inventing dates or moving explicit appointments',()=>{
+ const j=journey();j.tasks.first={date:'2026-09-20',time:'15:00',status:'scheduled'};
+ let items=P.timeline(j,'2026-09-16');
+ for(const id of ['blood-first','declaration','early-talk','prevention','birth-prep']){
+  const t=items.find(t=>t.id===id);assert.equal(t.when,'2026-09-20');assert(!t.date);assert(items.indexOf(t)>items.findIndex(t=>t.id==='first'));
+ }
+ j.tasks.declaration={date:'2026-09-24',status:'scheduled'};j.tasks.prevention={date:'2026-09-22',note:'Date fixée avec la sage-femme',status:'scheduled'};
+ items=P.timeline(j,'2026-09-16');assert.equal(items.find(t=>t.id==='early-talk').when,'2026-09-24');assert.equal(items.find(t=>t.id==='prevention').date,'2026-09-22');assert.equal(items.find(t=>t.id==='prevention').note,j.tasks.prevention.note);
+ assert(items.findIndex(t=>t.id==='prevention')<items.findIndex(t=>t.id==='declaration'));
+});
+test('Entered appointments are chronological including their time, irrespective of catalogue order',()=>{
+ const j=journey();j.tasks.echo2={date:'2026-10-20',time:'16:00'};j.tasks.echo3={date:'2026-10-20',time:'09:30'};j.tasks['custom-visit']={title:'Rendez-vous personnel',date:'2026-10-19',time:'14:00'};
+ const items=P.timeline(j).filter(t=>t.date);assert.deepEqual(items.map(t=>t.id),['custom-visit','echo3','echo2']);assert.equal(items[1].when,'2026-10-20');
+});
