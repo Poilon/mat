@@ -81,7 +81,7 @@
     {id:'early-talk',title:'L’entretien prénatal précoce',category:'rendezvous',kind:'flexible',after:'declaration',timing:'Le plus tôt possible',
       description:'Un entretien pour parler de vos besoins et préparer votre accompagnement, à organiser dès la déclaration de grossesse.',
       prepare:'Il peut avoir lieu dès le début du suivi. Vous pouvez venir avec le coparent.',source:'first'},
-    {id:'prevention',title:'Le bilan prénatal de prévention',category:'rendezvous',kind:'deadline',days:[0,167],after:'declaration',timing:'Si possible avant 24 SA',
+    {id:'prevention',explain:'C’est un échange avec une sage-femme, en cabinet ou en PMI, pour faire le point sur vos habitudes et vos besoins pendant la grossesse. Vous pouvez y parler d’alimentation, d’activité physique, de tabac ou d’alcool, de vaccination et de santé bucco-dentaire. C’est aussi l’occasion de poser les questions qui vous préoccupent.',title:'Le bilan prénatal de prévention',category:'rendezvous',kind:'deadline',days:[0,167],after:'declaration',timing:'Si possible avant 24 SA',
       description:'Ce bilan avec une sage-femme peut être réalisé dès la déclaration de grossesse.',
       prepare:'Faites le point sur l’alimentation, les habitudes de vie, les vaccinations et la santé bucco-dentaire. « Avant 24 SA » est une période conseillée, pas un rendez-vous fixé.',source:'follow'},
     {id:'dental',title:'Mon rendez-vous chez le dentiste',category:'rendezvous',kind:'window',months:[3,9],timing:'À partir du 4e mois',

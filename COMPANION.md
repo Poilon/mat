@@ -79,3 +79,9 @@ Cette revue documentaire corrige les règles et leur présentation ; elle ne con
 ## Cocher les étapes terminées
 
 Le calendrier s’ouvre sur « À faire ». Cocher « Fait » retire immédiatement l’étape de cette liste et des filtres de catégories, tout en conservant ses dates, notes et attribution. Le filtre « Faits » permet de retrouver l’historique et de décocher pour remettre l’étape à faire. Les étapes écartées restent dans « Écartés ». Le statut utilise le carnet et sa synchronisation existants.
+
+## Comprendre une étape depuis l’accueil
+
+Les cartes « À prévoir » ouvrent une fiche sur place : explication, période indicative ou date renseignée, préparation et lien vers la source officielle. Un bouton distinct permet ensuite d’ouvrir le rendez-vous concerné dans le calendrier pour y noter une date ou une question. La fiche se ferme avec Échap et rend le focus à la carte ; elle se ferme aussi lors d’un changement de compte. Le bilan prénatal de prévention dispose d’une explication détaillée fondée sur la page Ameli du suivi mensuel.
+
+Les textes d’accueil et de navigation privilégient des formulations directes (« Bonjour Poilon. », « À prévoir », « Calendrier, examens et repas. »), avec un vouvoiement cohérent.

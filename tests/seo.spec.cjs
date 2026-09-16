@@ -2,7 +2,7 @@ const {test,expect}=require('@playwright/test');
 const AxeBuilder=require('@axe-core/playwright').default;
 test('Search landing pages and precautions are readable without JavaScript, including the homepage',async({browser})=>{
  const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}});const page=await context.newPage();
- for(const [url,title]of [['/','Votre grossesse, une étape après l’autre.'],['/aliments/mozzarella-enceinte/','Mozzarella enceinte'],['/aliments/ananas-enceinte/','Ananas enceinte'],['/aliments/patate-douce-enceinte/','Patate douce enceinte'],['/alimentation-grossesse/fromages-produits-laitiers/','Quels fromages'],['/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','Bowl de quinoa']]){
+ for(const [url,title]of [['/','Votre grossesse, plus facile à organiser.'],['/aliments/mozzarella-enceinte/','Mozzarella enceinte'],['/aliments/ananas-enceinte/','Ananas enceinte'],['/aliments/patate-douce-enceinte/','Patate douce enceinte'],['/alimentation-grossesse/fromages-produits-laitiers/','Quels fromages'],['/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','Bowl de quinoa']]){
   const response=await page.goto(url);expect(response.status()).toBe(200);await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('h1')).toContainText(title);await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href','https://poum.app'+url);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
  await expect(page.locator('.seo-steps li')).toHaveCount(4);await expect(page.locator('.seo-sources a').first()).toHaveAttribute('href',/^https:\/\//);await context.close();
