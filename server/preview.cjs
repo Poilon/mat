@@ -3,19 +3,19 @@ const { createHash } = require('node:crypto');
 const { HttpError, originOf } = require('./http.cjs');
 const COOKIE = 'poum-access-preview';
 // This cookie is only a display preference. Authorization always comes from
-// the verified account returned by Neon, never from a client-supplied email.
+// the authenticated account returned by Neon, never from a client-supplied email.
 function eligible(user) {
-  return Boolean(user?.id && user.emailVerified === true && user.email?.toLowerCase() === 'poilon@gmail.com');
+  return Boolean(user?.id && user.email?.toLowerCase() === 'poilon@gmail.com');
 }
 function identity(user) { return createHash('sha256').update(user.id).digest('hex'); }
 function preview(req, user) {
-  if (!eligible(user)) return { eligible: false, mode: 'auto', ...(user?.id && user.email?.toLowerCase() === 'poilon@gmail.com' ? { requiresVerification: true } : {}) };
+  if (!eligible(user)) return { eligible: false, mode: 'auto' };
   const value = String(req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1);
   const [owner, mode] = (value || '').split('.');
   return { eligible: true, mode: owner === identity(user) && ['free', 'plus'].includes(mode) ? mode : 'auto' };
 }
 function select(req, res, user, mode) {
-  if (!eligible(user)) throw new HttpError(403, 'Ce mode est réservé au compte de test dont l’adresse e-mail est vérifiée.');
+  if (!eligible(user)) throw new HttpError(403, 'Ce mode admin est réservé au compte propriétaire connecté.');
   if (!['free', 'plus', 'auto'].includes(mode)) throw new HttpError(400, 'Choisissez le mode gratuit, Plus ou votre accès réel.');
   const value = mode === 'auto' ? '' : identity(user) + '.' + mode;
   const pair = COOKIE + '=' + value;

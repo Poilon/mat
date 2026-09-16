@@ -201,19 +201,11 @@
   function previewBar() {
     const p = Billing.state.preview;
     if (Billing.state.owner !== Cloud.state.user?.id) return '';
-    if (p?.requiresVerification) return `<div class="access-preview"><div><b>Votre switch Gratuit / Plus</b><small>Confirmez votre adresse e-mail pour activer le mode test.</small></div><button class="btn-text" data-action="preview-verify" ${previewBusy ? 'disabled' : ''}>Confirmer mon e-mail</button></div>`;
     if (!p?.eligible) return '';
     const paid = Billing.active;
-    return `<div class="access-preview"><div><b>Mode test · ${p.mode === 'auto' ? 'Accès réel' : paid ? 'Plus' : 'Gratuit'}</b><small>Visible uniquement sur votre compte · aucun achat</small></div><div class="access-preview-controls"><span>Gratuit</span><button type="button" role="switch" aria-label="Tester le mode Plus" aria-checked="${paid}" data-action="billing-preview" data-mode="${paid ? 'free' : 'plus'}" ${previewBusy ? 'disabled' : ''}><span></span></button><span>Plus</span><button class="btn-text" data-action="billing-preview" data-mode="auto" ${previewBusy || p.mode === 'auto' ? 'disabled' : ''}>Accès réel</button></div></div>`;
+    return `<div class="access-preview"><div><b>Mode admin · ${p.mode === 'auto' ? 'Accès réel' : paid ? 'Plus' : 'Gratuit'}</b><small>Visible uniquement sur votre compte · aucun achat</small></div><div class="access-preview-controls"><span>Gratuit</span><button type="button" role="switch" aria-label="Tester le mode Plus" aria-checked="${paid}" data-action="billing-preview" data-mode="${paid ? 'free' : 'plus'}" ${previewBusy ? 'disabled' : ''}><span></span></button><span>Plus</span><button class="btn-text" data-action="billing-preview" data-mode="auto" ${previewBusy || p.mode === 'auto' ? 'disabled' : ''}>Accès réel</button></div></div>`;
   }
   function renderPreviewBar() { if ($('#access-preview')) $('#access-preview').innerHTML = previewBar(); }
-  async function verifyPreviewEmail() {
-    if (previewBusy || !Cloud.state.user) return;
-    previewBusy = true; renderPreviewBar();
-    try { await Cloud.request('auth/send-verification-email', { method: 'POST', body: JSON.stringify({ email: Cloud.state.user.email, callbackURL: location.origin + '/#profil' }) }); toast('Le lien de confirmation a été envoyé à votre adresse e-mail.', 'check'); }
-    catch (error) { toast(error.message, 'info'); }
-    finally { previewBusy = false; renderPreviewBar(); }
-  }
   async function changePreview(mode) {
     if (previewBusy) return;
     previewBusy = true; renderPreviewBar();
@@ -417,7 +409,7 @@
   function memberPanel() {
     const b = Billing.state, active = Billing.active;
     const until = b.access.until ? new Date(b.access.until).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-    return `<section class="member-panel"><div class="member-symbol">${icon('calendar', 28)}</div><div><span class="eyebrow">${active ? 'Votre accès Plus' : 'VOTRE ABONNEMENT'}</span><h2>${active ? 'Votre atelier est disponible.' : 'Retrouvez votre accès Plus.'}</h2><p>${b.preview?.mode === 'plus' ? 'Mode test Plus actif. Aucun achat ni abonnement n’a été créé.' : active ? b.access.plan === 'pass' ? `Votre pass est actif jusqu’au ${until}, sans renouvellement automatique.` : b.access.cancelAtPeriodEnd ? `Le renouvellement est arrêté. Plus reste accessible jusqu’au ${until}.` : `Votre abonnement est actif. Période payée jusqu’au ${until}.` : b.access.subscriptionStatus === 'past_due' ? 'Le paiement doit être mis à jour pour retrouver les nouvelles semaines.' : 'Vos menus enregistrés restent accessibles. Vous pouvez gérer vos achats depuis Stripe.'}</p><div class="dialog-actions">${active ? '<a class="btn btn-primary" href="#atelier">Préparer ma prochaine semaine</a>' : ''}${b.canManage ? '<button class="btn btn-outline" data-action="billing-portal">Mon abonnement & mes factures</button><button class="btn-text" data-action="billing-restore">Actualiser mon accès</button>' : ''}</div></div></section>`;
+    return `<section class="member-panel"><div class="member-symbol">${icon('calendar', 28)}</div><div><span class="eyebrow">${active ? 'Votre accès Plus' : 'VOTRE ABONNEMENT'}</span><h2>${active ? 'Votre atelier est disponible.' : 'Retrouvez votre accès Plus.'}</h2><p>${b.preview?.mode === 'plus' ? 'Mode admin Plus actif. Aucun achat ni abonnement n’a été créé.' : active ? b.access.plan === 'pass' ? `Votre pass est actif jusqu’au ${until}, sans renouvellement automatique.` : b.access.cancelAtPeriodEnd ? `Le renouvellement est arrêté. Plus reste accessible jusqu’au ${until}.` : `Votre abonnement est actif. Période payée jusqu’au ${until}.` : b.access.subscriptionStatus === 'past_due' ? 'Le paiement doit être mis à jour pour retrouver les nouvelles semaines.' : 'Vos menus enregistrés restent accessibles. Vous pouvez gérer vos achats depuis Stripe.'}</p><div class="dialog-actions">${active ? '<a class="btn btn-primary" href="#atelier">Préparer ma prochaine semaine</a>' : ''}${b.canManage ? '<button class="btn btn-outline" data-action="billing-portal">Mon abonnement & mes factures</button><button class="btn-text" data-action="billing-restore">Actualiser mon accès</button>' : ''}</div></div></section>`;
   }
   function premiumNudge(place = 'home') {
     const copy = {
@@ -948,7 +940,6 @@
       case 'plan-recipe': planRecipe(id); break;
       case 'plus-offer': plusOffer(); break;
       case 'plus-example': Workshop.example(); go('atelier'); break;
-      case 'preview-verify': verifyPreviewEmail(); break;
       case 'billing-preview': changePreview(trigger.dataset.mode); break;
       case 'billing-checkout': startCheckout(); break;
       case 'billing-portal': billingPortal(); break;

@@ -51,9 +51,9 @@ La suite couvre notamment les corrections de datation sans perte de rendez-vous,
 
 ## Switch de test propriétaire
 
-Le compte Neon `poilon@gmail.com`, avec e-mail vérifié, dispose d’un bandeau « Mode test » global. Le switch choisit Gratuit ou Plus ; « Accès réel » rétablit les droits Stripe. Le choix est conservé 30 jours dans un cookie HttpOnly, Secure en HTTPS, propre au navigateur et lié à l’identifiant du compte. Le cookie exprime seulement une préférence : chaque requête vérifie à nouveau l’identité et l’e-mail confirmé côté serveur. Aucun autre compte ne bénéficie de cette option.
+Le compte Neon connecté `poilon@gmail.com` dispose d’un bandeau « Mode admin » global, sans condition de validation de l’e-mail. Le switch choisit Gratuit ou Plus ; « Accès réel » rétablit les droits Stripe. Le choix est conservé 30 jours dans un cookie HttpOnly, Secure en HTTPS, propre au navigateur et lié à l’identifiant du compte. Le cookie exprime seulement une préférence : chaque requête vérifie à nouveau l’identité et l’adresse renvoyées par la session Neon côté serveur. Aucun autre compte ne bénéficie de cette option.
 
-Les recettes, la composition des menus, les dîners et les exports calendrier utilisent le même accès effectif. Les téléchargements de recettes sont séparés par mode pour retrouver les paywalls en revenant au gratuit. Les carnets et la semaine d’essai déjà utilisée restent conservés. Les achats et la gestion Stripe demandent de revenir à l’accès réel ; la simulation ne modifie jamais un abonnement ni un paiement. Une adresse non vérifiée doit être confirmée avant que le switch apparaisse.
+Les recettes, la composition des menus, les dîners et les exports calendrier utilisent le même accès effectif. Les téléchargements de recettes sont séparés par mode pour retrouver les paywalls en revenant au gratuit. Les carnets et la semaine d’essai déjà utilisée restent conservés. Les achats et la gestion Stripe demandent de revenir à l’accès réel ; la simulation ne modifie jamais un abonnement ni un paiement. Le statut `emailVerified` ne conditionne pas cet accès administrateur.
 
 ## Revue du calendrier — 16 septembre 2026 (4.0.2)
 
