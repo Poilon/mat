@@ -7,7 +7,8 @@
     follow: 'https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/consultation-suivi-mensuel',
     official: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F963',
     declaration: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F968',
-    screening: 'https://www.has-sante.fr/jcms/c_2899277/fr/depistage-de-la-trisomie-21'
+    screening: 'https://www.has-sante.fr/jcms/c_2899277/fr/depistage-de-la-trisomie-21',
+    vaccines: 'https://professionnels.vaccination-info-service.fr/Recommandations-vaccinales-specifiques/Personnes-exposees-a-des-risques-specifiques/Femmes-enceintes'
   };
   const validDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v + 'T12:00:00Z')) && new Date(v + 'T12:00:00Z').toISOString().slice(0, 10) === v;
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -50,33 +51,81 @@
     const age = p.birthDate ? new Date(due).getUTCFullYear()-new Date(p.birthDate).getUTCFullYear()-(due.slice(5)<p.birthDate.slice(5)?1:0) : null;
     return { due,start,days,week:Math.floor(days/7),day:((days%7)+7)%7,trimester:days<98?1:days<196?2:3,progress:Math.max(0,Math.min(100,days/287*100)),age,estimated:p.basis!=='term' };
   }
+  // SA windows and calendar months deliberately remain distinct. A planning
+  // range never becomes an appointment unless the person enters a date.
+  function addMonths(value, months) {
+    const d = new Date(value + 'T12:00:00Z'), day = d.getUTCDate();
+    d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + months);
+    const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth()+1, 0)).getUTCDate();
+    d.setUTCDate(Math.min(day,last)); return d.toISOString().slice(0,10);
+  }
   const milestones = [
-    ['first',5,13,'Le premier rendez-vous','rendezvous','Confirmer la datation et préparer votre parcours avec une sage-femme ou un médecin.','Vos antécédents, traitements et questions ; vos documents déjà disponibles.','first'],
-    ['blood-first',6,13,'Faire le point sur le premier bilan','examens','Retrouver les analyses prescrites et leurs résultats. Le contenu est défini avec votre professionnel.','Apportez votre ordonnance et vos anciens résultats. Les consignes du laboratoire font référence.','first'],
-    ['screening',9,13,'Parler du dépistage prénatal','rendezvous','Comprendre les possibilités de dépistage et faire votre choix. L’âge seul ne détermine pas le parcours.','Quelles étapes me sont proposées ? Quels documents et quels délais prévoir ?','screening'],
-    ['echo1',11,13.857142857,'La première échographie','rendezvous','La datation retenue permet d’actualiser votre calendrier.','Notez le terme communiqué dans « Ma grossesse ».','first'],
-    ['declaration',8,15,'Vérifier ma déclaration de grossesse','demarches','Vérifier avec le professionnel la déclaration à l’Assurance Maladie et à la CAF.','Suivez le délai indiqué par vos organismes ; retrouvez leurs confirmations.','declaration'],
-    ['maternity',10,20,'Choisir ma maternité','pratique','Se renseigner sur l’inscription, les modalités d’accueil et les contacts.','Les délais dépendent de la maternité. Cette période est un repère d’organisation Poum.','official'],
-    ['early-talk',14,20,'L’entretien prénatal précoce','rendezvous','Un temps pour parler de vos besoins, de vos questions et de votre accompagnement.','Vous pouvez venir avec le coparent si vous le souhaitez.','follow'],
-    ['prevention',14,23,'Le bilan de prévention','rendezvous','Faire le point avec une sage-femme sur votre quotidien et vos besoins.','Rassembler les sujets que vous souhaitez aborder.','follow'],
-    ['dental',16,23,'Mon rendez-vous chez le dentiste','rendezvous','Prévoir le bilan bucco-dentaire proposé pendant la grossesse.','Retrouver les modalités de prise en charge dans votre espace Ameli.','follow'],
-    ['echo2',20,24,'La deuxième échographie','rendezvous','Prévoir l’échographie morphologique dans la période indiquée par votre professionnel.','Votre précédent compte rendu et vos questions.','follow'],
-    ['vaccines',20,36,'Faire le point sur les vaccinations','rendezvous','Échanger sur les vaccinations adaptées à votre situation et à la saison.','Apportez votre carnet de vaccination ; le professionnel définit le calendrier.','follow'],
-    ['birth-prep',22,32,'Préparer la naissance, à mon rythme','pratique','Organiser les séances de préparation et réfléchir à vos souhaits.','Respiration, accueil du bébé, alimentation, retour à la maison : choisissez vos questions.','follow'],
-    ['blood-six',24,28,'Retrouver mon bilan de suivi','examens','Faire le point sur les examens prescrits à cette étape, selon votre situation.','Les examens et répétitions dépendent notamment des résultats antérieurs.','follow'],
-    ['echo3',30,34,'La troisième échographie','rendezvous','Prévoir le rendez-vous selon les indications de votre équipe.','Votre dossier de suivi et vos questions pour la naissance.','follow'],
-    ['anesthesia',32,36,'La consultation d’anesthésie','rendezvous','Prévoir la consultation avec votre maternité, même sans projet de péridurale.','La maternité précise la date, les documents et examens nécessaires.','official'],
-    ['bag',32,37,'Préparer le sac de maternité','pratique','Rassembler tranquillement les essentiels et les documents.','Demandez la liste de votre maternité. Repère pratique Poum, à adapter.','official'],
-    ['home',34,38,'Organiser les premiers jours à la maison','pratique','Répartir les courses, les repas et les aides dont vous aurez envie.','Prévoir les contacts pour le suivi après la naissance.','follow']
+    {id:'first',title:'Le premier rendez-vous',category:'rendezvous',kind:'deadline',months:[0,3],timing:'Avant la fin du 3e mois',
+      description:'Prenez contact dès que vous savez que vous êtes enceinte. Ce premier examen confirme la grossesse et organise le suivi.',
+      prepare:'La consultation et l’échographie du premier trimestre sont deux étapes distinctes. Apportez vos antécédents, traitements et résultats disponibles.',source:'first'},
+    {id:'blood-first',title:'Faire le point sur le premier bilan',category:'examens',kind:'flexible',months:[0,3],after:'first',timing:'Après la consultation · sur ordonnance',
+      description:'Les prises de sang et analyses d’urines sont prescrites selon votre situation, avec leurs délais propres.',
+      prepare:'Rassemblez votre ordonnance et les résultats déjà disponibles. Demandez quels prélèvements sont attendus et quand les faire ; le calendrier ne remplace pas la prescription.',source:'first'},
+    {id:'screening',title:'Parler du dépistage prénatal',category:'rendezvous',kind:'flexible',months:[0,3],after:'first',timing:'À aborder au premier trimestre',
+      description:'Discutez tôt des possibilités de dépistage et de votre choix. Le parcours combine plusieurs informations, dont l’âge, les marqueurs et l’échographie.',
+      prepare:'Si vous choisissez le dépistage, faites confirmer les créneaux de prise de sang et d’échographie. L’âge seul ne constitue pas une prescription.',source:'screening'},
+    {id:'echo1',title:'L’échographie du premier trimestre',category:'rendezvous',kind:'window',days:[77,97],timing:'11 SA à 13 SA + 6 jours',
+      description:'Cette échographie précise la datation et le terme. Une échographie plus précoce peut être proposée selon la situation ; elle ne remplace pas ce rendez-vous.',
+      prepare:'Faites confirmer la date par votre professionnel et actualisez vos repères avec le terme communiqué.',source:'first'},
+    {id:'declaration',title:'Vérifier ma déclaration de grossesse',category:'demarches',kind:'deadline',months:[0,3],after:'first',timing:'Avant la fin du 3e mois',
+      description:'Après le premier examen prénatal, le médecin ou la sage-femme établit la déclaration. Vérifiez avec votre professionnel quand transmettre les éléments.',
+      prepare:'Vérifiez la transmission à l’Assurance Maladie et à la CAF/MSA. Les textes ne font pas de l’échographie du premier trimestre un préalable systématique. Suivez le calendrier communiqué par vos organismes ; aucun jour précis n’est fixé par Poum.',source:'declaration'},
+    {id:'maternity',title:'Choisir ma maternité',category:'pratique',kind:'flexible',timing:'Se renseigner dès que possible',
+      description:'Contactez les maternités qui vous intéressent : les modalités et délais d’inscription varient selon l’établissement.',
+      prepare:'Demandez les disponibilités, les documents et les contacts utiles directement à votre maternité.',source:null},
+    {id:'early-talk',title:'L’entretien prénatal précoce',category:'rendezvous',kind:'flexible',after:'declaration',timing:'Le plus tôt possible',
+      description:'Un entretien pour parler de vos besoins et préparer votre accompagnement, à organiser dès la déclaration de grossesse.',
+      prepare:'Il peut avoir lieu dès le début du suivi. Vous pouvez venir avec le coparent.',source:'first'},
+    {id:'prevention',title:'Le bilan prénatal de prévention',category:'rendezvous',kind:'deadline',days:[0,167],after:'declaration',timing:'Si possible avant 24 SA',
+      description:'Ce bilan avec une sage-femme peut être réalisé dès la déclaration de grossesse.',
+      prepare:'Faites le point sur l’alimentation, les habitudes de vie, les vaccinations et la santé bucco-dentaire. « Avant 24 SA » est une période conseillée, pas un rendez-vous fixé.',source:'follow'},
+    {id:'dental',title:'Mon rendez-vous chez le dentiste',category:'rendezvous',kind:'window',months:[3,9],timing:'À partir du 4e mois',
+      description:'Organisez votre examen bucco-dentaire à partir du quatrième mois. Il n’a pas besoin d’être fixé à une semaine précise par Poum.',
+      prepare:'Retrouvez les modalités de prise en charge dans votre espace Ameli. Le dispositif se prolonge jusqu’au sixième mois après l’accouchement.',source:'first'},
+    {id:'echo2',title:'L’échographie du deuxième trimestre',category:'rendezvous',kind:'window',days:[140,168],timing:'Entre 20 et 24 SA',
+      description:'Prévoyez l’échographie morphologique avec votre professionnel dans cette période.',
+      prepare:'Apportez le précédent compte rendu et vos questions.',source:'follow'},
+    {id:'vaccines',title:'Faire le point sur les vaccinations',category:'rendezvous',kind:'flexible',after:'first',timing:'Dès le premier rendez-vous',
+      description:'Les vaccinations n’ont pas toutes la même période : abordez-les dès le début du suivi, selon la saison et votre situation.',
+      prepare:'Coqueluche : à chaque grossesse, de préférence entre 20 et 36 SA. VRS : entre 32 et 36 SA pendant la campagne, selon les recommandations en vigueur. Grippe et Covid-19 : discussion selon la campagne, sans attendre 20 SA. Votre professionnel fixe le calendrier adapté.',source:'vaccines'},
+    {id:'birth-prep',title:'Préparer la naissance, à mon rythme',category:'pratique',kind:'flexible',after:'declaration',timing:'À organiser avec ma sage-femme',
+      description:'Organisez vos séances de préparation dès que vous le souhaitez avec l’équipe qui vous suit.',
+      prepare:'Les séances ont souvent lieu à partir du septième mois, mais il n’existe pas de créneau unique imposé. Demandez les disponibilités et les formats proposés.',source:'official'},
+    {id:'blood-six',title:'Retrouver mon bilan du 6e mois',category:'examens',kind:'window',months:[5,6],timing:'Au cours du 6e mois',
+      description:'Rassemblez les examens prescrits pour le sixième mois et prévoyez leur réalisation avec votre professionnel.',
+      prepare:'Les repères nationaux prévoient notamment la numération globulaire et l’antigène HBs ; la RAI dépend notamment du rhésus et des antécédents de transfusion. Votre ordonnance précise ce qui vous concerne.',source:'official'},
+    {id:'echo3',title:'L’échographie du troisième trimestre',category:'rendezvous',kind:'window',days:[210,245],timing:'Entre 30 et 35 SA',
+      description:'Organisez ce rendez-vous selon la datation retenue et les indications de votre équipe.',
+      prepare:'La période présentée reprend le repère Ameli. Le créneau donné par la maternité reste prioritaire.',source:'follow'},
+    {id:'anesthesia',title:'La consultation d’anesthésie',category:'rendezvous',kind:'window',months:[7,8],timing:'Au cours du 8e mois',
+      description:'La consultation est prévue au huitième mois, même sans projet de péridurale.',
+      prepare:'La maternité fixe le rendez-vous et précise les documents à apporter.',source:'official'},
+    {id:'bag',title:'Préparer le sac de maternité',category:'pratique',kind:'flexible',months:[7,9],timing:'À votre rythme',
+      description:'Un repère pratique Poum : rassemblez les essentiels quand cela vous convient.',
+      prepare:'Demandez la liste de votre maternité. Ce n’est pas une échéance médicale.',source:null},
+    {id:'home',title:'Organiser les premiers jours à la maison',category:'pratique',kind:'flexible',months:[8,9],timing:'Avant la naissance',
+      description:'Anticipez l’aide au quotidien et prenez contact avec le professionnel qui assurera le suivi après la naissance.',
+      prepare:'Votre équipe peut vous orienter pour le retour à domicile.',source:'follow'}
   ];
   function timeline(raw, at=today()) {
     const j=clean(raw), d=dates(j,at);if(!d || j.profile.paused)return [];
-    const definitions=[...milestones];
-    for(let month=4;month<=9;month++)definitions.push(['visit'+month,14+(month-4)*4.35,18+(month-4)*4.35,`Ma consultation du ${month}e mois`,'rendezvous','Un rendez-vous mensuel avec votre sage-femme ou médecin.','Vos questions, les résultats reçus et les rendez-vous à venir.','follow']);
-    if(j.profile.toxo==='nonimmune')for(let n=4;n<=9;n++)definitions.push(['toxo'+n,14+(n-4)*4.35,18+(n-4)*4.35,`Toxoplasmose · suivi du ${n}e mois`,'examens','Retrouver le contrôle mensuel prescrit, selon la non-immunisation confirmée par votre professionnel.','Vérifiez l’ordonnance et les modalités avec le laboratoire.','follow']);
-    const items=definitions.map(([id,from,to,title,category,description,prepare,source])=>({id,title,category,description,prepare,source:sources[source],start:add(d.start,Math.round(from*7)),end:add(d.start,Math.round(to*7)),...j.tasks[id]}));
-    for(const [id,t] of Object.entries(j.tasks))if(id.startsWith('custom-'))items.push({id,category:'personnel',description:'Votre rendez-vous personnel.',prepare:'',source:null,start:t.date||at,end:t.date||at,...t});
-    return items.map(t=>({...t,title:t.title||definitions.find(x=>x[0]===t.id)?.[3]||'Mon rendez-vous',status:t.status||'todo',when:t.date||t.start,phase:(t.date||t.end)<at?'past':t.start>at?'future':'now'})).sort((a,b)=>a.when.localeCompare(b.when)||a.id.localeCompare(b.id));
+    const conception=add(d.start,14), definitions=[...milestones];
+    for(let month=4;month<=9;month++) definitions.push({id:'visit'+month,title:`Ma consultation du ${month}e mois`,category:'rendezvous',kind:'window',months:[month-1,month],timing:`Au cours du ${month}e mois`,description:'Une consultation par mois à partir du quatrième mois, après le premier examen prénatal.',prepare:'Les limites des mois ci-dessous sont estimées depuis votre repère de grossesse. Faites confirmer vos dates avec le calendrier de suivi reçu de l’Assurance Maladie.',source:'official'});
+    // Monthly monitoring must not silently begin only in the fourth month.
+    if(j.profile.toxo==='nonimmune') for(let month=2;month<=9;month++) definitions.push({id:'toxo'+month,title:`Toxoplasmose · suivi du ${month}e mois`,category:'examens',kind:'window',months:[month-1,month],timing:`Chaque mois · repère du ${month}e mois`,description:'Après confirmation de la non-immunisation, le contrôle est mensuel, dès le début du suivi.',prepare:'Ces plages ne fixent pas le jour du prélèvement : suivez l’ordonnance et la date du précédent contrôle. Si cette période précède votre premier bilan, indiquez « Non prévu avec mon professionnel ».',source:'follow'});
+    const items=definitions.map((m,order)=>{
+      const start=m.days?add(d.start,m.days[0]):m.months?addMonths(conception,m.months[0]):conception;
+      const end=m.days?add(d.start,m.days[1]):m.months?add(addMonths(conception,m.months[1]),-1):d.due;
+      return {...m,order,start,end,source:sources[m.source]||null,...j.tasks[m.id],title:j.tasks[m.id]?.title||m.title};
+    });
+    for(const t of items) if(t.after && j.tasks[t.after]?.date && !t.date) t.start = [t.start,j.tasks[t.after].date].sort().at(-1);
+    for(const [id,t] of Object.entries(j.tasks)) if(id.startsWith('custom-'))items.push({id,kind:'personal',category:'personnel',description:'Votre rendez-vous personnel.',prepare:'',source:null,start:t.date||at,end:t.date||at,...t,order:items.length});
+    return items.map(t=>({...t,status:t.status||'todo',when:t.date||t.start,phase:t.date?(t.date<at?'past':t.date>at?'future':'now'):t.end<at?'past':t.start>at?'future':'now'})).sort((a,b)=>a.when.localeCompare(b.when)||a.order-b.order);
   }
   const aliases = [
     ['Groupe sanguin',/\b(?:groupe sanguin|groupage|abo)\b/],['Rhésus',/\b(?:rhesus|rhd|rh d)\b/],['RAI',/\b(?:rai|agglutinines irregulieres|anticorps irreguliers)\b/],
@@ -95,7 +144,7 @@
   }
   function calendar(raw,{partnerOnly=false,at=today()}={}) {
     const escape=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
-    const events=timeline(raw,at).filter(t=>!['done','skip'].includes(t.status)&&t.when>=at&&(!partnerOnly||t.assignee==='partner'));
+    const events=timeline(raw,at).filter(t=>!['done','skip'].includes(t.status)&&t.date&&t.date>=at&&(!partnerOnly||t.assignee==='partner'));
     const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Poum//Mon calendrier//FR','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
     for(const t of events){const date=t.when.replace(/-/g,''),dateTime=t.time?date+'T'+t.time.replace(':','')+'00':null;lines.push('BEGIN:VEVENT',`UID:${typeof module!=='undefined'&&module.exports?require('node:crypto').createHash('sha256').update(t.id+dates(raw,at).due).digest('hex').slice(0,32):t.id}@poum.app`,`DTSTAMP:${at.replace(/-/g,'')}T120000Z`,dateTime?`DTSTART:${dateTime}`:`DTSTART;VALUE=DATE:${date}`,`SUMMARY:${escape(partnerOnly?'Poum · Une chose à prévoir':t.title)}`,`DESCRIPTION:${escape(partnerOnly?'Une tâche partagée depuis Poum. Retrouvez les détails avec la personne qui vous a envoyé ce calendrier.':(t.date?'Rendez-vous enregistré. ':'Repère indicatif à confirmer. ')+t.description)}`,'CLASS:PRIVATE','BEGIN:VALARM',dateTime?'TRIGGER:-P1D':'TRIGGER:-PT15H','ACTION:DISPLAY','DESCRIPTION:Rappel Poum','END:VALARM','END:VEVENT');}
     lines.push('END:VCALENDAR');
@@ -103,6 +152,6 @@
     const fold=line=>{let out='',length=0;for(const char of line){const size=new TextEncoder().encode(char).length;if(length+size>75){out+='\r\n ';length=1;}out+=char;length+=size;}return out;};
     return lines.map(fold).join('\r\n')+'\r\n';
   }
-  const api={empty,clean,validate,dates,timeline,today,add,validDate,sources,recognised,compare,calendar};
+  const api={empty,clean,validate,dates,timeline,today,add,addMonths,validDate,sources,recognised,compare,calendar};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.PoumPregnancy=api;
 })(typeof window!=='undefined'?window:globalThis);

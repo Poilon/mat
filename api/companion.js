@@ -14,5 +14,6 @@ module.exports=handler(async(req,res)=>{
   if(body?.action!=='calendar'||typeof body.partnerOnly!=='boolean')throw new HttpError(400,'Choisissez un export de calendrier.');
   let journey;try{journey=P.validate(body.journey);}catch(e){throw new HttpError(400,e.message);}
   if(!P.dates(journey)||journey.profile.paused)throw new HttpError(400,'Activez votre calendrier et renseignez un repère de grossesse.');
+  if(!P.timeline(journey).some(t=>t.date&&t.date>=P.today()&&!['done','skip'].includes(t.status)&&(!body.partnerOnly||t.assignee==='partner')))throw new HttpError(400,'Ajoutez une date à venir dans votre calendrier avant de l’exporter. Les périodes estimées ne sont pas des rendez-vous.');
   json(res,200,{calendar:P.calendar(journey,{partnerOnly:body.partnerOnly})});
 });

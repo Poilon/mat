@@ -9,9 +9,9 @@ Le calendrier, les examens et les repas partagent le carnet existant. Pas de nou
 - `#calendrier` : 23 repères généraux français, contrôles supplémentaires en cas de non-immunisation toxoplasmose confirmée, filtres, dates/heures réellement fixées, notes, statut, responsable, rendez-vous personnels et questions de consultation.
 - `#examens` : saisie des analyses prescrites, proposition d'intitulés depuis une ordonnance, comparaison avec un résultat, confirmation manuelle des mentions et suivi « attendu / en attente / reçu et vérifié / discuté ».
 - `#envies` : goûts temporaires jusqu'à aujourd'hui, pour sept jours ou sans date de fin. Les allergies et goûts habituels restent distincts. Le moteur partagé applique ces exclusions à la navigation, aux suggestions et à la génération côté serveur.
-- `#plus` : nouvelle présentation de l'offre ; export ICS des étapes à venir et export neutre des dates confiées à un proche, droits vérifiés sur le serveur. Les menus, recettes Plus et courses conservent leurs droits existants.
+- `#plus` : nouvelle présentation de l'offre ; export ICS des rendez-vous à venir dont la date a été saisie et export neutre des dates confiées à un proche, droits vérifiés sur le serveur. Les menus, recettes Plus et courses conservent leurs droits existants.
 
-Le calendrier dans Poum, le suivi documentaire et les exclusions sont gratuits. Les rappels Plus sont des alarmes dans un fichier ICS à importer dans son agenda. Pas d'envoi automatique de notifications ou d'e-mails ; pas de synchronisation bidirectionnelle avec Google/Apple. Après une modification, il faut exporter à nouveau et gérer la mise à jour dans l'agenda destinataire. L'export pour un proche ne contient ni intitulés médicaux ni notes ; ses identifiants sont opaques. Aucun message n'est envoyé au proche par Poum.
+Le calendrier dans Poum, le suivi documentaire et les exclusions sont gratuits. Les rappels Plus sont des alarmes dans un fichier ICS à importer dans son agenda. Seules les dates renseignées par la personne sont exportées ; aucune période estimée ne crée de rendez-vous. Pas d'envoi automatique de notifications ou d'e-mails ; pas de synchronisation bidirectionnelle avec Google/Apple. Après une modification, il faut exporter à nouveau et gérer la mise à jour dans l'agenda destinataire. L'export pour un proche ne contient ni intitulés médicaux ni notes ; ses identifiants sont opaques. Aucun message n'est envoyé au proche par Poum.
 
 ## Lecture documentaire
 
@@ -54,3 +54,24 @@ La suite couvre notamment les corrections de datation sans perte de rendez-vous,
 Le compte Neon `poilon@gmail.com`, avec e-mail vérifié, dispose d’un bandeau « Mode test » global. Le switch choisit Gratuit ou Plus ; « Accès réel » rétablit les droits Stripe. Le choix est conservé 30 jours dans un cookie HttpOnly, Secure en HTTPS, propre au navigateur et lié à l’identifiant du compte. Le cookie exprime seulement une préférence : chaque requête vérifie à nouveau l’identité et l’e-mail confirmé côté serveur. Aucun autre compte ne bénéficie de cette option.
 
 Les recettes, la composition des menus, les dîners et les exports calendrier utilisent le même accès effectif. Les téléchargements de recettes sont séparés par mode pour retrouver les paywalls en revenant au gratuit. Les carnets et la semaine d’essai déjà utilisée restent conservés. Les achats et la gestion Stripe demandent de revenir à l’accès réel ; la simulation ne modifie jamais un abonnement ni un paiement. Une adresse non vérifiée doit être confirmée avant que le switch apparaisse.
+
+## Revue du calendrier — 16 septembre 2026 (4.0.2)
+
+Le premier calendrier confondait visuellement le début d’une plage d’organisation avec une date de rendez-vous. En particulier, la déclaration commençait arbitrairement à 8 SA et son jour était mis en avant. Cette règle a été supprimée. Le modèle distingue désormais les périodes, les échéances formulées dans les recommandations, les actions à organiser et les dates saisies. Les plages ne sont pas exportées en ICS ; l’API refuse un export sans date à venir renseignée. Les anciens fichiers déjà importés dans un agenda externe ne peuvent pas être corrigés à distance.
+
+| Étape | Repère retenu et limite |
+| --- | --- |
+| Premier examen / déclaration | Avant la fin du troisième mois ; déclaration après le premier examen, sans imposer une échographie T1 préalable. Pas de jour administratif précis déduit de la DDR. |
+| Échographies | T1 : 11 SA–13 SA + 6 j ; T2 : 20–24 SA ; T3 : 30–35 SA selon le repère Ameli. Les plages en dates civiles sont des estimations. |
+| Consultations du 4e au 9e mois | Mois calendaires depuis le début de grossesse estimé, sans multiplication par 4,35 semaines ; dates de l’Assurance Maladie prioritaires. |
+| Entretien prénatal | À organiser le plus tôt possible après la déclaration, sans attendre une plage arbitraire. |
+| Prévention | Possible dès la déclaration, de préférence avant 24 SA. |
+| Dentiste | À partir du quatrième mois ; pas d’échéance artificielle à 23 SA. |
+| Bilan du sixième mois / anesthésie | Respectivement sixième et huitième mois, selon ordonnance et organisation de la maternité. |
+| Toxoplasmose | En cas de non-immunisation confirmée : repères mensuels ajoutés dès le début du suivi, y compris deuxième et troisième mois. Le précédent prélèvement et l’ordonnance déterminent le jour réel ; les périodes antérieures au premier bilan peuvent être écartées. |
+| Vaccinations | Discussion dès le début du suivi ; les fenêtres de la coqueluche et du VRS sont distinctes des campagnes grippe/Covid-19. Aucune date de vaccination n’est prescrite automatiquement. |
+| Inscription, préparation, sac | Actions d’organisation, sans date nationale imposée par Poum. |
+
+Références relues : [premier trimestre Ameli](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/grossesse-soins-dentaires-dentiste-consultation), [suivi mensuel Ameli](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/consultation-suivi-mensuel), [déclaration Service Public](https://www.service-public.gouv.fr/particuliers/vosdroits/F968), [examens Service Public](https://www.service-public.gouv.fr/particuliers/vosdroits/F963), [vaccinations pendant la grossesse — Santé publique France](https://professionnels.vaccination-info-service.fr/Recommandations-vaccinales-specifiques/Personnes-exposees-a-des-risques-specifiques/Femmes-enceintes).
+
+Cette revue documentaire corrige les règles et leur présentation ; elle ne constitue pas une validation clinique indépendante. Le calcul depuis la DDR reste une estimation, même corrigé de la durée du cycle ; les rendez-vous fixés et la datation clinique priment.

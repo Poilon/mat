@@ -39,3 +39,11 @@ test('New health information stays isolated across two accounts and the guest no
  await login('one@example.com');await page.goto('/#grossesse');await expect(page.locator('#pregnancy-date')).toHaveValue('');await page.locator('#pregnancy-date').fill(P.add(P.today(),-130));await page.locator('[name=consent]').check();await page.locator('#pregnancy-form [type=submit]').click();await page.goto('/#profil');await page.locator('[data-action=sign-out]').click();await expect(page.locator('#auth-form')).toBeVisible();await page.goto('/#grossesse');await expect(page.locator('#pregnancy-date')).toHaveValue(P.add(P.today(),-90));
  await login('two@example.com');await page.goto('/#grossesse');await expect(page.locator('#pregnancy-date')).toHaveValue('');expect(remote['one@example.com'].notebook.journey.profile.date).toBe(P.add(P.today(),-130));
 });
+
+test('Calendar labels show periods and deadlines instead of an invented declaration date, and export requires an entered date',async({page})=>{
+ await page.clock.setFixedTime(new Date('2026-09-16T12:00:00Z'));await local(page);await page.goto('/#grossesse');await page.locator('#pregnancy-date').fill('2026-08-11');await page.locator('#pregnancy-form [name=consent]').check();await page.locator('#pregnancy-form [type=submit]').click();
+ const declaration=page.locator('[data-task=declaration]');await expect(declaration.locator('.j-timeline-date')).toContainText('Avant la fin du 3e mois');await expect(declaration.locator('.j-timeline-date')).not.toContainText('6 octobre');
+ await expect(page.locator('[data-task=echo1] .j-timeline-date')).toContainText('Du 27 octobre au 16 novembre');await expect(page.locator('[data-task=echo1]')).toContainText('11 SA à 13 SA + 6 jours');
+ await page.locator('[data-action=journey-export]').click();await expect(page.locator('#journey-feedback')).toContainText('Renseignez d’abord la date');
+ await declaration.locator('summary').click();await declaration.locator('[name=date]').fill('2026-11-05');await declaration.locator('[name=status]').selectOption('scheduled');await declaration.locator('[type=submit]').click();await expect(declaration.locator('.j-timeline-date')).toContainText('Le 5 novembre');await expect(declaration.locator('.j-timeline-date')).toContainText('Date saisie par vous');
+});

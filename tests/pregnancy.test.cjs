@@ -12,7 +12,7 @@ test('Unknown dates, paused follow-up and consent withdrawal do not produce medi
  assert.equal(P.dates(P.empty()),null);const j=journey();j.profile.paused=true;assert.deepEqual(P.timeline(j),[]);j.profile.consent=false;assert.deepEqual(P.clean(j),P.empty());assert.throws(()=>P.validate(j));assert.equal(P.validDate('2026-02-30'),false);assert.equal(P.validDate('2028-02-29'),true);
 });
 test('Only clinician-confirmed nonimmunity adds toxoplasmosis controls; age does not prescribe markers',()=>{
- const j=journey();j.profile.birthDate='1985-12-01';assert.equal(P.dates(j).age,41);assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,0);j.profile.toxo='nonimmune';assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,6);j.profile.toxo='immune';assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,0);
+ const j=journey();j.profile.birthDate='1985-12-01';assert.equal(P.dates(j).age,41);assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,0);j.profile.toxo='nonimmune';assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,8);j.profile.toxo='immune';assert.equal(P.timeline(j).filter(t=>t.id.startsWith('toxo')).length,0);
 });
 test('Independent appointments and questions merge between devices, conflicting edits remain explicit',()=>{
  const b={...N.empty(),journey:journey()},a=structuredClone(b),c=structuredClone(b);
@@ -48,4 +48,29 @@ test('Legacy notebook saves preserve pregnancy and temporary preferences without
 });
 test('Combining temporary exclusions with an empty account never removes their expiry',()=>{
  const a={...Diet.clean(),temporary:{text:'poisson',until:'2099-09-20'}};const combined=Diet.merge(a,Diet.clean());assert.equal(combined.temporary.until,'2099-09-20');assert.equal(Diet.temporary(combined,'2099-09-21'),'');
+});
+
+test('National pregnancy windows use SA and calendar months without manufacturing appointment dates',()=>{
+ const j=journey();j.profile.date='2026-08-11';const map=Object.fromEntries(P.timeline(j,'2026-09-16').map(t=>[t.id,t]));
+ assert.equal(map.echo1.start,'2026-10-27');assert.equal(map.echo1.end,'2026-11-16');
+ assert.equal(map.echo2.start,P.add('2026-08-11',140));assert.equal(map.echo3.end,P.add('2026-08-11',245));
+ assert.equal(map.declaration.kind,'deadline');assert.equal(map.declaration.timing,'Avant la fin du 3e mois');assert.equal(map.declaration.date,undefined);assert.notEqual(map.declaration.when,'2026-10-06');
+ assert.equal(map.visit4.start,'2026-11-25');assert.equal(map.visit4.end,'2026-12-24');
+ assert.equal(map.visit5.start,P.add(map.visit4.end,1));assert.equal(map.anesthesia.start,map.visit8.start);
+ assert.equal(map['blood-six'].start,map.visit6.start);
+ assert.equal(map.prevention.end,P.add('2026-08-11',167));assert.equal(map['early-talk'].kind,'flexible');
+ assert.equal(P.addMonths('2028-01-31',1),'2028-02-29');assert.equal(P.addMonths('2026-01-31',1),'2026-02-28');
+});
+test('The first consultation anchors the declaration but the first trimester scan is not a mandatory prerequisite',()=>{
+ const j=journey();j.tasks.first={status:'scheduled',date:'2026-07-12'};j.tasks.echo1={status:'scheduled',date:'2026-08-25'};
+ let items=P.timeline(j);assert.equal(items.find(t=>t.id==='declaration').start,'2026-07-12');
+ j.tasks.declaration={status:'scheduled',date:'2026-07-15',note:'Date convenue'};items=P.timeline(j);assert.equal(items.find(t=>t.id==='declaration').when,'2026-07-15');assert.equal(items.find(t=>t.id==='declaration').note,'Date convenue');
+ j.profile.date='2026-06-05';assert.equal(P.timeline(j).find(t=>t.id==='declaration').date,'2026-07-15');
+});
+test('Calendar export includes only user-entered future dates, never estimated windows or deadlines',()=>{
+ const j=journey();assert.equal((P.calendar(j,{at:'2026-06-10'}).match(/BEGIN:VEVENT/g)||[]).length,0);
+ j.tasks.echo1={status:'scheduled',date:'2026-08-20'};j.tasks.declaration={status:'done',date:'2026-07-20'};j.tasks['custom-one']={title:'Mon rendez-vous',status:'todo',date:'2026-08-21',assignee:'partner'};
+ const text=P.calendar(j,{at:'2026-06-10'});assert.equal((text.match(/BEGIN:VEVENT/g)||[]).length,2);assert.match(text,/DTSTART;VALUE=DATE:20260820/);assert(!text.includes('déclaration'));assert(!text.includes('Repère indicatif'));
+ assert.equal((P.calendar(j,{at:'2026-06-10',partnerOnly:true}).match(/BEGIN:VEVENT/g)||[]).length,1);
+ assert.equal((P.calendar(j,{at:'2026-09-01'}).match(/BEGIN:VEVENT/g)||[]).length,0);
 });
