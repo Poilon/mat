@@ -69,10 +69,18 @@
     if (isBarcode && !root.MietteRules.isValidBarcode(digits)) throw new Error('Ce code-barres est incomplet ou sa clé de contrôle est incorrecte. Vérifiez les 8, 12, 13 ou 14 chiffres.');
     if (!isBarcode && term.length < 2) throw new Error('Saisissez au moins deux caractères pour rechercher un produit.');
     const key = isBarcode ? 'barcode:' + digits : 'search:' + root.MietteRules.normalize(term) + ':' + page;
-    const hit = cached(key);
+    const billing = root.MietteBilling;
+    const premiumError = () => Object.assign(new Error('Le scan et la recherche par code-barres font partie de Poum Plus.'), { code: 'scan_premium' });
+    if (isBarcode) {
+      if (billing && !billing.state.loaded) await billing.refresh();
+      if (!billing?.active) throw premiumError();
+    }
+    const scanOwner = billing?.state.owner;
+    const hit = isBarcode ? null : cached(key);
     if (hit) return hit;
     if (typeof navigator !== 'undefined' && !navigator.onLine) throw new Error('Vous êtes hors connexion. Les aliments du guide, vos recettes et votre carnet restent accessibles.');
     const proxyBase = root.MietteRuntime?.apiBase;
+    if (isBarcode && (!proxyBase || root.MietteRuntime?.cloud === false)) throw premiumError();
     if (!proxyBase) checkRate(isBarcode ? 'barcode' : 'search');
     const url = new URL(isBarcode ? '/api/v3/product/' + digits + '.json' : '/cgi/search.pl', API_ROOT);
     url.searchParams.set('fields', FIELDS);
@@ -91,13 +99,15 @@
     const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 18000);
     try {
       const proxy = proxyBase ? new URL('products', new URL(proxyBase, location.href)) : null;
-      if (proxy) { proxy.searchParams.set('q', term); proxy.searchParams.set('page', String(page)); proxy.searchParams.set('v', '2'); }
-      let response = await fetch(proxy || url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+      if (proxy) { proxy.searchParams.set('q', term); proxy.searchParams.set('page', String(page)); proxy.searchParams.set('v', '3'); }
+      let response = await fetch(proxy || url, { signal: controller.signal, credentials: isBarcode ? 'same-origin' : 'omit', cache: isBarcode ? 'no-store' : 'default', referrerPolicy: 'no-referrer' });
       // A standalone static copy keeps working; Vercel responds with JSON for all product lookups.
-      if (proxy && response.status === 404) {
+      if (proxy && !isBarcode && response.status === 404) {
         checkRate(isBarcode ? 'barcode' : 'search');
         response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
       }
+      if (isBarcode && [401, 402].includes(response.status)) { await billing.refresh(); throw premiumError(); }
+      if (isBarcode && (!billing.active || billing.state.owner !== scanOwner)) throw premiumError();
       if (response.status === 404 && isBarcode) return { products: [], count: 0, page: 1, hasMore: false };
       if (response.status === 429) throw new Error('Open Food Facts reçoit trop de demandes. Réessayez dans une minute.');
       if (!response.ok) throw new Error('Open Food Facts est temporairement indisponible. Vous pouvez utiliser le guide et réessayer plus tard.');
@@ -107,7 +117,7 @@
       const products = raw.map(toProduct).filter(Boolean);
       const count = isBarcode ? products.length : Number.isFinite(Number(json.count)) ? Math.max(0, Number(json.count)) : products.length;
       const data = { products, count, page, hasMore: !isBarcode && raw.length === 20 && page * 20 < count };
-      saveCache(key, data);
+      if (!isBarcode) saveCache(key, data);
       return data;
     } catch (err) {
       if (timedOut) throw new Error('Open Food Facts met trop de temps à répondre. Le guide reste accessible ; réessayez dans un instant.');

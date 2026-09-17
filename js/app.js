@@ -24,7 +24,7 @@
   let storageAvailable = true;
   let store = readStore();
   let route = getRoute();
-  let apiState = { key: '', query: '', products: [], count: 0, page: 1, loading: false, error: '', hasMore: false, cached: false };
+  let apiState = { key: '', query: '', products: [], count: 0, page: 1, loading: false, error: '', hasMore: false, cached: false, premium: false };
   let apiAbort = null;
   let requestGeneration = 0;
   let dialogContext = null;
@@ -302,7 +302,8 @@
   }
   function offResults() {
     const q = route.params.get('q') || '';
-    if (!q) return `<div class="off-empty"><div class="off-empty-icon">${icon('scan', 29)}</div><h3>Votre rayon, à portée de main.</h3><p>Recherchez parmi les produits de la base mondiale Open Food Facts, ou saisissez le code-barres de votre emballage.</p><button class="btn btn-secondary" data-action="scan">${icon('scan', 16)}Utiliser un code-barres</button></div>`;
+    if (apiState.premium) return `<div class="off-empty"><div class="off-empty-icon">${icon('lock',29)}</div><h3>Le code-barres, avec Poum Plus.</h3><p>Le scan et la saisie du code-barres nécessitent un accès Plus. La recherche par nom reste gratuite.</p><button class="btn btn-primary" data-action="scan">${icon('lock',16)}Découvrir Plus</button></div>`;
+    if (!q) return `<div class="off-empty"><div class="off-empty-icon">${icon('scan', 29)}</div><h3>Votre rayon, à portée de main.</h3><p>Recherchez parmi les produits de la base mondiale Open Food Facts, ou retrouvez un produit par code-barres avec Poum Plus.</p><button class="btn btn-secondary" data-action="scan">${icon('scan', 16)}Utiliser un code-barres · Plus</button></div>`;
     if (apiState.loading && !apiState.products.length) return `<p class="loading-caption">À la recherche de « ${escape(q)} » dans Open Food Facts…</p><div class="food-grid explore-grid">${Array.from({ length: 4 }, () => '<div class="skeleton" aria-hidden="true"></div>').join('')}</div>`;
     const error = apiState.error ? `<div class="error-panel" role="alert"><h3>La recherche n’a pas abouti.</h3><p>${escape(apiState.error)}</p><button class="btn btn-outline" data-action="retry-api">${icon('refresh', 15)}Réessayer</button></div>` : '';
     if (!apiState.products.length) return error || empty('Aucun produit trouvé.', 'Vérifiez le nom ou le code-barres. La base est collaborative : tous les produits ne sont pas encore renseignés.', `<a href="${href('aliments', { q })}" class="btn btn-secondary">Chercher dans le guide ${icon('arrow', 15)}</a>`, 'search');
@@ -315,7 +316,7 @@
     apiAbort = new AbortController();
     const generation = ++requestGeneration;
     const page = more ? apiState.page + 1 : 1;
-    if (!more) apiState = { key: q, query: q, products: [], count: 0, page: 1, loading: true, error: '', hasMore: false, cached: false };
+    if (!more) apiState = { key: q, query: q, products: [], count: 0, page: 1, loading: true, error: '', hasMore: false, cached: false, premium: false };
     else { apiState.loading = true; apiState.error = ''; }
     updateAPIResults();
     try {
@@ -326,7 +327,7 @@
       apiState = { ...result, key: q, query: q, products: [...new Map(combined.map(p => [p.id, p])).values()], loading: false, error: '' };
     } catch (err) {
       if (generation !== requestGeneration || err.name === 'AbortError') return;
-      apiState.loading = false; apiState.error = err.message;
+      apiState.loading = false; apiState.error = err.message; apiState.premium = err.code === 'scan_premium';
     }
     if (generation === requestGeneration) updateAPIResults();
   }
@@ -402,11 +403,12 @@
   function plusPlans(prefix) {
     return `<fieldset class="plus-plans"><legend>Les formules proposées</legend>${Plus.offer.plans.map(plan => `<label class="plus-plan" for="${prefix}-${plan.id}"><input id="${prefix}-${plan.id}" type="radio" name="plus-plan-${prefix}" value="${plan.id}" data-plus-plan ${plusPlan === plan.id ? 'checked' : ''}><span class="plus-plan-copy"><span class="plus-plan-name">${plan.name}${plan.id === 'pass' ? '<small>Un seul paiement</small>' : ''}</span><span class="plus-price">${plusPrice(plan)} <small>${plan.cadence}</small></span><span class="plus-plan-caption">${plan.id === 'pass' ? '14,20 € de moins que 9 mensualités' : 'Pour la durée qui vous convient'}</span></span></label>`).join('')}</fieldset><p class="plus-terms" data-plus-terms aria-live="polite">${plusTerms()}</p>`;
   }
-  function billingCta() {
+  function billingCta(scan = false) {
     const b = Billing.state, plan = Plus.offer.plans.find(p => p.id === plusPlan);
     if (Billing.active) return `<button class="btn btn-primary plus-cta" data-action="plus-preview" data-billing-cta>Ouvrir mon atelier Plus ${icon('arrow', 16)}</button>`;
     if (!b.loaded) return '<button class="btn btn-primary plus-cta" data-billing-cta disabled>Chargement de l’offre…</button>';
     if (b.mode === 'error') return '<button class="btn btn-primary plus-cta" data-action="billing-refresh" data-billing-cta>Réessayer la connexion à Plus</button>';
+    if (scan && b.mode !== 'mirror' && !b.configured) return '<button class="btn btn-primary plus-cta" disabled>Scan Plus momentanément indisponible</button>';
     if (b.mode !== 'mirror' && !b.configured) return `<button class="btn btn-primary plus-cta" data-action="plus-preview" data-billing-cta>Essayer l’atelier offert ${icon('arrow', 16)}</button>`;
     if (b.canManage && b.access.subscriptionStatus && !['canceled', 'incomplete_expired'].includes(b.access.subscriptionStatus)) return '<button class="btn btn-primary plus-cta" data-action="billing-portal" data-billing-cta>Gérer mon abonnement et mon paiement</button>';
     return `<button class="btn btn-primary plus-cta" data-action="billing-checkout" data-billing-cta ${checkoutBusy ? 'disabled' : ''}>${icon('lock', 15)}${checkoutBusy ? 'Ouverture du paiement…' : `${b.mode === 'test' ? 'Tester' : 'Choisir'} ${plan.id === 'pass' ? `le pass à ${plusPrice(plan)}` : `Plus à ${plusPrice(plan)}/mois`}`}</button>`;
@@ -486,10 +488,11 @@
       else {window.addEventListener('hashchange',submitWeek,{once:true});go('atelier');}
     }
   }
-  function plusOffer() {
+  function plusOffer(context = '') {
+    const scan = context === 'scan';
     if (Billing.active) { go(route.page === 'cesoir' ? 'cesoir' : 'atelier'); return; }
     const stats = Workshop.stats();
-    openDialog(`<div class="dialog-content plus-dialog offer-dialog">${plusStamp()}<h2 id="dialog-title">Les recettes, les menus, les courses. Tout au même endroit.</h2><p class="plus-lead">Avec Plus, retrouvez les 1 000 recettes complètes et préparez vos semaines pendant la grossesse selon vos goûts et votre temps de cuisine.</p>${stats.ready ? `<div class="offer-proof"><b>Dans votre semaine</b><div><span><strong>${stats.meals}</strong> repas</span><span><strong>${stats.matches}</strong> avec vos ingrédients</span><span><strong>${stats.items}</strong> articles à prévoir</span></div></div>` : '<div class="offer-dialog-photo"><img src="assets/recipes/gnocchi.jpg" alt="Gnocchis dorés, une des recettes à composer dans l’atelier." width="600" height="220"><span>Un exemple de plat proposé dans l’atelier.</span></div>'}<ul class="plus-benefits"><li>Les dîners selon vos envies, avec les courses partagées et le relais avec un proche</li><li>${icon('check', 17)}980 recettes complètes en plus des 20 gratuites</li><li>${icon('check', 17)}7 dîners ou 14 repas selon vos préférences</li><li>${icon('check', 17)}Des recettes qui utilisent les ingrédients du placard</li><li>${icon('check', 17)}Remplacement des plats et quantités recalculées</li><li>${icon('check', 17)}Le carnet avec les recettes et les courses</li></ul>${plusPlans('dialog')}${billingNote()}${billingCta()}${billingFeedback()}<button class="btn-text plus-try" data-action="plus-preview">${stats.ready ? 'Retrouver ma semaine' : 'Commencer par ma semaine offerte'}</button><button class="btn-text plus-dismiss" data-action="close-dialog">Continuer gratuitement</button><p class="plus-free-note">Les ${D.foods.length} fiches, Open Food Facts, ${D.freeRecipeCount} recettes complètes et le carnet restent gratuits. Les précautions de toutes les recettes restent publiques.</p></div>`, { type: 'plus-offer' });
+    openDialog(`<div class="dialog-content plus-dialog offer-dialog">${plusStamp()}<h2 id="dialog-title">${scan ? 'Le scan fait partie de Poum Plus.' : 'Les recettes, les menus, les courses. Tout au même endroit.'}</h2><p class="plus-lead">${scan ? 'Caméra, photo ou code saisi à la main : retrouvez les précautions grossesse repérées, les ingrédients et les allergènes déclarés du produit. Un accès Plus actif est nécessaire ; la semaine de menus offerte n’inclut pas le scan.' : 'Avec Plus, retrouvez les 1 000 recettes complètes et préparez vos semaines pendant la grossesse selon vos goûts et votre temps de cuisine.'}</p>${scan ? '' : stats.ready ? `<div class="offer-proof"><b>Dans votre semaine</b><div><span><strong>${stats.meals}</strong> repas</span><span><strong>${stats.matches}</strong> avec vos ingrédients</span><span><strong>${stats.items}</strong> articles à prévoir</span></div></div>` : '<div class="offer-dialog-photo"><img src="assets/recipes/gnocchi.jpg" alt="Gnocchis dorés, une des recettes à composer dans l’atelier." width="600" height="220"><span>Un exemple de plat proposé dans l’atelier.</span></div>'}<ul class="plus-benefits"><li>${icon('scan',17)}Le scan de produits, par caméra, photo ou code-barres</li><li>Les dîners selon vos envies, avec les courses partagées et le relais avec un proche</li><li>${icon('check', 17)}980 recettes complètes en plus des 20 gratuites</li><li>${icon('check', 17)}7 dîners ou 14 repas selon vos préférences</li><li>${icon('check', 17)}Des recettes qui utilisent les ingrédients du placard</li><li>${icon('check', 17)}Remplacement des plats et quantités recalculées</li><li>${icon('check', 17)}Le carnet avec les recettes et les courses</li></ul>${plusPlans('dialog')}${billingNote()}${billingCta(scan)}${billingFeedback()}${scan ? '' : `<button class="btn-text plus-try" data-action="plus-preview">${stats.ready ? 'Retrouver ma semaine' : 'Commencer par ma semaine offerte'}</button>`}<button class="btn-text plus-dismiss" data-action="close-dialog">Continuer gratuitement</button><p class="plus-free-note">Les ${D.foods.length} fiches, la recherche de produits par nom, ${D.freeRecipeCount} recettes complètes et le carnet restent gratuits. Les précautions de toutes les recettes restent publiques.</p></div>`, { type: 'plus-offer' });
   }
   function plusPage() {
     if (Billing.active) return `${heading('Votre abonnement Plus', 'Retrouvez vos exports d’agenda, vos menus et vos courses.')}${billingFeedback()}${memberPanel()}<div class="j-companion j-shortcuts"><a href="#calendrier">${icon('calendar',20)}Mon calendrier et ses exports</a><a href="#atelier">${icon('recipe',20)}Composer mes repas</a></div>${premiumNudge('home')}`;
@@ -498,7 +501,7 @@
       <section class="j-offer-hero"><div class="offer-hero-copy">${plusStamp()}<h1>Les repas de la semaine,<br><em>déjà organisés.</em></h1><p>Choisissez vos préférences, composez vos menus et récupérez la liste de courses. Plus permet aussi d’exporter vos rendez-vous vers votre agenda.</p><p class="offer-upfront-price">4,90 € / mois <span>ou 29,90 € en une fois pour 9 mois</span></p><button class="btn btn-primary offer-buy" data-action="plus-offer">Choisir mon accès Plus ${icon('arrow',16)}</button><button class="btn btn-outline offer-primary" data-action="plus-preview">Essayer ma semaine offerte ${icon('arrow',16)}</button><small>Avec un compte gratuit, sans carte bancaire.</small><button class="btn-text offer-example-button" data-action="plus-example">D’abord, voir un exemple ${icon('arrow',14)}</button></div><div class="j-offer-preview"><span class="j-eyebrow">Ce que comprend Plus</span><strong>Concrètement, avec Plus.</strong><div>${icon('calendar',21)}Mes dates fixées dans mon agenda, avec rappels</div><div>${icon('leaf',21)}Des menus selon mes exclusions et mes envies</div><div>${icon('bag',21)}Une liste de courses prête à emporter</div><div>${icon('heart',21)}Des tâches à confier à mon proche</div></div></section>
       <section class="j-offer-grid"><div>${icon('calendar',24)}<h2>Les étapes, sans les retenir.</h2><p>Exportez vos rendez-vous datés et les dates confiées à votre proche. Après import dans votre agenda, un rappel est prévu la veille. Les changements nécessitent un nouvel export.</p></div><div>${icon('recipe',24)}<h2>À votre goût. Même quand il change.</h2><p>1 000 recettes et déclinaisons complètes, 7 dîners ou 14 repas. Les allergies renseignées, goûts habituels et envies temporaires sont pris en compte.</p></div><div>${icon('bag',24)}<h2>Des idées jusqu’au panier.</h2><p>Gardez un plat, changez le suivant. Retrouvez les courses regroupées et le carnet de recettes à télécharger, imprimer ou partager.</p></div></section>
       <section class="week-sample"><div class="week-sample-heading"><span>Le carnet de la semaine</span><small>Un exemple</small></div>${examples.map((r,i)=>`<button class="week-sample-row" data-action="recipe" data-id="${r.id}"><span>${['Lun.','Mar.','Mer.'][i]}</span><span><b>${escape(r.title)}</b><small>${r.time} minutes</small></span>${icon('arrow',15)}</button>`).join('')}<button class="btn-text week-sample-more" data-action="plus-example">Voir les sept dîners ${icon('arrow',14)}</button></section>
-      <section class="offer-pricing-section" aria-labelledby="offer-price-title"><div class="offer-pricing-copy"><span class="section-kicker">Ce que comprend Plus</span><h2 id="offer-price-title">Un pass, pour votre quotidien.</h2><ul class="offer-inclusions"><li><b>Votre calendrier dans votre agenda.</b><p>Vos dates fixées et leurs rappels à importer. Un export séparé pour les dates confiées à votre proche, sans notes médicales.</p></li><li><b>Les 1 000 recettes complètes.</b><p>980 préparations supplémentaires : brunchs, plats au four, dîners rapides et desserts. Les recettes ouvertes sont conservées sur votre appareil.</p></li><li><b>7 dîners ou 14 repas, pour deux.</b><p>Avec votre temps de cuisine, les ingrédients à utiliser et ceux que vous préférez écarter.</p></li><li><b>Un autre plat si celui-ci ne vous tente pas.</b><p>Gardez vos favoris, remplacez une recette. Les quantités des courses sont recalculées.</p></li><li><b>La liste et les recettes à emporter.</b><p>Cochez ce que vous avez déjà, puis téléchargez le carnet pour cuisiner ou le partager.</p></li></ul><p class="offer-honesty">Le calendrier dans Poum, le suivi documentaire des examens, vos allergies, le guide des aliments, Open Food Facts, ${D.freeRecipeCount} recettes complètes et vos carnets enregistrés restent gratuits. L’atelier applique vos exclusions déclarées. Il ne garantit pas l’absence d’allergènes dans les produits achetés et ne prescrit pas de régime médical.</p></div><div class="plus-offer-panel"><h3>Choisir sa formule</h3>${plusPlans('page')}${billingNote()}${billingCta()}<p class="plus-reassurance">Le pass est payé une seule fois. Le mensuel se résilie depuis votre compte.</p></div></section>
+      <section class="offer-pricing-section" aria-labelledby="offer-price-title"><div class="offer-pricing-copy"><span class="section-kicker">Ce que comprend Plus</span><h2 id="offer-price-title">Un pass, pour votre quotidien.</h2><ul class="offer-inclusions"><li><b>Le scan de produits.</b><p>Caméra, photo ou code-barres saisi à la main : précautions grossesse repérées, ingrédients et allergènes déclarés. Réservé à Plus, hors essai de menus.</p></li><li><b>Votre calendrier dans votre agenda.</b><p>Vos dates fixées et leurs rappels à importer. Un export séparé pour les dates confiées à votre proche, sans notes médicales.</p></li><li><b>Les 1 000 recettes complètes.</b><p>980 préparations supplémentaires : brunchs, plats au four, dîners rapides et desserts. Les recettes ouvertes sont conservées sur votre appareil.</p></li><li><b>7 dîners ou 14 repas, pour deux.</b><p>Avec votre temps de cuisine, les ingrédients à utiliser et ceux que vous préférez écarter.</p></li><li><b>Un autre plat si celui-ci ne vous tente pas.</b><p>Gardez vos favoris, remplacez une recette. Les quantités des courses sont recalculées.</p></li><li><b>La liste et les recettes à emporter.</b><p>Cochez ce que vous avez déjà, puis téléchargez le carnet pour cuisiner ou le partager.</p></li></ul><p class="offer-honesty">Le calendrier dans Poum, le suivi documentaire des examens, vos allergies, le guide des aliments, la recherche de produits par nom, ${D.freeRecipeCount} recettes complètes et vos carnets enregistrés restent gratuits. L’atelier applique vos exclusions déclarées. Il ne garantit pas l’absence d’allergènes dans les produits achetés et ne prescrit pas de régime médical.</p></div><div class="plus-offer-panel"><h3>Choisir sa formule</h3>${plusPlans('page')}${billingNote()}${billingCta()}<p class="plus-reassurance">Le pass est payé une seule fois. Le mensuel se résilie depuis votre compte.</p></div></section>
       <section class="plus-faq" aria-labelledby="plus-faq-title"><h2 id="plus-faq-title">Les questions pratiques</h2><details><summary>Mon suivi médical devient-il payant ?</summary><p>Non. Le calendrier dans Poum, les questions de consultation, les exclusions alimentaires et la comparaison documentaire restent gratuits. Plus apporte les exports d’agenda, les menus automatiques et les préparations supplémentaires. Poum n’évalue pas votre état de santé et ne remplace pas votre professionnel.</p></details><details><summary>Qu’est-ce qui est offert ?</summary><p>20 recettes complètes et tous les repères alimentaires restent gratuits. La première semaine composée inclut les préparations de tous les plats proposés, même ceux de Plus, sans carte bancaire. Plus ouvre ensuite les 980 autres recettes à la demande et les nouvelles semaines de menus.</p></details><details><summary>Si un plat ne me plaît pas ?</summary><p>Remplacez-le dans l’atelier. Vous pouvez aussi épingler les plats à conserver avant de demander d’autres idées. Votre première semaine offerte reste modifiable.</p></details><details><summary>Comment récupérer les recettes ?</summary><p>Le carnet se télécharge dans un document HTML qui s’ouvre sans connexion. Il contient le menu, les courses, les ingrédients, les étapes et les précautions. Vous pouvez l’imprimer ou l’enregistrer en PDF depuis votre navigateur.</p></details><details><summary>Et le paiement ?</summary><p>Il s’effectue chez Stripe, après connexion à votre compte. Le mensuel se renouvelle automatiquement ; la résiliation arrête la prochaine échéance. Le pass donne neuf mois d’accès sans renouvellement. Vos factures sont disponibles dans votre compte.</p></details></section></div>`;
   }
   function plusPlannerBanner() {
@@ -611,6 +614,7 @@
     return scannerLoading;
   }
   async function readBarcodePhoto(file) {
+    if (!Billing.active) { plusOffer('scan'); return; }
     ++cameraGeneration;
     const status = $('#barcode-error');
     if (!status) return;
@@ -837,7 +841,9 @@
     sidebar.inert = hidden;
     sidebar.setAttribute('aria-hidden', String(hidden));
   }
-  function scannerDialog() {
+  async function scannerDialog() {
+    if (!Billing.state.loaded) await Billing.refresh();
+    if (!Billing.active) { plusOffer('scan'); return; }
     const capable = Boolean(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
     openDialog(`<div class="dialog-content"><span class="eyebrow">Recherche de produit</span><h2 id="dialog-title">Scanner un code-barres</h2><p class="muted small">Saisissez les chiffres de l’emballage pour retrouver sa fiche Open Food Facts.</p><form id="barcode-form" class="barcode-form"><label class="sr-only" for="barcode-input">Code-barres à 8, 12, 13 ou 14 chiffres</label><input class="text-input" id="barcode-input" name="code" inputmode="numeric" autocomplete="off" maxlength="24" placeholder="Ex. 3017620422003" required><button class="btn btn-primary" type="submit">Rechercher ${icon('arrow', 15)}</button></form><p id="barcode-error" class="scanner-status" role="alert"></p><input type="file" id="barcode-photo" accept="image/*" hidden><button class="btn btn-outline" data-action="barcode-photo">${icon('camera', 16)}Lire une photo du code-barres</button>${capable ? `<div class="scanner-view" id="scanner-view" hidden></div><button class="btn btn-secondary" data-action="start-camera">${icon('camera', 16)}Utiliser la caméra</button><p class="scanner-status" id="camera-status">La caméra reste sur votre appareil. Aucune image n’est transmise.</p>` : `<div class="off-note" style="margin-top:23px">${icon('info', 17)}<p>La lecture caméra n’est pas disponible dans ce navigateur. La saisie du code-barres fonctionne toujours. Vous pouvez lire une photo du code-barres ou ouvrir Poum dans le navigateur de votre téléphone.</p></div>`}</div>`, { type: 'scanner' });
   }
@@ -852,6 +858,7 @@
     if (video) { video.srcObject?.getTracks().forEach(t => t.stop()); video.srcObject = null; }
   }
   async function startCamera() {
+    if (!Billing.active) { plusOffer('scan'); return; }
     const generation = ++cameraGeneration;
     const button = $('[data-action="start-camera"]');
     const status = $('#camera-status');
@@ -1026,6 +1033,7 @@
       if(route.params.has('retour')||pendingCheckoutSession)resumeCommerce().catch(error=>toast(error.message,'info'));
     } else if (form.id === 'plan-recipe-form') assignRecipe(form.dataset.id, String(data.get('date')), String(data.get('meal')));
     else if (form.id === 'barcode-form') {
+      if (!Billing.active) { plusOffer('scan'); return; }
       const q = String(data.get('code') || '').replace(/[\s-]/g, '');
       if (!R.isValidBarcode(q)) { $('#barcode-error').textContent = 'Vérifiez les chiffres : un code valide comporte 8, 12, 13 ou 14 chiffres et une clé de contrôle correcte.'; $('#barcode-input').focus(); return; }
       $('#detail-dialog').close(); go('aliments', { source: 'off', q });
@@ -1130,6 +1138,13 @@
   renderRoute(); updateOnline();
   window.addEventListener('miette:cloud', () => { Journey.refresh(); if(route.page==='bienvenue')Onboarding.refresh(); Tonight.enter(); renderAccount(); updateProfileFeedback(); if ($('#topbar')) $('#topbar').innerHTML = topbar(); });
   window.addEventListener('miamama:billing', () => {
+    if (!Billing.active) {
+      if (dialogContext?.type === 'scanner') { stopCamera(); $('#detail-dialog').close(); }
+      if (route.page === 'aliments' && /^\d+$/.test((route.params.get('q') || '').replace(/[\s-]/g, ''))) {
+        apiAbort?.abort(); requestGeneration++; apiState = { key: route.params.get('q'), products: [], count: 0, loading: false, premium: true, error: '' }; updateAPIResults();
+      }
+    }
+    if (Billing.active && route.page === 'aliments' && apiState.premium) searchAPI();
     Tonight.enter();
     document.querySelectorAll('[data-premium-place]').forEach(el => { el.outerHTML = premiumNudge(el.dataset.premiumPlace); });
     if ($('#topbar')) $('#topbar').innerHTML = topbar();

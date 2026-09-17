@@ -121,12 +121,12 @@ test('Legacy notebooks import with confirmation and Poum exports round-trip on m
 test('Account forms and scanner have no serious accessibility violations',async({page})=>{
   await mockAccount(page,{});await page.goto('/#profil');await expect(page.locator('#auth-form')).toBeVisible();
   for(const mode of ['login','signup','forgot']){await page.locator(`[data-mode="${mode}"]`).first().click();const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);if(mode==='signup')await page.locator('[data-mode="login"]').first().click();}
-  await page.goto('/');await page.locator('[data-action="scan"]').click();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))});const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))).toEqual([]);
+  await require('./scanner-fixture.cjs').paidScanner(page);await page.goto('/');await page.locator('[data-action="scan"]').first().click();await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))});const r=await new AxeBuilder({page}).analyze();expect(r.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))).toEqual([]);
 });
 test('Photo barcode decoding works without BarcodeDetector and the image stays local',async({page})=>{
   await page.addInitScript(()=>{window.BarcodeDetector=undefined});let calls=0;
   await page.route('**/api/products?**',route=>{calls++;expect(new URL(route.request().url()).searchParams.get('q')).toBe('3017620422003');return route.fulfill({json:{products:[{code:'3017620422003',product_name:'Test photo',ingredients_text:'Sucre, cacao'}],count:1,page:1}})});
-  await page.goto('/');await page.locator('[data-action="scan"]').click();
+  await require('./scanner-fixture.cjs').paidScanner(page);await page.goto('/');await page.locator('[data-action="scan"]').first().click();
   // An independently encoded EAN-13 fixture: standard L/G/R patterns and parity for leading 3.
   const L=['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
   const G=['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'];
@@ -140,7 +140,7 @@ test('Fallback camera starts without BarcodeDetector and stops every track when 
   const browser=await chromium.launch({args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
   const context=await browser.newContext({permissions:['camera'],serviceWorkers:'block'});
   const page=await context.newPage();await page.addInitScript(()=>{window.BarcodeDetector=undefined});
-  await page.goto('http://localhost:4176/');await page.locator('[data-action="scan"]').click();await page.locator('[data-action="start-camera"]').click();
+  await require('./scanner-fixture.cjs').paidScanner(page);await page.goto('http://localhost:4176/');await page.locator('[data-action="scan"]').first().click();await page.locator('[data-action="start-camera"]').click();
   await expect.poll(()=>page.evaluate(()=>Boolean(document.querySelector('video')?.srcObject?.active))).toBe(true);
   await page.evaluate(()=>{window.testTracks=document.querySelector('video').srcObject.getTracks()});await page.keyboard.press('Escape');
   await expect.poll(()=>page.evaluate(()=>window.testTracks.every(t=>t.readyState==='ended'))).toBe(true);await browser.close();

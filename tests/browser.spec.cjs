@@ -105,10 +105,11 @@ test('Meal planner saves a recipe, generates shopping and removes a meal', async
 });
 
 test('Manual scanner validates the checksum and reads a product', async ({ page }) => {
+  await require('./scanner-fixture.cjs').paidScanner(page);
   let requests = 0;
   await routeOFF(page, async route => { requests++; await route.fulfill({ json: { status: 'success', product: product() } }); });
   await page.goto('/');
-  await page.locator('[data-action="scan"]').click();
+  await page.locator('[data-action="scan"]').first().click();
   await page.locator('#barcode-input').fill('3017620422004');
   await page.locator('#barcode-form button').click();
   await expect(page.locator('#barcode-error')).toContainText('clé de contrôle');

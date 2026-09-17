@@ -117,3 +117,11 @@ Constats SEO au 17 septembre 2026 : accueil pré-rendu, robots et sitemap access
 ## Scanner depuis l’accueil Plus — 4.0.11
 
 Le tableau de bord Plus met en avant le scan avec « Ce produit, je peux en manger enceinte ? ». Son bouton ouvre le scanner existant, avec caméra, photo ou saisie du code-barres. Le texte décrit les précautions repérées, ingrédients et allergènes déclarés, avec la limite des données collaboratives. Il ne promet pas une autorisation médicale binaire. La visibilité suit l’accès serveur et le switch admin ; les accès gratuits au scanner existant restent disponibles.
+
+## Scan réservé à Plus — 4.0.12
+
+Le scan caméra, la lecture de photo et la recherche par code-barres saisi à la main nécessitent un accès Plus actif. Les boutons ouvrent une offre explicite pour les comptes gratuits et les visiteurs. L’essai de menus n’inclut pas le scan ; la recherche de produits par nom reste gratuite. Les textes de l’offre distinguent ces accès.
+
+Le serveur authentifie le compte et vérifie son accès effectif (switch admin compris) avant toute réponse par code-barres, même quand le produit est en cache interne. Les réponses par code-barres sont privées et non stockables par le navigateur/CDN ; la recherche publique par nom conserve son cache. Le navigateur transmet la session, ignore les anciens caches de codes-barres et n’utilise pas de repli direct vers Open Food Facts pour cette fonction. Les erreurs de configuration ne donnent pas accès au scan. Une perte d’accès ferme le scanner et retire les résultats du scan en cours. Les fiches déjà enregistrées au carnet sont conservées.
+
+Validation : tests du contrat serveur pour visiteur, gratuit, payé, configuration absente, cache partagé et modes admin ; tests navigateur des offres, de la saisie, de la photo, de la caméra et de la conservation de la recherche gratuite par nom.
