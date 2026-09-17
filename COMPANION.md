@@ -113,3 +113,7 @@ L’accueil présente « Ma semaine prête » juste après son introduction. L�
 L’accès Plus actif remplace cette présentation par un accès direct à l’atelier. Le changement suit l’état serveur et le switch admin, sans modifier les droits, prix, achats ou données du carnet. Les anciens textes évoquant 100 recettes ont été alignés sur le catalogue de 1 000 recettes.
 
 Constats SEO au 17 septembre 2026 : accueil pré-rendu, robots et sitemap accessibles, 394 URL publiées, titres/canonical/données structurées présents dans le générateur. Le contenu public reste centré sur l’alimentation ; calendrier, examens et offre Plus ne disposent pas encore de pages publiques dédiées dans le sitemap. Les écrans applicatifs en fragments ne remplacent pas ces pages. Ce contrôle ne mesure ni l’indexation Search Console, ni les performances réelles des visiteurs, ni le taux de conversion.
+
+## Scanner depuis l’accueil Plus — 4.0.11
+
+Le tableau de bord Plus met en avant le scan avec « Ce produit, je peux en manger enceinte ? ». Son bouton ouvre le scanner existant, avec caméra, photo ou saisie du code-barres. Le texte décrit les précautions repérées, ingrédients et allergènes déclarés, avec la limite des données collaboratives. Il ne promet pas une autorisation médicale binaire. La visibilité suit l’accès serveur et le switch admin ; les accès gratuits au scanner existant restent disponibles.
