@@ -105,3 +105,11 @@ Les détails présentent la composition disponible, les allergènes déclarés, 
 Le proxy demande ces champs supplémentaires à Open Food Facts. Le cache navigateur passe au schéma 2, et la requête versionnée renouvelle les anciennes réponses sans multiplier les appels. Référence : [champs de l’API produit Open Food Facts](https://openfoodfacts.github.io/documentation/docs/Product-Opener/v2/products/get-product-by-code/).
 
 L’accueil ne répète plus le prénom dans la section alimentation : la salutation reste en tête du suivi.
+
+## Montrer la valeur de Plus — 4.0.10
+
+L’accueil présente « Ma semaine prête » juste après son introduction. L’aperçu montre deux idées de plats explicitement non personnalisées, le reste de la semaine, les courses et le carnet à emporter. Le cadenas ouvre l’offre existante ; l’essai offert reste une action distincte. Le comparatif précise ce qui reste gratuit et ce que Plus ajoute. Aucun menu payant n’est généré pour afficher cet aperçu.
+
+L’accès Plus actif remplace cette présentation par un accès direct à l’atelier. Le changement suit l’état serveur et le switch admin, sans modifier les droits, prix, achats ou données du carnet. Les anciens textes évoquant 100 recettes ont été alignés sur le catalogue de 1 000 recettes.
+
+Constats SEO au 17 septembre 2026 : accueil pré-rendu, robots et sitemap accessibles, 394 URL publiées, titres/canonical/données structurées présents dans le générateur. Le contenu public reste centré sur l’alimentation ; calendrier, examens et offre Plus ne disposent pas encore de pages publiques dédiées dans le sitemap. Les écrans applicatifs en fragments ne remplacent pas ces pages. Ce contrôle ne mesure ni l’indexation Search Console, ni les performances réelles des visiteurs, ni le taux de conversion.

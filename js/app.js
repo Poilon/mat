@@ -81,7 +81,7 @@
     read: () => store, owner: () => Cloud.storageKey, recipes: D.recipes, escape, icon,
     commit: patch => { Object.assign(store, patch); return persist(); },
     render: () => rerender(true), go, notify: text => toast(text, 'info'),
-    cloud: () => Cloud.state, paid: () => Billing.active, offer: () => go('plus'), request: Cloud.request, download: downloadFile,
+    cloud: () => Cloud.state, paid: () => Billing.active, billing: () => Billing.state, offer: () => go('plus'), request: Cloud.request, download: downloadFile,
     showStep: content => openDialog(content, { type: 'journey-step' }),
     closeStep: () => { if(dialogContext?.type==='journey-step') $('#detail-dialog')?.close(); },
     openTask: id => {
@@ -427,10 +427,10 @@
   function premiumNudge(place = 'home') {
     const copy = {
       home: ['Les repas de la semaine, au même endroit.', '1 000 recettes, vos menus et les courses avec Plus.'],
-      recipes: ['Toutes les recettes. Et les menus qui vont avec.', '20 recettes gratuites pour commencer, 80 de plus avec l’abonnement.'],
+      recipes: ['Toutes les recettes. Et les menus qui vont avec.', '20 recettes gratuites pour commencer, 980 de plus avec Plus.'],
       favorites: ['Et pour les prochains repas ?', 'Préparez une semaine de menus que vous pourrez ajuster.'],
       shopping: ['Partir des menus pour faire les courses', 'L’atelier regroupe les ingrédients et les quantités de la semaine.'],
-      recipe: ['Cette recette, puis toute la semaine.', 'Avec Plus : les 100 préparations, vos menus et leurs courses.']
+      recipe: ['Cette recette, puis toute la semaine.', 'Avec Plus : les 1 000 préparations, vos menus et leurs courses.']
     }[place];
     return `<aside class="premium-nudge premium-nudge-${place}" data-premium-place="${place}"><div>${plusStamp()}<h2>${copy[0]}</h2><p>${copy[1]}</p><span class="premium-nudge-caption">${Billing.active ? 'Votre atelier Plus est ouvert' : place === 'recipes' ? 'Première semaine offerte · 4,90 €/mois' : 'Première semaine offerte · Plus : 4,90 €/mois ou 29,90 € les 9 mois'}</span></div><div class="premium-actions">${Billing.active ? '<a class="btn btn-primary" href="#atelier">Ouvrir mon atelier</a>' : `<button class="btn btn-primary" data-action="plus-offer">Découvrir Plus ${icon('arrow', 16)}</button>${place === 'home' ? '<button class="btn-text" data-action="plus-example">Voir un exemple</button>' : ''}`}</div></aside>`;
   }
