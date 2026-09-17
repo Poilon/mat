@@ -1,6 +1,6 @@
 'use strict';
 const { HttpError } = require('./http.cjs');
-const FIELDS = 'code,product_name,product_name_fr,brands,quantity,image_front_small_url,ingredients_text,ingredients_text_fr,ingredients,categories,categories_tags,allergens_tags,nutriments,nutrition_grades';
+const FIELDS = 'code,product_name,product_name_fr,brands,quantity,image_front_small_url,ingredients_text,ingredients_text_fr,ingredients,categories,categories_tags,allergens_tags,traces_tags,conservation_conditions,conservation_conditions_fr,last_modified_t,data_quality_errors_tags,nutriments,nutrition_grades';
 async function fetchProducts({ term, code, barcode, page }, { fetchImpl = fetch, allowance } = {}) {
   const hosts = ['world.openfoodfacts.org', 'fr.openfoodfacts.org'];
   for (let attempt = 0; attempt < hosts.length; attempt++) {

@@ -339,3 +339,22 @@ body{background:var(--canvas)}.sidebar{background:#f5f2e9;border-right-color:var
 @media(max-width:1100px){.premium-nudge{grid-template-columns:85px minmax(0,1fr);gap:16px;padding:22px}.premium-nudge .btn{grid-column:2;justify-self:start;max-width:none}.premium-nudge-photos{transform:scale(.85);transform-origin:left center;width:85px;grid-row:1 / span 2}.topbar-right{gap:12px}}
 @media(max-width:600px){.topbar{gap:8px}.topbar-plus{font-size:10px;gap:5px;padding:7px 9px}.topbar-plus svg{width:12px}.topbar-right{gap:5px}.premium-nudge{padding:21px 19px;grid-template-columns:minmax(0,1fr);gap:14px}.premium-nudge-photos{display:none}.premium-nudge h2{font-size:22px}.premium-nudge .btn{grid-column:1;justify-self:stretch;max-width:none}.premium-nudge-caption{font-size:11px}.premium-nudge p{font-size:12px}.member-panel{padding:23px 19px;gap:14px}.member-symbol{width:34px;height:34px;border-radius:11px}.member-symbol svg{width:20px}.member-panel h2{font-size:22px}.member-panel .dialog-actions{flex-direction:column;align-items:stretch}.premium-nudge-recipe h2{font-size:20px}}
 @media(max-width:370px){.breadcrumb{max-width:76px;overflow:hidden;white-space:nowrap}.topbar-right .profile-trigger{gap:0}.topbar-right .profile-trigger>span:not(.avatar){display:none}.topbar-plus{padding:6px 8px}.member-panel{display:block}.member-symbol{margin-bottom:12px}}
+/* OFF: useful declared facts, distinct from a pregnancy safety verdict. */
+.off-badge{white-space:normal;text-align:left;line-height:1.5;max-width:100%}
+.off-badge.status-unknown{background:#eeeaf0;color:#594960}
+.food-card-content .off-card-summary{font-size:12px;line-height:1.65;margin:12px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#62575d}
+.food-card-content .off-card-facts{font-size:10px;color:#655449;margin:9px 0 0}
+.food-card-content .off-card-brand{font-size:10px;color:#70676b;margin:8px 0 0}
+.off-facts{border:1px solid #e3d9d2;border-radius:14px;padding:20px;margin:22px 0;background:#fffaf5}
+.off-facts h3{margin:0 0 16px}
+.off-facts dl{margin:0}
+.off-facts dl>div{padding:11px 0;border-bottom:1px solid #e9e0d8}
+.off-facts dl>div:last-child{border-bottom:0}
+.off-facts dt{font-size:11px;color:#75676e;margin-bottom:4px}
+.off-facts dd{font-size:13px;line-height:1.7;color:#44313d;margin:0;overflow-wrap:anywhere;white-space:pre-line}
+.off-mentions{list-style:none;padding:0;margin:0}
+.off-mentions li{padding:10px 13px;background:#f0e9df;border-radius:9px;margin-bottom:8px}
+.off-mentions strong{font-size:12px;display:block;color:#574237}
+.off-mentions span{display:block;font-size:11px;line-height:1.6;margin-top:4px;color:#69594f;overflow-wrap:anywhere}
+.off-fact-note{font-size:11px;line-height:1.7;color:#75686e;margin:13px 0 0}
+.product-unknowns>summary{font-size:13px;line-height:1.6;color:#4f5d52;cursor:pointer}

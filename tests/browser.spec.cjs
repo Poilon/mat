@@ -118,8 +118,8 @@ test('Manual scanner validates the checksum and reads a product', async ({ page 
   await expect(page.locator('.food-card')).toHaveCount(1);
   expect(requests).toBe(1);
   await page.locator('.food-card-open').click();
-  await expect(page.locator('dialog')).toContainText('ne certifie pas');
-  await expect(page.locator('dialog .status-badge')).toHaveText('À vérifier');
+  await expect(page.locator('dialog')).toContainText('Aucun produit n’est certifié compatible');
+  await expect(page.locator('dialog .status-badge')).toHaveText('Précautions de préparation');
 });
 
 test('OFF search is submission-only; incomplete data, pagination and caching work', async ({ page }) => {
@@ -139,7 +139,7 @@ test('OFF search is submission-only; incomplete data, pagination and caching wor
   expect(requests[0].searchParams.get('q')).toBe('yaourt');
   await page.locator('.food-card-open').first().click();
   await expect(page.locator('dialog')).toContainText('Ingrédients non renseignés');
-  await expect(page.locator('dialog .status-badge')).toHaveText('À vérifier');
+  await expect(page.locator('dialog .status-badge')).toHaveText('Fiche incomplète');
   await page.keyboard.press('Escape');
   await page.clock.install(); await page.clock.fastForward(7100);
   await page.locator('[data-action="more-products"]').click();
@@ -159,6 +159,27 @@ test('External text is escaped and unsafe product image URLs are discarded', asy
   await expect(page.locator('.ingredient-text').last()).toContainText('<script>');
   expect(await page.evaluate(() => window.injected)).toBeUndefined();
   await expect(page.locator('img[src^="javascript:"]')).toHaveCount(0);
+});
+
+test('OFF cards explain their status and display declared treatments, allergens, traces and storage on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});let requests=0;
+ await routeOFF(page,r=>{requests++;return r.fulfill({json:{count:4,products:[
+  product({code:'1000000000011',product_name:'Lait UHT',ingredients_text:'Lait',categories_tags:['en:milks'],allergens_tags:['en:milk'],traces_tags:['en:nuts'],conservation_conditions_fr:'Après ouverture, conserver au réfrigérateur.',last_modified_t:1700000000}),
+  product({code:'1000000000028',product_name:'Riz complet',ingredients_text:'Riz complet',categories_tags:['en:rices']}),
+  product({code:'1000000000035',product_name:'Produit incomplet',ingredients_text:'',categories_tags:[]}),
+  product({code:'1000000000042',product_name:'Brie au lait pasteurisé',ingredients_text:'Lait pasteurisé',categories_tags:['en:soft-cheeses']})
+ ]}})});
+ await page.goto('/#aliments?source=off&q=exemples');const cards=page.locator('.food-card');await expect(cards).toHaveCount(4);
+ await expect(cards.nth(0)).toContainText('Précautions de préparation');await expect(cards.nth(0)).toContainText('UHT');await expect(cards.nth(1)).toContainText('Aucun signal repéré');await expect(cards.nth(2)).toContainText('Fiche incomplète');await expect(cards.nth(3).locator('.status-badge')).toHaveText('À éviter');
+ await cards.nth(0).locator('.food-card-open').click();const dialog=page.locator('#detail-dialog');await expect(dialog.locator('.off-facts')).toContainText('Allergènes déclarés');await expect(dialog.locator('.off-facts')).toContainText('Lait');await expect(dialog.locator('.off-facts')).toContainText('Fruits à coque');await expect(dialog.locator('.off-facts')).toContainText('Après ouverture, conserver au réfrigérateur.');
+ await page.evaluate(async()=>{await document.fonts.ready;await Promise.allSettled(document.getAnimations().map(a=>a.finished));});const audit=await new AxeBuilder({page}).include('#detail-dialog').analyze();expect(audit.violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.keyboard.press('Escape');await cards.nth(1).locator('.food-card-open').click();await expect(dialog.locator('.risk-flag')).toHaveCount(0);await dialog.locator('.product-unknowns summary').click();await expect(dialog.locator('.product-unknowns')).toContainText('Aucun produit n’est certifié compatible');await page.keyboard.press('Escape');await page.reload();await expect(cards).toHaveCount(4);expect(requests).toBe(1);
+});
+
+test('Old OFF cache is refreshed for newly requested fields and malformed extra fields remain harmless',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('miette-off-cache-v1',JSON.stringify({'search:essai:1':{at:Date.now(),data:{products:[{code:'1000000000011',product_name:'Ancienne fiche'}],count:1,page:1,hasMore:false}}})));
+ let requests=0;await routeOFF(page,r=>{requests++;return r.fulfill({json:{count:1,products:[product({product_name:'Fiche actualisée',ingredients_text:'',ingredients:[{id:42,text:12},null,{text:'Farine'}],traces_tags:['<b>traces</b>',null,42],conservation_conditions_fr:'<img src=x onerror=alert(1)>',last_modified_t:999999999999999})]}})});
+ await page.goto('/#aliments?source=off&q=essai');await expect(page.locator('.food-card')).toContainText('Fiche actualisée');expect(requests).toBe(1);await page.locator('.food-card-open').click();await expect(page.locator('.ingredient-text')).toHaveText('Farine');await expect(page.locator('.off-facts')).toContainText('<b>traces</b>');await expect(page.locator('.off-facts img')).toHaveCount(0);await expect(page.locator('.off-facts')).not.toContainText('Fiche OFF modifiée');
 });
 
 test('An unavailable API shows an actionable error and the local guide remains usable', async ({ page }) => {
@@ -192,8 +213,10 @@ test('Profile preferences are local and vegetarian recipes exclude fish', async 
   await page.locator('#profile-name').fill('Camille');
   await page.locator('#profile-vegetarian').check();
   await page.locator('#profile-form button[type="submit"]').click();
+  await page.reload();
+  await expect(page.locator('#profile-name')).toHaveValue('Camille');
   await page.goto('/#accueil');
-  await expect(page.locator('.home-dateline')).toContainText('Bonjour Camille');
+  await expect(page.locator('.home-simple')).not.toContainText('Bonjour Camille');
   await page.goto('/#recettes');
   await expect(page.locator('[data-action="recipe"][data-id="lemon-salmon"]')).toHaveCount(0);
   await page.goto('/#confidentialite');

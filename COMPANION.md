@@ -95,3 +95,13 @@ Le tri suit désormais toute la chaîne d’étapes préalables, même sans date
 Les contenus de `js/pregnancy-guide.js` distinguent explications et prescriptions. Ils couvrent les étapes générales, les consultations mensuelles et les contrôles de toxoplasmose, avec leurs sources. Références supplémentaires relues le 16 septembre 2026 : [préparation à la parentalité](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/preparation-parentalite), [bilan bucco-dentaire](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/femme-enceinte-soins-dentaire-mtdents), [toxoplasmose](https://www.ameli.fr/assure/sante/themes/toxoplasmose/bons-reflexes-cas-faut-consulter) et [information péridurale HCL](https://www.chu-lyon.fr/analgesie-peridurale-obstetricale). Les thèmes proposés ne sont pas un programme exhaustif de consultation et n’ont pas de validation clinique indépendante.
 
 Les goûts habituels sont désormais modifiables dans « Mes envies », à côté des exclusions temporaires et de leur durée. Le profil conserve les allergies et un lien vers cet écran. Une sauvegarde du profil conserve les goûts déjà enregistrés ; retirer les envies temporaires ne retire ni les goûts habituels ni les allergies. Les champs du carnet et la synchronisation restent identiques.
+
+## Fiches Open Food Facts — 4.0.9
+
+Les fiches distinguent les signaux à éviter ou limiter, les précautions de préparation, les compositions à préciser, les fiches incomplètes et l’absence de signal repéré dans les données disponibles. Cette dernière indication n’est pas une certification de compatibilité pendant la grossesse. Les cartes affichent une explication propre au produit en plus de la marque.
+
+Les détails présentent la composition disponible, les allergènes déclarés, les traces, la conservation et la date de modification lorsqu’elles sont renseignées. Les mentions UHT, pasteurisation, lait en poudre, conserve et surgelé sont reliées aux champs concernés ; une mention d’ingrédient ne valide pas tout le produit. Les précautions les plus fortes restent prioritaires. Une valeur manquante n’est jamais présentée comme une absence d’allergène.
+
+Le proxy demande ces champs supplémentaires à Open Food Facts. Le cache navigateur passe au schéma 2, et la requête versionnée renouvelle les anciennes réponses sans multiplier les appels. Référence : [champs de l’API produit Open Food Facts](https://openfoodfacts.github.io/documentation/docs/Product-Opener/v2/products/get-product-by-code/).
+
+L’accueil ne répète plus le prénom dans la section alimentation : la salutation reste en tête du suivi.

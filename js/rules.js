@@ -21,6 +21,20 @@
       return found ? [{ field, label: labels[field], term: found[0].trim().slice(0, 120) }] : [];
     });
     const flags = [];
+    const facts = [];
+    const affirmativeTreatment=text=>text.replace(/\b(?:non|not|sans|pas|without)\s+(?:de\s+)?(?:lait\s+)?(?:uht|pasteuri[sz]\w*)\b/g,'');
+    const fact = (id, title, pattern, keys = allFields) => {
+      const matches = match(pattern, keys, affirmativeTreatment);
+      if(matches.length)facts.push({id,title,matches});
+    };
+    // Describe explicit mentions only. A treatment of one ingredient does not
+    // establish the treatment or safety of the entire finished product.
+    fact('uht','Mention UHT',/\buht\b/);
+    const pasteurised=match(/\bpasteuri[sz](?:e|ee|es|ees|ed)\b/,allFields,affirmativeTreatment);
+    if(pasteurised.length)facts.push({id:'pasteurised',title:'Mention de pasteurisation',matches:pasteurised});
+    fact('canned','Conserve indiquée',/\b(?:en conserve|conserves|canned foods|canned vegetables|canned fish|tinned)\b/,identity);
+    fact('frozen','Produit surgelé indiqué',/\b(?:surgele[es]*|frozen)\b/,identity);
+    fact('milk-powder','Lait en poudre indiqué',/\b(?:lait(?: ecreme| entier| demi ecreme)? en poudre|(?:skimmed |whole |skim )?milk powder|powdered milk)\b/,['ingredients']);
     const add = (id, title, text, status, profile, matches) => {
       if (!matches.length) return;
       const p = E.profiles[profile];
@@ -59,7 +73,8 @@
     if (soyFood.length) add('soy', 'Aliment à base de soja', 'La famille repérée est concernée par la précaution française sur les aliments à base de soja.', 'avoid', 'soy', soyFood);
     else signal('soy-ingredient', 'Ingrédient à base de soja', 'L’ingrédient ne donne pas sa teneur en isoflavones : vérifier la quantité et la recette. Une trace d’allergène ou de la lécithine seule ne déclenche pas ce signal.', 'precaution', 'soy', /\b(proteines? de soja|soy proteins?|soybeans|graines? de soja|farine de soja)\b/, ['ingredients']);
     signal('caffeine', 'Caféine possible', 'La dose de caféine n’est pas connue à partir de ce seul terme. Compter toutes les sources pour le repère EFSA de 200 mg/jour au maximum.', 'limit', 'caffeine', /\b(cafe|coffee|caffeine|cafeine|the vert|the noir|green tea|black tea|matcha|cola|guarana|yerba mate)\b/);
-    signal('eggs', 'Œuf repéré', 'L’ingrédient œuf ne dit pas si le produit est cru, cuit ou pasteurisé. Un biscuit entièrement cuit se distingue d’une mousse à l’œuf cru.', 'precaution', 'eggs', /\b(oeuf|oeufs|eggs?|egg yolk|jaune d oeuf)\b/);
+    const biscuit=match(/\b(?:biscuits?|cookies?)\b/,identity).length>0;
+    signal('eggs', biscuit?'Œuf dans un biscuit':'Œuf repéré', biscuit?'Pour un biscuit entièrement cuit, l’œuf incorporé à la pâte se distingue d’un œuf cru. Vérifier les éventuelles garnitures et les consignes du fabricant.':'L’ingrédient œuf ne dit pas si le produit est cru, cuit ou pasteurisé. Privilégier une préparation entièrement cuite et vérifier les indications de l’emballage.', 'precaution', 'eggs', /\b(oeuf|oeufs|eggs?|egg yolk|jaune d oeuf)\b/);
     if (!rawMilk.length && !hardCheese.length && !softCheese.length) signal('dairy', 'Produit laitier repéré', 'Le mot lait ou fromage ne confirme pas la pasteurisation, le type de produit et sa conservation.', 'precaution', 'dairy', /\b(lait|milk|fromage|cheese|mozzarella|feta|ricotta|mascarpone|cream|creme|yogurts?|yaourts?)\b/);
     const poultry = match(/\b(chicken|poulet|turkey|dinde|duck|canard|pintade)\b/);
     const meat = match(/\b(beef|boeuf|pork|porc|meats?|viandes?|agneau|veal|veau)\b/);
@@ -70,12 +85,19 @@
     signal('herbs', 'Plantes ou compléments', 'Faire examiner la liste des plantes, la dose et la forme du produit ; une mention générale ne permet pas de conclure.', 'unknown', 'herbs', /\b(herbal teas|infusions?|tisanes?|complements alimentaires|food supplements|essential oils|huiles essentielles)\b/, identity);
     signal('liquorice', 'Réglisse repérée', 'La réglisse est contre-indiquée pendant la grossesse selon l’Assurance Maladie, y compris dans une tisane ou un bonbon.', 'avoid', 'liquorice', /\b(reglisse|licorice|liquorice|glycyrrhiza)\b/);
     const priority = { unknown: 0, precaution: 1, limit: 2, avoid: 3 };
+    flags.sort((a,b)=>priority[b.status]-priority[a.status]);
     const strongest = flags.reduce((best, flag) => priority[flag.status] > priority[best] ? flag.status : best, 'unknown');
-    const status = strongest === 'avoid' || strongest === 'limit' ? strongest : 'unknown';
-    return { status, flags,
-      missing: [!fields.ingredients.trim() && 'Ingrédients non renseignés', !fields.categories.trim() && 'Catégorie non renseignée'].filter(Boolean),
+    const status = strongest;
+    const missing=[!fields.ingredients.trim() && 'Ingrédients non renseignés', !fields.categories.trim() && 'Catégorie non renseignée'].filter(Boolean);
+    const qualityIssues=list(product.data_quality_errors_tags).length>0;
+    const label=status==='avoid'?'À éviter':status==='limit'?'À limiter':status==='precaution'?'Précautions de préparation':flags.length?'Composition à préciser':missing.length||qualityIssues?'Fiche incomplète':'Aucun signal repéré';
+    const dairy=flags.find(f=>f.id==='dairy');
+    if(dairy&&facts.some(f=>['uht','pasteurised'].includes(f.id))){dairy.title='Traitement indiqué, conservation à respecter';dairy.text='Une mention UHT ou de pasteurisation figure dans la fiche. Vérifier à quel ingrédient elle se rapporte, le type de produit et ses consignes de conservation ; cette mention ne suffit pas pour tous les fromages.';}
+    else if(dairy&&facts.some(f=>f.id==='milk-powder')){dairy.title='Lait en poudre dans la recette';dairy.text='La fiche indique du lait en poudre parmi les ingrédients. Les allergènes du lait restent à prendre en compte ; suivez les consignes de conservation du produit fini.';}
+    const summary=flags[0]?.text||(qualityIssues?'Open Food Facts signale une incohérence dans cette fiche. Comparez les informations avec l’emballage.':missing.length?missing.join(' · ')+'. Les informations disponibles restent consultables.':'Aucun signal particulier détecté dans les données disponibles. Retrouvez la composition et les informations déclarées.');
+    return { status, label, summary, flags, facts, qualityIssues, missing,
       unknowns: ['Traitement thermique et préparation réelle', 'Conservation, chaîne du froid et état du lot', 'Quantité consommée et situation personnelle'],
-      reason: status === 'unknown' ? 'Les données du produit ne permettent pas de confirmer sa compatibilité avec la grossesse.' : 'Des signaux ont été repérés dans les champs ci-dessous. Ils demandent de confirmer la recette et la préparation sur l’emballage.',
+      reason: summary,
       sources: [...new Set(flags.flatMap(f => f.sources))] };
   }
   function isValidBarcode(input) {

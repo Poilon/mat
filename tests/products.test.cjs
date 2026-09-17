@@ -3,6 +3,7 @@ const params={term:'yaourt nature',code:'',barcode:false,page:2};
 test('A search outage falls back to the other official endpoint without restricting the country',async()=>{
   const urls=[],quotas=[];const result=await fetchProducts(params,{allowance:async(...args)=>quotas.push(args),fetchImpl:async url=>{urls.push(url);return urls.length===1?new Response('Unavailable',{status:503}):Response.json({products:[{code:'3017620422003'}],count:43})}});
   assert.equal(result.count,43);assert.equal(result.page,2);assert.equal(urls[1].hostname,'fr.openfoodfacts.org');assert.equal(urls[1].searchParams.get('cc'),'world');assert.equal(urls[1].searchParams.get('search_terms'),'yaourt nature');assert.equal(quotas.length,2);
+  for(const field of ['traces_tags','conservation_conditions_fr','data_quality_errors_tags','last_modified_t'])assert(urls[0].searchParams.get('fields').split(',').includes(field));
 });
 test('Healthy upstream results need only one request and one shared quota entry',async()=>{
   let calls=0;const result=await fetchProducts(params,{fetchImpl:async()=>{calls++;return Response.json({products:[],count:0})}});assert.equal(calls,1);assert.deepEqual(result.products,[]);

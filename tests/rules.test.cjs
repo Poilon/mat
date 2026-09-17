@@ -21,6 +21,20 @@ test('Even rich product data cannot produce a green verdict', () => {
   const examples = ['Eau minérale', 'Pois chiches en conserve', 'Yaourt au lait pasteurisé', 'Lait UHT', 'Pain complet', 'Saumon bien cuit', 'Parmesan', 'Huile d’olive'];
   examples.forEach(name => assert.notEqual(analyze(name, { categories_tags: ['fr:aliments'], ingredients_text: 'ingrédients renseignés' }).status, 'compatible'));
 });
+test('Product summaries distinguish missing information, detected preparation needs and no detected signal',()=>{
+ assert.equal(analyzeProduct({}).label,'Fiche incomplète');
+ const rice=analyze('Riz complet',{categories_tags:['en:rices'],ingredients_text:'Riz complet'});assert.equal(rice.label,'Aucun signal repéré');assert.equal(rice.status,'unknown');assert.match(rice.summary,/données disponibles/);
+ const milk=analyze('Lait UHT',{categories_tags:['en:milks'],ingredients_text:'Lait'});assert.equal(milk.status,'precaution');assert.equal(milk.label,'Précautions de préparation');assert(milk.facts.some(f=>f.id==='uht'));assert.match(milk.summary,/UHT/);
+ const spread=analyze('Pâte à tartiner',{categories_tags:['en:spreads'],ingredients_text:'Sucre, lait écrémé en poudre, cacao'});assert(spread.facts.some(f=>f.id==='milk-powder'));assert.match(spread.summary,/lait en poudre/);
+ const partial=analyze('Produit',{ingredients_text:'Sucre'});assert.equal(partial.label,'Fiche incomplète');assert.deepEqual(partial.missing,['Catégorie non renseignée']);
+ const invalid=analyze('Riz',{categories_tags:['en:rices'],ingredients_text:'Riz',data_quality_errors_tags:['en:example-error']});assert.equal(invalid.label,'Fiche incomplète');assert.equal(invalid.qualityIssues,true);
+});
+test('Treatment mentions are traced to fields, do not read negations as affirmative, and never clear stronger signals',()=>{
+ for(const name of ['Lait non pasteurisé','Lait not pasteurized','Lait non UHT','Sans lait pasteurisé'])assert.equal(analyze(name).facts.filter(f=>['uht','pasteurised'].includes(f.id)).length,0,name);
+ const brie=analyze('Brie au lait pasteurisé');assert.equal(brie.status,'avoid');assert(brie.facts.some(f=>f.id==='pasteurised'));
+ const tuna=analyze('Thon en conserve');assert.equal(tuna.status,'limit');assert(tuna.facts.some(f=>f.id==='canned'));
+ const mixed=analyze('Dessert',{ingredients_text:'Lait pasteurisé, rhum'});assert.equal(mixed.status,'avoid');assert.equal(mixed.facts[0].matches[0].field,'ingredients');assert.equal(mixed.flags[0].id,'alcohol');
+});
 test('Raw milk is flagged, including thermised and negated pasteurisation', () => {
   ['Lait cru', 'Lait non pasteurisé', 'Lait thermisé', 'Raw milk', 'Unpasteurized milk'].forEach(name => assert.equal(analyze(name).status, 'avoid', name));
 });
@@ -29,7 +43,7 @@ test('Pasteurisation does not clear soft cheese', () => {
 });
 test('The hard cooked cheese exception is distinguished from raw milk', () => {
   const result = analyze('Comté au lait cru');
-  assert.equal(result.status, 'unknown');
+  assert.equal(result.status, 'precaution');
   assert.ok(flagIds(result).includes('hard-cheese'));
   assert.ok(!flagIds(result).includes('raw-milk'));
 });
@@ -43,7 +57,7 @@ test('Multiple risk signals accumulate and avoidance wins over limitation', () =
 });
 test('Eggs as an ingredient do not make a cooked biscuit forbidden', () => {
   const result = analyze('Biscuits cuits', { ingredients_text: 'Farine de blé, sucre, œufs' });
-  assert.equal(result.status, 'unknown');
+  assert.equal(result.status, 'precaution');
   assert.ok(flagIds(result).includes('eggs'));
 });
 test('French and English high-risk fish are recognized', () => {

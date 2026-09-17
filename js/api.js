@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const API_ROOT = 'https://world.openfoodfacts.org';
-  const FIELDS = 'code,product_name,product_name_fr,brands,quantity,image_front_small_url,ingredients_text,ingredients_text_fr,ingredients,categories,categories_tags,allergens_tags,nutriments,nutrition_grades';
+  const FIELDS = 'code,product_name,product_name_fr,brands,quantity,image_front_small_url,ingredients_text,ingredients_text_fr,ingredients,categories,categories_tags,allergens_tags,traces_tags,conservation_conditions,conservation_conditions_fr,last_modified_t,data_quality_errors_tags,nutriments,nutrition_grades';
   const cacheKey = 'miette-off-cache-v1';
   const CACHE_TTL = 24 * 60 * 60 * 1000;
   const requestTimes = { search: [], barcode: [] };
@@ -19,6 +19,10 @@
       ingredients_text: safeString(raw.ingredients_text), ingredients_text_fr: safeString(raw.ingredients_text_fr),
       categories: safeString(raw.categories, 2000), categories_tags: Array.isArray(raw.categories_tags) ? raw.categories_tags.filter(x => typeof x === 'string').slice(0, 80) : [],
       allergens_tags: Array.isArray(raw.allergens_tags) ? raw.allergens_tags.filter(x => typeof x === 'string').slice(0, 30) : [],
+      traces_tags: Array.isArray(raw.traces_tags) ? raw.traces_tags.filter(x => typeof x === 'string').slice(0, 30) : [],
+      conservation_conditions: safeString(raw.conservation_conditions, 2000), conservation_conditions_fr: safeString(raw.conservation_conditions_fr, 2000),
+      last_modified_t: Number.isFinite(raw.last_modified_t) && raw.last_modified_t > 0 && raw.last_modified_t * 1000 <= Date.now() ? raw.last_modified_t : null,
+      data_quality_errors_tags: Array.isArray(raw.data_quality_errors_tags) ? raw.data_quality_errors_tags.filter(x => typeof x === 'string').slice(0, 20) : [],
       ingredients: Array.isArray(raw.ingredients) ? raw.ingredients.slice(0, 100) : [],
       nutriments: {}, nutrition_grades: /^[a-e]$/.test(raw.nutrition_grades) ? raw.nutrition_grades : '',
       image_front_small_url: safeImage(raw.image_front_small_url)
@@ -28,15 +32,15 @@
       if (v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v))) product.nutriments[k] = Number(v);
     });
     const analysis = root.MietteRules.analyzeProduct(product);
-    return { ...product, id: 'off-' + product.code, name: product.product_name_fr || product.product_name || 'Produit sans nom', origin: 'off', art: 'bowl', category: 'product', status: analysis.status, summary: analysis.status === 'unknown' ? 'Composition et préparation à vérifier' : 'Précautions repérées dans la fiche', analysis };
+    return { ...product, id: 'off-' + product.code, name: product.product_name_fr || product.product_name || 'Produit sans nom', origin: 'off', art: 'bowl', category: 'product', status: analysis.status, summary: analysis.summary, analysis };
   }
   function cached(key) {
     const entry = memoryCache[key];
-    if (!entry || !Number.isFinite(entry.at) || Date.now() - entry.at > CACHE_TTL || !entry.data || !Array.isArray(entry.data.products)) return null;
+    if (!entry || entry.schema !== 2 || !Number.isFinite(entry.at) || Date.now() - entry.at > CACHE_TTL || !entry.data || !Array.isArray(entry.data.products)) return null;
     return { ...entry.data, products: entry.data.products.map(toProduct).filter(Boolean), cached: true, cachedAt: entry.at };
   }
   function saveCache(key, data) {
-    memoryCache[key] = { at: Date.now(), data };
+    memoryCache[key] = { at: Date.now(), schema: 2, data };
     const recent = Object.entries(memoryCache).filter(([, v]) => v && Date.now() - v.at < CACHE_TTL).sort((a, b) => b[1].at - a[1].at).slice(0, 12);
     memoryCache = Object.fromEntries(recent);
     try { localStorage.setItem(cacheKey, JSON.stringify(memoryCache)); } catch (_) { /* Keep the in-memory cache if quota is exceeded. */ }
@@ -87,7 +91,7 @@
     const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 18000);
     try {
       const proxy = proxyBase ? new URL('products', new URL(proxyBase, location.href)) : null;
-      if (proxy) { proxy.searchParams.set('q', term); proxy.searchParams.set('page', String(page)); }
+      if (proxy) { proxy.searchParams.set('q', term); proxy.searchParams.set('page', String(page)); proxy.searchParams.set('v', '2'); }
       let response = await fetch(proxy || url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
       // A standalone static copy keeps working; Vercel responds with JSON for all product lookups.
       if (proxy && response.status === 404) {
