@@ -231,7 +231,7 @@
     return `<button class="mobile-menu" data-action="menu" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sidebar">${icon('menu', 22)}</button><div class="breadcrumb"><a class="brand-home" href="#accueil"><img src="assets/brand/mark.svg" alt="" width="32" height="32"><span>Poum<small>Votre compagnon de grossesse</small></span></a><span aria-hidden="true">/</span><b>${labels[route.page]}</b></div><div class="topbar-right"><a href="#plus" class="topbar-plus">${Billing.active ? 'Mon accès Plus' : 'Plus'}</a><a href="#profil" class="profile-trigger" aria-label="Mon compte et mes préférences"><span class="avatar">${store.name ? escape(store.name.charAt(0).toUpperCase()) : icon('user', 17)}</span><span>${escape(store.name || (Cloud.state.user ? 'Mon compte' : 'Se connecter'))}</span></a></div>`;
   }
   function footer() {
-    return `<footer class="footer"><span><span class="footer-brand">poum</span> · Votre compagnon de grossesse</span><div class="footer-links"><a href="${seoURL('/alimentation-grossesse/')}">Guide grossesse</a><a href="${seoURL('/sources-et-methode/')}">Sources & méthode</a><a href="#confidentialite">Vos données</a><a href="#plus">Plus</a></div></footer>`;
+    return `<footer class="footer"><span><span class="footer-brand">poum</span> · Votre compagnon de grossesse</span><div class="footer-links"><a href="${seoURL('/calendrier-grossesse/')}">Calendrier de grossesse</a><a href="${seoURL('/scanner-grossesse/')}">Le scan</a><a href="${seoURL('/alimentation-grossesse/')}">Guide alimentaire</a><a href="${seoURL('/sources-et-methode/')}">Sources & méthode</a><a href="#confidentialite">Vos données</a><a href="${seoURL('/poum-plus/')}">Poum Plus</a></div></footer>`;
   }
   function migrationNote() {
     const runtime = window.MietteRuntime;
@@ -686,7 +686,7 @@
     bottom.innerHTML=[['accueil','home','Aujourd’hui'],['calendrier','calendar','Calendrier'],['examens','book','Examens'],['recettes','recipe','Repas']].map(([p,i,l])=>`<a href="#${p}" ${route.page===p?'aria-current="page"':''}>${icon(i,19)}${l}</a>`).join('');document.body.append(bottom);
     syncSidebar();
     Tonight.enter();
-    document.title = route.page === 'accueil' ? 'Poum — Mon suivi de grossesse' : `${labels[route.page]} — Poum`;
+    document.title = route.page === 'accueil' ? 'Poum — Suivi et calendrier de grossesse gratuit' : `${labels[route.page]} — Poum`;
     if (oldPage !== route.page) { window.scrollTo({ top: 0, behavior: 'instant' }); if(route.page==='bienvenue')requestAnimationFrame(()=>$('#ob-title')?.focus({preventScroll:true})); }
     if (isOFF) {
       const q = route.params.get('q') || '';

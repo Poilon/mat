@@ -118,6 +118,12 @@ Constats SEO au 17 septembre 2026 : accueil pré-rendu, robots et sitemap access
 
 Le tableau de bord Plus met en avant le scan avec « Ce produit, je peux en manger enceinte ? ». Son bouton ouvre le scanner existant, avec caméra, photo ou saisie du code-barres. Le texte décrit les précautions repérées, ingrédients et allergènes déclarés, avec la limite des données collaboratives. Il ne promet pas une autorisation médicale binaire. La visibilité suit l’accès serveur et le switch admin ; les accès gratuits au scanner existant restent disponibles.
 
+## Pages de présentation et découverte — 4.0.13
+
+Trois pages HTML publiques expliquent le calendrier gratuit, le scan de produits et les accès Poum Plus : `/calendrier-grossesse/`, `/scanner-grossesse/`, `/poum-plus/`. Elles se lisent sans JavaScript, sont reliées depuis l’accueil et le guide et figurent dans le sitemap. Les prix proviennent de la configuration commune de l’offre. Les liens restent présents après le rendu de l’application. Aucun document personnel ni contenu de recette premium n’est publié.
+
+Le titre de l’accueil met le suivi de grossesse au premier plan. Les informations d’indexation et la marche à suivre sont consignées dans `SEO.md` ; publier ces pages ne garantit pas leur indexation.
+
 ## Scan réservé à Plus — 4.0.12
 
 Le scan caméra, la lecture de photo et la recherche par code-barres saisi à la main nécessitent un accès Plus actif. Les boutons ouvrent une offre explicite pour les comptes gratuits et les visiteurs. L’essai de menus n’inclut pas le scan ; la recherche de produits par nom reste gratuite. Les textes de l’offre distinguent ces accès.

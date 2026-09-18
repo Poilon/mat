@@ -1,12 +1,18 @@
 # SEO de Poum
 
-Version 3.6.0, 11 septembre 2026. Domaine canonique : https://poum.app/.
+Version 4.0.13, 18 septembre 2026. Domaine canonique : https://poum.app/.
 
 ## Ce qui est publié
 
-Le build génère 394 URL HTML publiques à partir des données existantes du guide : accueil, 360 fiches alimentaires, 7 familles, annuaire des aliments, guide général, listes « à éviter » et « à limiter », 20 recettes gratuites, annuaire des recettes et méthode éditoriale. L’accueil contient du vrai HTML avant le démarrage de l’application. Les autres pages se lisent intégralement sans JavaScript.
+Le build génère 397 URL HTML publiques : trois présentations du produit (calendrier gratuit, scan et offre Plus), puis les pages du guide : accueil, 360 fiches alimentaires, 7 familles, annuaire des aliments, guide général, listes « à éviter » et « à limiter », 20 recettes gratuites, annuaire des recettes et méthode éditoriale. L’accueil contient du vrai HTML avant le démarrage de l’application. Les autres pages se lisent intégralement sans JavaScript.
+
+Les trois pages produit expliquent des usages différents et reprennent les fonctions réelles. Elles ne reproduisent ni les données personnelles ni les préparations premium. Les prix et le nombre de recettes sont calculés depuis le catalogue et l’offre du projet. Les liens sont présents dans le HTML initial et dans le pied de page après le rendu JavaScript.
 
 Exemples :
+
+- `/calendrier-grossesse/`
+- `/scanner-grossesse/`
+- `/poum-plus/`
 
 - `/aliments/mozzarella-enceinte/`
 - `/aliments/ananas-enceinte/`
@@ -37,17 +43,36 @@ Les pages éditoriales utilisent un style critique intégré, des polices WOFF2 
 
 Les tests couvrent les 360 réponses et leurs sources, tous les liens internes, le sitemap, l’absence de publications premium, les données structurées, les pages sans JavaScript, le moteur de recherche de l’annuaire, les lecteurs mobiles et l’accessibilité. Les audits Lighthouse sont des mesures de laboratoire, pas une garantie de positionnement ou de performances réelles.
 
-## Search Console : étape dépendant du compte Google du propriétaire
+## Search Console : constat du 18 septembre 2026
 
-Aucun accès Search Console n’est disponible dans la session. Une demande de la balise publique de vérification a été adressée au propriétaire ; aucune soumission n’est déclarée effectuée sans accès.
+La propriété Domaine `poum.app` existe et son rapport a été consulté dans la session Chrome du propriétaire. Le rapport global affiche une dernière mise à jour au 14 septembre : 1 page indexée, 386 détectées non explorées, 7 explorées non indexées, 3 avec redirection. Ce constat n’est pas une explication de la décision de Google ni un audit complet de la qualité des contenus.
 
-1. Ajouter la propriété **Préfixe de l’URL** `https://poum.app/` dans https://search.google.com/search-console.
-2. Choisir **Balise HTML** et ajouter la balise `google-site-verification` fournie dans le `<head>` de `index.html`, puis redéployer et valider la propriété. Ne jamais communiquer de mot de passe ni de jeton OAuth.
-3. Dans **Sitemaps**, soumettre `https://poum.app/sitemap.xml`.
-4. Inspecter l’accueil et quelques fiches principales ; demander leur indexation, puis suivre les pages indexées, les impressions, les requêtes et les clics.
-5. Comparer les recherches par aliment et les recherches générales après accumulation de données. Affiner les titres et les fiches à partir des requêtes réelles. Une relecture médicale identifiable et des liens éditoriaux pertinents sont des travaux de fond, pas des signaux à inventer.
+Les sept exemples explorés sont : compote de fruits, marlin, gnocchis au pesto, épeautre, chèvre à croûte fleurie, gruyère, câpres en bocal. Leurs dates d’exploration affichées vont du 13 au 15 septembre. Le sitemap public répondait HTTP 200 et contenait 394 URL avant cette évolution. L’accueil, l’annuaire des aliments et deux fiches échantillonnées répondaient 200, autorisaient l’indexation et avaient une canonique correspondant à leur URL. Aucun blocage global n’a été identifié dans cet échantillon.
 
-Ne pas utiliser l’Indexing API réservée aux catégories éligibles pour ces fiches, ni les anciens points d’entrée de ping des sitemaps. Publier un sitemap ne garantit ni l’indexation ni une première position.
+### Travail effectué sur le site
+
+- Ajout de trois pages publiques pour expliquer le suivi de grossesse, le scan et la différence gratuit/Plus ; le sitemap comporte désormais 397 URL.
+- Liens directs depuis l’accueil, les pages du guide et le pied de page de l’application, maintenus après l’exécution de JavaScript.
+- Titre d’accueil centré sur le suivi et le calendrier gratuit, cohérent avant et après le rendu JavaScript.
+- Vérification des liens internes, des pages sans JavaScript, des vues mobiles et de l’accessibilité. Les dates des anciennes références restent inchangées.
+
+### Actions Search Console à effectuer après publication
+
+1. Dans **Sitemaps**, vérifier l’état de `https://poum.app/sitemap.xml`. S’il est déjà traité avec succès, conserver cette même adresse ; une nouvelle URL de sitemap n’est pas nécessaire.
+2. Inspecter en priorité `https://poum.app/calendrier-grossesse/`, puis `/scanner-grossesse/` et `/poum-plus/`. Faire le test en direct et demander l’indexation si la page est accessible et indexable. Les quotas éventuels restent ceux de Google.
+3. Pour les sept pages déjà explorées, lire le détail de l’inspection (rendu, canonique retenue, éventuels blocages). Ne pas soumettre en boucle des demandes d’exploration : ce statut ne donne pas sa cause exacte.
+4. Vérifier les trois redirections : elles sont normales si elles pointent vers la bonne adresse canonique. Leurs destinations exactes restent à contrôler.
+5. Relever dans 7 à 14 jours les dates d’exploration, pages indexées, impressions, requêtes et clics. Ce délai sert au suivi, ce n’est pas une promesse d’indexation.
+
+Aucune demande d’indexation ni nouvelle soumission de sitemap n’est déclarée effectuée par cette modification. Le rapport a été lisible pendant le diagnostic ; son onglet n’était plus accessible lors de la préparation des nouvelles pages.
+
+### Travail de fond
+
+Faire relire et enrichir en priorité les fiches utiles aux utilisatrices, en commençant par les pages déjà explorées et les recherches réellement observées. Ajouter des exemples propres au sujet, expliquer les nuances et maintenir les sources précises. Une relecture médicale doit être réelle et consentie avant de mentionner un nom ou une validation.
+
+Chercher des liens éditoriaux pertinents par des démonstrations et retours de partenaires réels. Ne pas acheter de liens artificiels ou fabriquer des avis. Les échanges n’ont pas été envoyés dans cette intervention.
+
+Ne pas utiliser l’Indexing API réservée aux catégories éligibles pour ces fiches, ni les anciens points d’entrée de ping des sitemaps. Publier un sitemap ou demander une exploration ne garantit ni l’indexation ni une première position.
 
 ## Références de mise en œuvre
 

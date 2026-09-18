@@ -2,7 +2,7 @@ const {test,expect}=require('@playwright/test');
 const AxeBuilder=require('@axe-core/playwright').default;
 test('Search landing pages and precautions are readable without JavaScript, including the homepage',async({browser})=>{
  const context=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}});const page=await context.newPage();
- for(const [url,title]of [['/','Votre grossesse, plus facile à organiser.'],['/aliments/mozzarella-enceinte/','Mozzarella enceinte'],['/aliments/ananas-enceinte/','Ananas enceinte'],['/aliments/patate-douce-enceinte/','Patate douce enceinte'],['/alimentation-grossesse/fromages-produits-laitiers/','Quels fromages'],['/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','Bowl de quinoa']]){
+ for(const [url,title]of [['/','Votre grossesse, plus facile à organiser.'],['/calendrier-grossesse/','Votre calendrier de grossesse'],['/scanner-grossesse/','Ce produit'],['/poum-plus/','Commencer gratuitement'],['/aliments/mozzarella-enceinte/','Mozzarella enceinte'],['/aliments/ananas-enceinte/','Ananas enceinte'],['/aliments/patate-douce-enceinte/','Patate douce enceinte'],['/alimentation-grossesse/fromages-produits-laitiers/','Quels fromages'],['/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','Bowl de quinoa']]){
   const response=await page.goto(url);expect(response.status()).toBe(200);await expect(page.locator('h1')).toHaveCount(1);await expect(page.locator('h1')).toContainText(title);await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href','https://poum.app'+url);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }
  await expect(page.locator('.seo-steps li')).toHaveCount(4);await expect(page.locator('.seo-sources a').first()).toHaveAttribute('href',/^https:\/\//);await context.close();
@@ -13,9 +13,17 @@ test('The directory searches all foods locally, and app dialogs link to the same
 });
 test('SEO pages have working assets, breadcrumbs and accessible mobile layouts',async({page})=>{
  await page.setViewportSize({width:320,height:740});
- for(const url of ['/aliments/mozzarella-enceinte/','/alimentation-grossesse/','/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','/sources-et-methode/']){
+ for(const url of ['/calendrier-grossesse/','/scanner-grossesse/','/poum-plus/','/aliments/mozzarella-enceinte/','/alimentation-grossesse/','/recettes-grossesse/bowl-de-quinoa-douceur-d-avocat/','/sources-et-methode/']){
   await page.goto(url);await expect(page.locator('.seo-breadcrumb [aria-current=page]')).toBeVisible();await page.evaluate(()=>document.fonts.ready);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const results=await new AxeBuilder({page}).analyze();expect(results.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))).toEqual([]);
   expect(await page.locator('img').evaluateAll(imgs=>imgs.filter(i=>i.loading!=='lazy').every(i=>i.complete&&i.naturalWidth>0))).toBe(true);
  }
+});
+test('Product discovery links survive app rendering and lead back to the working calendar',async({page})=>{
+ await page.goto('/');
+ const footer=page.locator('footer.footer');
+ for(const path of ['/calendrier-grossesse/','/scanner-grossesse/','/poum-plus/'])await expect(footer.locator(`a[href="${path}"]`)).toBeVisible();
+ await footer.getByRole('link',{name:'Calendrier de grossesse'}).click();
+ await page.getByRole('link',{name:'Créer mon calendrier gratuit'}).click();
+ await expect(page.locator('#pregnancy-form')).toBeVisible();
 });
