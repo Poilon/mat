@@ -56,15 +56,15 @@ Les sept exemples explorés sont : compote de fruits, marlin, gnocchis au pesto,
 - Titre d’accueil centré sur le suivi et le calendrier gratuit, cohérent avant et après le rendu JavaScript.
 - Vérification des liens internes, des pages sans JavaScript, des vues mobiles et de l’accessibilité. Les dates des anciennes références restent inchangées.
 
-### Actions Search Console à effectuer après publication
+### Actions Search Console et suivi après publication
 
-1. Dans **Sitemaps**, vérifier l’état de `https://poum.app/sitemap.xml`. S’il est déjà traité avec succès, conserver cette même adresse ; une nouvelle URL de sitemap n’est pas nécessaire.
-2. Inspecter en priorité `https://poum.app/calendrier-grossesse/`, puis `/scanner-grossesse/` et `/poum-plus/`. Faire le test en direct et demander l’indexation si la page est accessible et indexable. Les quotas éventuels restent ceux de Google.
+1. **Vérifié le 18 septembre** : `https://poum.app/sitemap.xml` est accepté (« Opération effectuée »), envoyé le 11 septembre, dernière lecture affichée au 14 septembre avec 394 pages découvertes. Le même fichier contient maintenant 397 URL en production ; Google doit le relire.
+2. **Effectué le 18 septembre** : inspection des trois nouvelles pages et demande d’indexation pour chacune. Les trois confirmations « Indexation demandée » indiquent leur ajout à la file d’exploration prioritaire. Le test en direct du calendrier confirme « Google a accès à cette URL », « La page peut être indexée » et un fil d’Ariane valide. Ce sont des demandes acceptées, pas une confirmation d’indexation.
 3. Pour les sept pages déjà explorées, lire le détail de l’inspection (rendu, canonique retenue, éventuels blocages). Ne pas soumettre en boucle des demandes d’exploration : ce statut ne donne pas sa cause exacte.
 4. Vérifier les trois redirections : elles sont normales si elles pointent vers la bonne adresse canonique. Leurs destinations exactes restent à contrôler.
 5. Relever dans 7 à 14 jours les dates d’exploration, pages indexées, impressions, requêtes et clics. Ce délai sert au suivi, ce n’est pas une promesse d’indexation.
 
-Aucune demande d’indexation ni nouvelle soumission de sitemap n’est déclarée effectuée par cette modification. Le rapport a été lisible pendant le diagnostic ; son onglet n’était plus accessible lors de la préparation des nouvelles pages.
+Les trois nouvelles pages ont été vérifiées en production : HTTP 200, URL canoniques correctes et présence dans le sitemap. Les demandes ont été faites depuis l’interface Search Console du propriétaire, après publication. Aucune resoumission répétée ni appel à une API d’indexation n’a été utilisé.
 
 ### Travail de fond
 

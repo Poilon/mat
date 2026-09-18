@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const D = require('../js/data.js');
 const { empty } = require('../js/notebook.js');
+const shellCache = 'miette-shell-v' + require('../package.json').version;
 const draftKey = 'miette-workshop-v1:miette-notebook-v1';
 const recipeIDs = page => page.locator('[data-action="workshop-recipe"]').evaluateAll(nodes => nodes.map(n => n.dataset.id));
 const notebook = page => page.evaluate(() => JSON.parse(localStorage.getItem('miette-notebook-v1')));
@@ -175,7 +176,7 @@ test.describe('Offline workshop', () => {
     test.setTimeout(60000);
     await page.goto('/#atelier');
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
-    await expect.poll(() => page.evaluate(async () => (await caches.open('miette-shell-v4.0.12')).match(new URL('js/workshop.js?v=7', location.href)).then(Boolean))).toBe(true);
+    await expect.poll(() => page.evaluate(async cache => (await caches.open(cache)).match(new URL('js/workshop.js?v=7', location.href)).then(Boolean), shellCache)).toBe(true);
     await generate(page);
     await context.setOffline(true); await page.reload();
     await page.locator('[data-action="workshop-swap"][data-index="0"]').click();
